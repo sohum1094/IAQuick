@@ -48,8 +48,6 @@ Widget roomReadingsInfoForm(BuildContext context) {
   List<Widget> roomReadingsWidgets = [
           
         ];
-        debugPrint('checkpoint 1');
-
           roomReadingsWidgets.add(SizedBox(
               height: MediaQuery.of(context).size.height * .1,
               child: const Text('Enter Room Data'),

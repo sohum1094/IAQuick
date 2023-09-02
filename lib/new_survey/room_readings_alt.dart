@@ -244,6 +244,15 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                                   context, 'relative humidity');
                             }
                           },
+                          onChanged: (value) {
+                            bool seen = false;
+
+                            if (!seen &&
+                                (double.parse(value) > 65)) {
+                              seen = true;
+                              _showConfirmValueDialog(context, 'temperature');
+                            }
+                          },
                           decoration: const InputDecoration(
                               suffixText: '%',
                               labelText: "Relative Humidity (%)"),
