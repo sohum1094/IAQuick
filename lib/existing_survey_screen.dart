@@ -41,14 +41,15 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
       final siteName = row[0];
       final date = row[1];
       final address = row[2];
-      final path = row[3];
+      final iaqPath = row[3];
+      final visualPath = row[4];
 
       DateTime dateTime = DateTime.parse(date.toString());
 
       // Format the DateTime object as 'MM/dd/yyyy'
       String formattedDate = DateFormat('MM/dd/yyyy').format(dateTime);
 
-      fileNames.add([siteName, formattedDate, address, path]);
+      fileNames.add([siteName, formattedDate, address, iaqPath,visualPath]);
       // Do something with the extracted metadata and data
     }
 
@@ -121,7 +122,12 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               columns: const <DataColumn>[
                 DataColumn(
                   label: Expanded(
-                    child: Text('File'),
+                    child: Text('IAQ'),
+                  ),
+                ),
+                DataColumn(
+                  label: Expanded(
+                    child: Text('Visual\nAssesment'),
                   ),
                 ),
                 DataColumn(
@@ -181,6 +187,32 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           ),
         ),
         DataCell(
+          ElevatedButton(
+            onPressed: () async {
+              final filePath = recentFile[4]; // Extract the file path
+
+              // Replace backslashes with forward slashes
+              final correctedPath = filePath.replaceAll(r'\', '/');
+              bool fileExists = await File(filePath).exists();
+              debugPrint('File existence: ${fileExists.toString()}');
+              final result = await OpenFile.open(correctedPath);
+              if (result.type == ResultType.done) {
+                debugPrint('Opened successfully');
+              } else if (result.type == ResultType.noAppToOpen) {
+                debugPrint('No app to open this file');
+              } else {
+                // Error occurred while opening the file
+                debugPrint('Error opening the file: ${result.message}');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey,
+              elevation: 0,
+            ),
+            child: const Icon(Icons.file_open),
+          ),
+        ),
+        DataCell(
           Text(siteName), // Display site name
         ),
         DataCell(
@@ -214,7 +246,12 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               columns: const <DataColumn>[
                 DataColumn(
                   label: Expanded(
-                    child: Text('File'),
+                    child: Text('IAQ'),
+                  ),
+                ),
+                DataColumn(
+                  label: Expanded(
+                    child: Text('Visual\nAssesment'),
                   ),
                 ),
                 DataColumn(
@@ -251,6 +288,25 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           ElevatedButton(
             onPressed: () async {
               final filePath = recentFile[3]; // Extract the file path
+              final result = await OpenFile.open(filePath);
+              if (result.type == ResultType.done) {
+                debugPrint('opened successfully');
+              } else {
+                // Unable to open the file
+                debugPrint('file not opened properly');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey,
+              elevation: 0,
+            ),
+            child: const Icon(Icons.file_open),
+          ),
+        ),
+        DataCell(
+          ElevatedButton(
+            onPressed: () async {
+              final filePath = recentFile[4]; // Extract the file path
               final result = await OpenFile.open(filePath);
               if (result.type == ResultType.done) {
                 debugPrint('opened successfully');

@@ -1,7 +1,7 @@
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:iaqapp/new_survey/new_survey_start.dart';
-import 'package:iaqapp/new_survey/room_readings_alt.dart';
+import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
@@ -71,7 +71,6 @@ Widget outdoorReadingsInfoForm(BuildContext context) {
             ? headerRow.add('PM2.5 (mg/m3)')
             : null;
         (prefs.getBool('PM10') ?? false) ? headerRow.add('PM10 (mg/m3)') : null;
-        headerRow.add('Comments');
 
         return EasyDataForm(
           key: formKey,
@@ -97,7 +96,8 @@ Widget outdoorReadingsInfoForm(BuildContext context) {
                   ? outdoorReadingsRow.add(fieldValues['PM10Field'])
                   : null;
 
-              writeCSV(headerRow, outdoorReadingsRow);
+              writeIAQ(headerRow, outdoorReadingsRow);
+              writeVisualAssessment();
               writeMetadata();
             }
           },
@@ -178,22 +178,46 @@ EasyTextFormField outdoorReadingsTextFormFieldTemplate(
   );
 }
 
-Future<void> writeCSV(
+Future<void> writeIAQ(
     List<dynamic> headerRow, List<dynamic> outdoorReadingsRow) async {
-  final csv =
-      const ListToCsvConverter().convert([headerRow, outdoorReadingsRow]);
+  final prefs = await SharedPreferences.getInstance();
+  final iaqCSV =
+      const ListToCsvConverter().convert([['${prefs.getString('Site Name')} Indoor Air Quality Measurements'],['${prefs.getString('Date Time')}'],['${prefs.getString('Occupancy')}'],headerRow]);
   final appDocumentsDirectory = await getApplicationDocumentsDirectory();
   // Define the CSV files directory within the app's documents directory
-  final csvDirectory =
-      Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/');
-  await csvDirectory.create(recursive: true);
-  final prefs = await SharedPreferences.getInstance();
-  final csvFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}.csv';
-  prefs.setString('csvPath', csvFilePath);
+  final iaqDirectory =
+      Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}');
+  await iaqDirectory.create(recursive: true);
+  final iaqFilePath =
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}_IAQ.csv';
+  prefs.setString('iaqPath', iaqFilePath);
   debugPrint('wrote the path');
-  final file = File(csvFilePath);
-  await file.writeAsString(csv);
+  final file = File(iaqFilePath);
+  await file.writeAsString(iaqCSV);
+}
+
+Future<void> writeVisualAssessment() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<dynamic> headerRow = [
+    'Building',
+    'Floor #',
+    'Room #',
+    'Primary Room Use',
+    'Visual Assesment Notes'
+  ];
+  final visualCSV =
+      const ListToCsvConverter().convert([['${prefs.getString('Site Name')} Visual Assesment'],['${prefs.getString('Date Time')}'],['${prefs.getString('Occupancy')}'],headerRow]);
+  final appDocumentsDirectory = await getApplicationDocumentsDirectory();
+  // Define the CSV files directory within the app's documents directory
+  final visualDirectory =
+      Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}');
+  await visualDirectory.create(recursive: true);
+  final visualFilePath =
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}_Visual_Assessment.csv';
+  prefs.setString('visualPath', visualFilePath);
+  debugPrint('wrote the path');
+  final file = File(visualFilePath);
+  await file.writeAsString(visualCSV);
 }
 
 Future<void> writeMetadata() async {
@@ -204,9 +228,11 @@ Future<void> writeMetadata() async {
   final metaDirectory =
       Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/do_not_edit/');
   await metaDirectory.create(recursive: true);
-
-  final csvFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}.csv';
+  final schoolInfo = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}.csv';
+  final iaqFilePath =
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$schoolInfo\\${schoolInfo}_IAQ.csv';
+  final visualFilePath =
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$schoolInfo\\${schoolInfo}_Visual_Assessment.csv';
   final metaCSVPath = 
       '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\do_not_edit\\survey_meta.csv';
   final csv = const ListToCsvConverter().convert(
@@ -215,7 +241,8 @@ Future<void> writeMetadata() async {
         prefs.getString('Site Name'),
         prefs.getString('Date Time'),
         prefs.getString('Address'),
-        csvFilePath,
+        iaqFilePath,
+        visualFilePath,
       ],
     ],
   );
@@ -227,7 +254,8 @@ Future<void> writeMetadata() async {
           "Site Name",
           "Date",
           "Address",
-          "CSV path",
+          "IAQ path",
+          "Visual Assesment Path"
         ],
       ],
     );
