@@ -9,10 +9,10 @@ class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
 
   @override
-  _ExistingSurveyScreenState createState() => _ExistingSurveyScreenState();
+  ExistingSurveyScreenState createState() => ExistingSurveyScreenState();
 }
 
-class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
+class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   TextEditingController searchController = TextEditingController();
   List<List<String>> fileNames = [];
   bool showRecentFiles = true;
@@ -85,7 +85,7 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               decoration: InputDecoration(
                 labelText: 'Search',
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
+                  icon: const Icon(Icons.clear),
                   onPressed: () {
                     searchController.clear();
                     setState(() {
@@ -336,7 +336,7 @@ class _ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: ExistingSurveyScreen(),
   ));
 }
