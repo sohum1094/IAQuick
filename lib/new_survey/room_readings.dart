@@ -125,6 +125,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         commentTextController.text,
       ];
       writeIAQ(iaqRoomReadingsRow);
+      writeVisualAssessment(visualRoomReadingsRow);
 
     }
   }

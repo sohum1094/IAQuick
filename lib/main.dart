@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iaqapp/new_survey/new_survey_start.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'existing_survey_screen.dart';
 import 'user_info/user_initial_info.dart';
 
@@ -12,6 +13,20 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fetch the boolean value from SharedPreferences
+    Future<bool> getUserInfoDialogStatus() async {
+      final prefs = await SharedPreferences.getInstance();
+      return (prefs.getString('First Name') == null ||
+          prefs.getString('First Name') == ''); // Default to true if not found
+    }
+
+    getUserInfoDialogStatus().then((shouldShowDialog) {
+      if (shouldShowDialog) {
+        debugPrint('should show triggered');
+        _showEnterUserInfoDialog(context);
+      }
+    });
+
     return MaterialApp(
       home: Builder(
         builder: (context) => Scaffold(
@@ -67,7 +82,8 @@ class HomeScreen extends StatelessWidget {
         context,
         MaterialPageRoute(
           builder: (BuildContext context) {
-            return ExistingSurveyScreen(key: key,
+            return ExistingSurveyScreen(
+              key: key,
             );
           },
         ),
@@ -116,3 +132,32 @@ ElevatedButton createNewSurveyButton(BuildContext context) {
     ),
   );
 }
+
+void _showEnterUserInfoDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true, // Dialog can be dismissed by tapping outside
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Welcome to IAQuick!'),
+        content: const Text('Please enter user information.'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) {
+                    return const UserInitialInfo();
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
