@@ -233,6 +233,8 @@ Future<void> writeMetadata() async {
       '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$schoolInfo\\${schoolInfo}_IAQ.csv';
   final visualFilePath =
       '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$schoolInfo\\${schoolInfo}_Visual_Assessment.csv';
+  final sourceFilePath = 
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$schoolInfo';
   final metaCSVPath = 
       '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\do_not_edit\\survey_meta.csv';
   final csv = const ListToCsvConverter().convert(
@@ -243,6 +245,7 @@ Future<void> writeMetadata() async {
         prefs.getString('Address'),
         iaqFilePath,
         visualFilePath,
+        sourceFilePath
       ],
     ],
   );
@@ -255,7 +258,8 @@ Future<void> writeMetadata() async {
           "Date",
           "Address",
           "IAQ path",
-          "Visual Assesment Path"
+          "Visual Assesment Path",
+          "Source Folder Path"
         ],
       ],
     );

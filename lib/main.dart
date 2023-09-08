@@ -103,7 +103,7 @@ ElevatedButton createNewSurveyButton(BuildContext context) {
   void _showEnterUserInfoDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Welcome to IAQuick!'),

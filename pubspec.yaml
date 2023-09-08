@@ -43,6 +43,7 @@ dependencies:
   csv: ^5.0.2
   path_provider: ^2.1.0
   open_file: ^3.3.2
+  image_picker: ^0.8.4+2
 
 dev_dependencies:
   flutter_test:

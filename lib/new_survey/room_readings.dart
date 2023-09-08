@@ -4,6 +4,7 @@ import 'package:csv/csv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:iaqapp/main.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RoomReadingsFormScreen extends StatelessWidget {
   const RoomReadingsFormScreen({super.key});
@@ -52,6 +53,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   TextEditingController commentTextController = TextEditingController();
 
+  File? _imageFile;
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +90,18 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     });
   }
 
+  Future<void> _getImage() async {
+    final imagePicker = ImagePicker();
+    final pickedImage =
+        await imagePicker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = File(pickedImage.path);
+      });
+    }
+  }
+
   void _saveForm() async {
     final form = _formKey.currentState;
 
@@ -116,7 +131,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         iaqRoomReadingsRow.add(pm10TextController.text);
       }
 
-
       List<String> visualRoomReadingsRow = [
         dropdownModel.building,
         dropdownModel.floor,
@@ -127,6 +141,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       writeIAQ(iaqRoomReadingsRow);
       writeVisualAssessment(visualRoomReadingsRow);
 
+      if (_imageFile != null) {
+        await saveImageLocally(_imageFile!,roomNumberTextController.text);
+      }
     }
   }
 
@@ -257,8 +274,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           onChanged: (value) {
                             bool seen = false;
 
-                            if (!seen &&
-                                (double.parse(value) > 65)) {
+                            if (!seen && (double.parse(value) > 65)) {
                               seen = true;
                               _showConfirmValueDialog(context, 'temperature');
                             }
@@ -489,6 +505,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                     ),
                   ),
+                  ElevatedButton(
+                    onPressed: _getImage,
+                    child: Text('Pick an Image'),
+                  ),
+                  _imageFile != null
+                      ? Image.file(_imageFile!)
+                      : Text('No Image Selected'),
                 ],
               ),
             ),
@@ -615,12 +638,13 @@ Future<void> writeIAQ(List<dynamic> roomReadingsRow) async {
   final prefs = await SharedPreferences.getInstance();
   final iaqCSV = const ListToCsvConverter().convert([roomReadingsRow]);
   final appDocumentsDirectory = await getApplicationDocumentsDirectory();
+  final fileName = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
   // Define the CSV files directory within the app's documents directory
-  final iaqDirectory =
-      Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}');
+  final iaqDirectory = Directory(
+      '${appDocumentsDirectory.path}/iaQuick/csv_files/$fileName');
   await iaqDirectory.create(recursive: true);
   final iaqFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}_IAQ.csv';
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$fileName\\${fileName}_IAQ.csv';
   final file = File(iaqFilePath).openWrite(mode: FileMode.append);
   file.write('\n');
   file.write(iaqCSV);
@@ -631,14 +655,27 @@ Future<void> writeVisualAssessment(List<dynamic> roomReadingsRow) async {
   final visualCSV = const ListToCsvConverter().convert([roomReadingsRow]);
   final appDocumentsDirectory = await getApplicationDocumentsDirectory();
   // Define the CSV files directory within the app's documents directory
-  final visualDirectory =
-      Directory('${appDocumentsDirectory.path}/iaQuick/csv_files/${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}');
+  final fileName = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
+  final visualDirectory = Directory(
+      '${appDocumentsDirectory.path}/iaQuick/csv_files/$fileName');
   await visualDirectory.create(recursive: true);
   final visualFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}_Visual_Assessment.csv';
+      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$fileName\\${fileName}_Visual_Assessment.csv';
   final file = File(visualFilePath).openWrite(mode: FileMode.append);
   file.write('\n');
   file.write(visualCSV);
+}
+
+Future<void> saveImageLocally(File imageFile, String roomNumber) async {
+  final prefs = await SharedPreferences.getInstance();
+  final appDir = await getApplicationDocumentsDirectory();
+  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
+
+  final localPath = '${appDir.path}\\iaQuick\\csv_files\\$fileNameBuilder';
+  final fileName = '${fileNameBuilder}_room_$roomNumber.jpg'; // You can generate a unique name here
+
+  final localFile = await imageFile.copy('$localPath/$fileName');
+  // Store the 'localFile.path' in your form data or database.
 }
 
 void _showErrorDialog(BuildContext context, String message) {
@@ -757,6 +794,8 @@ DropdownButtonFormField floorDropdownTemplate(
     },
   );
 }
+
+
 
 class DropdownModel {
   String building = '';
