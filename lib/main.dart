@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:iaqapp/new_survey/new_survey_start.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,11 +6,16 @@ import 'existing_survey_screen.dart';
 import 'user_info/user_initial_info.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserInfoDialogStatus(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,29 +25,59 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  HomeScreenState createState() => HomeScreenState();
-}
+  Widget build(BuildContext context) {
+    final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
 
-class HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkAndShowUserInfoDialog();
-  }
-
-  Future<void> _checkAndShowUserInfoDialog() async {
-    final shouldShowDialog = await getUserInfoDialogStatus();
-
-    if (shouldShowDialog) {
+    if (userInfoDialogStatus.shouldShowDialog) {
       _showEnterUserInfoDialog(context);
     }
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.person),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return const UserInitialInfo();
+              },
+            ),
+          ),
+        ),
+        title: const Text('IAQuick', textScaleFactor: 1.1),
+        backgroundColor: Colors.blueGrey,
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * .95,
+          height: MediaQuery.of(context).size.height * .5,
+          child: Column(
+            children: [
+              Expanded(
+                flex: 3,
+                child: createNewSurveyButton(context),
+              ),
+              const Spacer(
+                flex: 1,
+              ),
+              Expanded(
+                flex: 3,
+                child: openExistingSurveyButton(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-    ElevatedButton openExistingSurveyButton(BuildContext context) {
+  ElevatedButton openExistingSurveyButton(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.indigo,
@@ -70,35 +106,34 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-ElevatedButton createNewSurveyButton(BuildContext context) {
-  return ElevatedButton(
-    onPressed: () => Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) {
-          return const NewSurveyStart();
-        },
+  ElevatedButton createNewSurveyButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) {
+            return const NewSurveyStart();
+          },
+        ),
       ),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.cyan,
-      elevation: 4.0,
-    ),
-    child: Center(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * .12,
-        width: MediaQuery.of(context).size.width * .7,
-        child: const Center(
-          child: Text(
-            "Create New Survey",
-            textScaleFactor: 1.5,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.cyan,
+        elevation: 4.0,
+      ),
+      child: Center(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * .12,
+          width: MediaQuery.of(context).size.width * .7,
+          child: const Center(
+            child: Text(
+              "Create New Survey",
+              textScaleFactor: 1.5,
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showEnterUserInfoDialog(BuildContext context) {
     showDialog(
@@ -127,63 +162,21 @@ ElevatedButton createNewSurveyButton(BuildContext context) {
       },
     );
   }
-
-  Future<bool> getUserInfoDialogStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    return (prefs.getString('First Name') == null ||
-        prefs.getString('First Name') == '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.person),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (BuildContext context) {
-                    return const UserInitialInfo();
-                  },
-                ),
-              ),
-            ),
-            title: const Text('IAQuick', textScaleFactor: 1.1),
-            backgroundColor: Colors.blueGrey,
-            centerTitle: true,
-          ),
-      body: Center(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * .95,
-              height: MediaQuery.of(context).size.height * .5,
-              child: Column(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: createNewSurveyButton(context),
-                  ),
-                  const Spacer(
-                    flex: 1,
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: openExistingSurveyButton(context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-    );
-  }
 }
 
-// import 'package:flutter/material.dart';
-// import 'package:iaqapp/new_survey/new_survey_start.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'existing_survey_screen.dart';
-// import 'user_info/user_initial_info.dart';
+class UserInfoDialogStatus extends ChangeNotifier {
+  bool _shouldShowDialog = false;
 
+  bool get shouldShowDialog => _shouldShowDialog;
+
+  Future<void> getUserInfoDialogStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    _shouldShowDialog = (prefs.getString('First Name') == null ||
+        prefs.getString('First Name') == '');
+
+    notifyListeners();
+  }
+}
 // void main() {
 //   runApp(const HomeScreen());
 // }
@@ -245,6 +238,13 @@ ElevatedButton createNewSurveyButton(BuildContext context) {
 //     },
 //   );
 // }
+
+// Future<bool> getUserInfoDialogStatus() async {
+//       final prefs = await SharedPreferences.getInstance();
+//       return (prefs.getString('First Name') == null ||
+//           prefs.getString('First Name') == ''); // Default to true if not found
+//     }
+
 
 // Future<bool> getUserInfoDialogStatus() async {
 //       final prefs = await SharedPreferences.getInstance();

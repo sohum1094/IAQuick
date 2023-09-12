@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iaqapp/main.dart';
 
 class FileExport extends StatelessWidget {
-  const FileExport({super.key});
+  const FileExport({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +10,8 @@ class FileExport extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.lightGreen,
         title: const Text("Export File"),
-        leading: BackButton(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.push(
               context,
@@ -23,7 +24,7 @@ class FileExport extends StatelessWidget {
           },
         ),
       ),
-      body: const SizedBox(
+      body: const Center(
         child: Text("to be created"),
       ),
     );

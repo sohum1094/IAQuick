@@ -1,3 +1,31 @@
+/// This code snippet is a part of a Flutter application that handles the initial survey information form. It includes form fields for site name, address, date, occupancy type, and checkboxes for different readings. The form data is saved using shared preferences and validated before submission.
+///
+/// Example Usage:
+/// 
+/// // Creating an instance of the SurveyInitialInfoForm
+/// final form = SurveyInitialInfoForm();
+///
+/// // Building the form widget
+/// final formWidget = form.build(context);
+///
+/// // Displaying the form widget
+/// return formWidget;
+///
+/// Inputs:
+/// - BuildContext context: The build context of the widget.
+/// - SurveyInfoModel model: The model object that holds the survey information.
+///
+/// Flow:
+/// 1. The SurveyInitialInfoForm widget is built, which contains form fields for site name, address, date, occupancy type, and checkboxes for different readings.
+/// 2. The form data is validated and saved when the form is submitted.
+/// 3. If any field is empty or the form validation fails, an error dialog is shown.
+/// 4. If the form is successfully submitted, the survey information is saved using shared preferences.
+/// 5. The user is navigated to the LoggedScreen widget.
+///
+/// Outputs:
+/// - The SurveyInitialInfoForm widget is built and displayed.
+/// - The form data is saved using shared preferences.
+/// - The user is navigated to the LoggedScreen widget.
 import 'package:flutter/material.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:iaqapp/new_survey/outdoor_readings.dart';

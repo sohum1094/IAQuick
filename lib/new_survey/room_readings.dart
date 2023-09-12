@@ -1,10 +1,68 @@
-import 'dart:io';
+/// This code snippet represents a Flutter form for entering room readings in an indoor air quality (IAQ) survey. 
+/// It includes text input fields for room number, primary use, humidity, temperature, and various air quality parameters. 
+/// The form also allows the user to select an image and save the form data to a CSV file.
+/// 
+/// Example Usage:
+/// 
+/// // Create an instance of the RoomReadingsFormScreen widget
+/// final formScreen = RoomReadingsFormScreen();
+/// 
+/// // Build the form screen widget
+/// final formScreenWidget = formScreen.build(context);
+/// 
+/// // Display the form screen widget
+/// return Scaffold(
+///   body: formScreenWidget,
+/// );
+/// 
+/// Inputs:
+/// - Various text input fields for room number, primary use, humidity, temperature, and air quality parameters.
+/// - Image file selected by the user.
+/// 
+/// Flow:
+/// 1. The user enters the room readings and selects an image.
+/// 2. The form is validated to ensure that all required fields are filled correctly.
+/// 3. If the form is valid, the data is saved to a CSV file.
+/// 4. The image is saved locally.
+/// 
+/// Outputs:
+/// - The form data is saved to a CSV file.
+/// - The image is saved locally.
 import 'package:flutter/material.dart';
-import 'package:csv/csv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:iaqapp/main.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+
+
+int roomCount = 0;
+TextEditingController roomNumberTextController = TextEditingController();
+TextEditingController primaryUseTextController = TextEditingController();
+TextEditingController humiditiyTextController = TextEditingController();
+TextEditingController temperatureTextController = TextEditingController();
+FieldModel showFieldModel = FieldModel();
+DropdownModel dropdownModel = DropdownModel();
+
+
+// Add other dropdown controllers and variables here
+TextEditingController dioxTextController = TextEditingController();
+TextEditingController monoxTextController = TextEditingController();
+TextEditingController vocsTextController = TextEditingController();
+TextEditingController pm25TextController = TextEditingController();
+TextEditingController pm10TextController = TextEditingController();
+
+TextEditingController commentTextController = TextEditingController();
+
+FocusNode temperatureFocusNode = FocusNode();
+
+File? _imageFile;
+
+bool savedPressed = false; // Initialize the button state
+
 
 class RoomReadingsFormScreen extends StatelessWidget {
   const RoomReadingsFormScreen({super.key});
@@ -16,7 +74,29 @@ class RoomReadingsFormScreen extends StatelessWidget {
         leading: BackButton(
           color: Colors.white,
           onPressed: () {
-            Navigator.pop(context);
+            if (roomCount <= 0) {
+              Navigator.pop(context);
+              debugPrint('room count = $roomCount');
+            } else {
+              roomCount--;
+              debugPrint('room count decrement to = $roomCount');
+              roomNumberTextController.clear();
+              primaryUseTextController.clear();
+              humiditiyTextController.clear();
+              temperatureTextController.clear();
+              //add dropdowns
+              dioxTextController.clear();
+              monoxTextController.clear();
+              vocsTextController.clear();
+              pm25TextController.clear();
+              pm10TextController.clear();
+
+              commentTextController.clear();
+
+              _imageFile = null;
+
+              savedPressed = false;
+            }
             deleteLastLineFromCSV();
           },
         ),
@@ -37,23 +117,26 @@ class RoomReadingsForm extends StatefulWidget {
 
 class RoomReadingsFormState extends State<RoomReadingsForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController roomNumberTextController = TextEditingController();
-  TextEditingController primaryUseTextController = TextEditingController();
-  TextEditingController humiditiyTextController = TextEditingController();
-  TextEditingController temperatureTextController = TextEditingController();
-  FieldModel showFieldModel = FieldModel();
-  DropdownModel dropdownModel = DropdownModel();
+  final TextEditingController roomNumberTextController = TextEditingController();
+  final TextEditingController primaryUseTextController = TextEditingController();
+  final TextEditingController humiditiyTextController = TextEditingController();
+  final TextEditingController temperatureTextController = TextEditingController();
+  final TextEditingController dioxTextController = TextEditingController();
+  final TextEditingController monoxTextController = TextEditingController();
+  final TextEditingController vocsTextController = TextEditingController();
+  final TextEditingController pm25TextController = TextEditingController();
+  final TextEditingController pm10TextController = TextEditingController();
+  final TextEditingController commentTextController = TextEditingController();
+  final GlobalKey<FormFieldState<String>> buildingDropdownKey =
+      GlobalKey<FormFieldState<String>>();
+  final GlobalKey<FormFieldState<String>> floorDropdownKey =
+      GlobalKey<FormFieldState<String>>();
 
-  // Add other dropdown controllers and variables here
-  TextEditingController dioxTextController = TextEditingController();
-  TextEditingController monoxTextController = TextEditingController();
-  TextEditingController vocsTextController = TextEditingController();
-  TextEditingController pm25TextController = TextEditingController();
-  TextEditingController pm10TextController = TextEditingController();
-
-  TextEditingController commentTextController = TextEditingController();
-
-  File? _imageFile;
+  List<String> autofillPrimaryUse = ['Classroom', 'Storage', 'Boys Bathroom', 'Girls Bathroom', 'Corridor', 'Library', 'Electrical Room', 'Janitor Closet', 'Nurse', 'Office', 'Cafeteria', 'Principal\'s Office', 'Breakroom'];
+  bool savedPressed = false;
+  late FieldModel showFieldModel = FieldModel();
+  late DropdownModel dropdownModel=DropdownModel();
+  late FocusNode temperatureFocusNode= FocusNode();
 
   @override
   void initState() {
@@ -102,55 +185,145 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     }
   }
 
+  void validateTemperatureAndShowDialog() {
+    if (temperatureFocusNode.hasFocus) {
+      final temperatureValue = temperatureTextController.text;
+      if (temperatureValue.isNotEmpty) {
+        final temperature = double.parse(temperatureValue);
+        if (temperature > 76 || temperature < 68) {
+          _showConfirmValueDialog(context, 'temperature');
+        }
+      }
+    }
+  }
+
   void _saveForm() async {
     final form = _formKey.currentState;
 
     if (form!.validate()) {
       form.save();
+      final String building = dropdownModel.building;
+      final String floor = dropdownModel.floor;
+      final String roomNumber = roomNumberTextController.text;
+      final String primaryUse = primaryUseTextController.text;
+      final String humidity = humiditiyTextController.text;
+      final String temperature = temperatureTextController.text;
+      final String carbonDioxide =
+          showFieldModel.carbonDioxideReadings ? dioxTextController.text : '';
+      final String carbonMonoxide =
+          showFieldModel.carbonMonoxideReadings ? monoxTextController.text : '';
+      final String vocs = showFieldModel.vocs ? vocsTextController.text : '';
+      final String pm25 = showFieldModel.pm25 ? pm25TextController.text : '';
+      final String pm10 = showFieldModel.pm10 ? pm10TextController.text : '';
+      buildingDropdownKey.currentState?.reset();
+      floorDropdownKey.currentState?.reset();
+
       List<String> iaqRoomReadingsRow = [
-        dropdownModel.building,
-        dropdownModel.floor,
-        roomNumberTextController.text,
-        primaryUseTextController.text,
-        humiditiyTextController.text,
-        temperatureTextController.text,
+        building,
+        floor,
+        roomNumber,
+        primaryUse,
+        humidity,
+        temperature,
+        carbonDioxide,
+        carbonMonoxide,
+        vocs,
+        pm25,
+        pm10,
       ];
-      if (showFieldModel.carbonDioxideReadings) {
-        iaqRoomReadingsRow.add(dioxTextController.text);
-      }
-      if (showFieldModel.carbonMonoxideReadings) {
-        iaqRoomReadingsRow.add(monoxTextController.text);
-      }
-      if (showFieldModel.vocs) {
-        iaqRoomReadingsRow.add(vocsTextController.text);
-      }
-      if (showFieldModel.pm25) {
-        iaqRoomReadingsRow.add(pm25TextController.text);
-      }
-      if (showFieldModel.pm10) {
-        iaqRoomReadingsRow.add(pm10TextController.text);
-      }
 
       List<String> visualRoomReadingsRow = [
         dropdownModel.building,
         dropdownModel.floor,
         roomNumberTextController.text,
         primaryUseTextController.text,
-        commentTextController.text,
+        (commentTextController.text.isNotEmpty)? commentTextController.text : "No issues were observed.",
       ];
       writeIAQ(iaqRoomReadingsRow);
       writeVisualAssessment(visualRoomReadingsRow);
 
       if (_imageFile != null) {
-        await saveImageLocally(_imageFile!,roomNumberTextController.text);
+        await saveImageLocally(_imageFile!, roomNumberTextController.text);
       }
     }
   }
 
+  String? validateRelativeHumidity(String? value) {
+    if (value == null) {
+      return null;
+    } else if (value.isNotEmpty &&
+        !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+      return "Enter Correct Relative Humidity Value";
+    } else {
+      return null;
+    }
+  }
+
+  DropdownButtonFormField buildingDropdownTemplate(
+    BuildContext context, DropdownModel model) {
+  List<String> options = ['Main', 'Annex', 'Other'];
+
+  return DropdownButtonFormField(
+    key: buildingDropdownKey,
+    decoration: const InputDecoration(
+      labelText: 'Building',
+    ),
+    items: options.map<DropdownMenuItem<String>>((String value) {
+      return DropdownMenuItem<String>(
+        value: value,
+        child: Text(value),
+      );
+    }).toList(),
+    onChanged: (value) {
+      model.building = value;
+
+    },
+    onSaved: (value) {
+      model.floor = value; 
+    },
+  );
+}
+
+DropdownButtonFormField floorDropdownTemplate(
+    BuildContext context, DropdownModel model) {
+  List<String> options = [
+    'B',
+    'G',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    'Other'
+  ];
+
+  return DropdownButtonFormField(
+    key: floorDropdownKey,
+    decoration: const InputDecoration(
+      labelText: 'Floor #',
+    ),
+    items: options.map<DropdownMenuItem<String>>((String value) {
+      return DropdownMenuItem<String>(
+        value: value,
+        child: Text(value),
+      );
+    }).toList(),
+    onChanged: (value) {
+      model.floor = value;
+    },
+    onSaved: (value) {
+      model.floor = value;
+    },
+  );
+}
+
   @override
   Widget build(BuildContext context) {
-    bool savedPressed = false; // Initialize the button state
-
     return Form(
       key: _formKey,
       child: Column(
@@ -229,6 +402,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     decoration: const InputDecoration(
                       labelText: "Primary Use",
                     ),
+                    autofillHints: autofillPrimaryUse,
                     // primaryUse
                   ),
                   //room readings
@@ -250,16 +424,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         child: TextFormField(
                           controller: humiditiyTextController,
                           autovalidateMode: AutovalidateMode.always,
-                          validator: (value) {
-                            if (value == null) {
-                              return null;
-                            } else if (value.isNotEmpty &&
-                                !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
-                              return "Enter Correct Relative Humidity Value";
-                            } else {
-                              return null;
-                            }
-                          },
+                          validator: validateRelativeHumidity,
                           onEditingComplete: () {
                             bool seen = false;
 
@@ -276,7 +441,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
                             if (!seen && (double.parse(value) > 65)) {
                               seen = true;
-                              _showConfirmValueDialog(context, 'temperature');
+                              _showConfirmValueDialog(context, 'relative humidity');
                             }
                           },
                           decoration: const InputDecoration(
@@ -304,20 +469,18 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                               return null;
                             }
                           },
-                          onChanged: (value) {
-                            bool seen = false;
-
-                            if (!seen &&
-                                (double.parse(value) > 76 ||
-                                    double.parse(value) < 68)) {
-                              seen = true;
-                              _showConfirmValueDialog(context, 'temperature');
-                            }
-                          },
+                          focusNode: temperatureFocusNode,
+                          // onChanged: (value) {
+                          //   validateTemperatureAndShowDialog();
+                          // },
                           decoration: const InputDecoration(
                             labelText: "Temperature (F)",
                             suffixText: 'F',
                           ),
+                          onEditingComplete: () {
+                            validateTemperatureAndShowDialog();
+                            FocusScope.of(context).unfocus();
+                          },
                           // temperature
                         ),
                       ),
@@ -476,15 +639,39 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     controller: commentTextController,
                     decoration: const InputDecoration(
                       labelText: "Enter any comments",
-                    ),
-                    // Define your text input properties here
+                      hintText: 'Leave empty if no issues are observed'
+                    ),// Define your text input properties here
                   ),
                   const SizedBox(
                     height: 20,
                   ),
+                  ElevatedButton(
+                    onPressed: _getImage,
+                    child: const Text('Pick an Image'),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                    child: Text("Click image to delete."),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _imageFile = null; // Remove the selected image
+                      });
+                    },
+                    child: _imageFile != null
+                        ? Image.file(
+                            _imageFile!,
+                            height: 100,
+                          )
+                        : const Text('No Image Selected'),
+                  ),
                   // Save button
+                  const SizedBox(
+                    height: 20,
+                  ),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * .33,
+                    width: MediaQuery.of(context).size.width * .30,
                     height: MediaQuery.of(context).size.height * .07,
                     child: ElevatedButton(
                       onPressed: () {
@@ -493,6 +680,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                               !(roomNumberTextController.text == '')) {
                             _saveForm();
                             savedPressed = true;
+                            roomCount++;
+                            debugPrint('room count incremented to= $roomCount');
                           } else {
                             _showErrorDialog(context,
                                 'Please enter all room info correctly before saving.');
@@ -505,13 +694,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: _getImage,
-                    child: Text('Pick an Image'),
-                  ),
-                  _imageFile != null
-                      ? Image.file(_imageFile!)
-                      : Text('No Image Selected'),
                 ],
               ),
             ),
@@ -524,6 +706,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   backgroundColor: Colors.green,
                 ),
                 onPressed: () {
+                  if (!autofillPrimaryUse.contains(commentTextController.text)) {
+                    autofillPrimaryUse.add(commentTextController.text);
+                  }
+                  
                   roomNumberTextController.clear();
                   primaryUseTextController.clear();
                   humiditiyTextController.clear();
@@ -536,6 +722,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   pm10TextController.clear();
 
                   commentTextController.clear();
+                  buildingDropdownKey.currentState?.reset();
+                  floorDropdownKey.currentState?.reset();
+
+                  _imageFile = null;
 
                   savedPressed = false;
                 },
@@ -616,21 +806,37 @@ class FieldModel {
 Future<void> deleteLastLineFromCSV() async {
   // Read the existing CSV file
   final prefs = await SharedPreferences.getInstance();
-  final csvFilePath = prefs.getString('csvPath')!;
-  final inputCSV = File(csvFilePath);
-  final inputContent = await inputCSV.readAsString();
+  final iaqPath = prefs.getString('iaqPath')!;
+  final iaqCSV = File(iaqPath);
+  final iaqContent = await iaqCSV.readAsString();
 
   // Parse the CSV data
   const csvConverter = CsvToListConverter();
-  List<List<dynamic>> csvData = csvConverter.convert(inputContent);
+  List<List<dynamic>> iaqData = csvConverter.convert(iaqContent);
 
   // Check if there are any lines to delete
-  if (csvData.isNotEmpty) {
+  if (iaqData.isNotEmpty) {
     // Remove the last line from the data
-    csvData.removeLast();
+    iaqData.removeLast();
     // Write the updated data back to the CSV file
-    final outputContent = const ListToCsvConverter().convert(csvData);
-    await inputCSV.writeAsString(outputContent);
+    final outputContent = const ListToCsvConverter().convert(iaqData);
+    await iaqCSV.writeAsString(outputContent);
+  }
+
+  final visualPath = prefs.getString('visualPath')!;
+  final visualCSV = File(visualPath);
+  final visualContent = await visualCSV.readAsString();
+
+  // Parse the CSV data
+  List<List<dynamic>> visualData = csvConverter.convert(visualContent);
+
+  // Check if there are any lines to delete
+  if (visualData.isNotEmpty) {
+    // Remove the last line from the data
+    visualData.removeLast();
+    // Write the updated data back to the CSV file
+    final outputContent = const ListToCsvConverter().convert(visualData);
+    await visualCSV.writeAsString(outputContent);
   }
 }
 
@@ -638,45 +844,43 @@ Future<void> writeIAQ(List<dynamic> roomReadingsRow) async {
   final prefs = await SharedPreferences.getInstance();
   final iaqCSV = const ListToCsvConverter().convert([roomReadingsRow]);
   final appDocumentsDirectory = await getApplicationDocumentsDirectory();
-  final fileName = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
-  // Define the CSV files directory within the app's documents directory
-  final iaqDirectory = Directory(
-      '${appDocumentsDirectory.path}/iaQuick/csv_files/$fileName');
+  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('Last Name')?.substring(0,1)}';
+
+  final iaqDirectory = Directory(path.join(appDocumentsDirectory.path, 'iaQuick', 'csv_files', fileNameBuilder));
   await iaqDirectory.create(recursive: true);
-  final iaqFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$fileName\\${fileName}_IAQ.csv';
+  final iaqFilePath = path.join(iaqDirectory.path, '${fileNameBuilder}_IAQ.csv');
   final file = File(iaqFilePath).openWrite(mode: FileMode.append);
   file.write('\n');
   file.write(iaqCSV);
+  await file.close(); // Close the file when done writing
 }
 
 Future<void> writeVisualAssessment(List<dynamic> roomReadingsRow) async {
   final prefs = await SharedPreferences.getInstance();
   final visualCSV = const ListToCsvConverter().convert([roomReadingsRow]);
   final appDocumentsDirectory = await getApplicationDocumentsDirectory();
-  // Define the CSV files directory within the app's documents directory
-  final fileName = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
-  final visualDirectory = Directory(
-      '${appDocumentsDirectory.path}/iaQuick/csv_files/$fileName');
+  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('Last Name')?.substring(0,1)}';
+
+  final visualDirectory = Directory(path.join(appDocumentsDirectory.path, 'iaQuick', 'csv_files', fileNameBuilder));
   await visualDirectory.create(recursive: true);
-  final visualFilePath =
-      '${appDocumentsDirectory.path}\\iaQuick\\csv_files\\$fileName\\${fileName}_Visual_Assessment.csv';
+  final visualFilePath = path.join(visualDirectory.path, '${fileNameBuilder}_Visual_Assessment.csv');
   final file = File(visualFilePath).openWrite(mode: FileMode.append);
   file.write('\n');
   file.write(visualCSV);
+  await file.close(); // Close the file when done writing
 }
 
 Future<void> saveImageLocally(File imageFile, String roomNumber) async {
-  final prefs = await SharedPreferences.getInstance();
-  final appDir = await getApplicationDocumentsDirectory();
-  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('firstName')?.substring(1)}_${prefs.getString('lastName')?.substring(1)}';
+    final prefs = await SharedPreferences.getInstance();
+    final appDir = await getApplicationDocumentsDirectory();
+    final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('lastName')?.substring(0,1)}';
 
-  final localPath = '${appDir.path}\\iaQuick\\csv_files\\$fileNameBuilder';
-  final fileName = '${fileNameBuilder}_room_$roomNumber.jpg'; // You can generate a unique name here
+    final localPath = path.join(appDir.path, 'iaQuick', 'csv_files', fileNameBuilder);
+    final fileName = '${fileNameBuilder}_room_$roomNumber.jpg'; // You can generate a unique name here
 
-  final localFile = await imageFile.copy('$localPath/$fileName');
-  // Store the 'localFile.path' in your form data or database.
-}
+    final localFile = await imageFile.copy(path.join(localPath, fileName));
+    // Store the 'localFile.path' in your form data or database.
+  }
 
 void _showErrorDialog(BuildContext context, String message) {
   showDialog(
@@ -717,80 +921,6 @@ void _showConfirmValueDialog(BuildContext context, String message) {
           ),
         ],
       );
-    },
-  );
-}
-
-DropdownButtonFormField buildingDropdownTemplate(
-    BuildContext context, DropdownModel model) {
-  List<String> options = ['Main', 'Annex', 'Other'];
-
-  return DropdownButtonFormField(
-    decoration: const InputDecoration(
-      labelText: 'Building',
-    ),
-    validator: (value) {
-      if (value.isEmpty) {
-        return "Enter Building";
-      } else {
-        return null;
-      }
-    },
-    items: options.map<DropdownMenuItem<String>>((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    onChanged: (value) {
-      model.building = value;
-    },
-    onSaved: (value) {
-      model.floor = value;
-    },
-  );
-}
-
-DropdownButtonFormField floorDropdownTemplate(
-    BuildContext context, DropdownModel model) {
-  List<String> options = [
-    'B',
-    'G',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '10',
-    'Other'
-  ];
-
-  return DropdownButtonFormField(
-    decoration: const InputDecoration(
-      labelText: 'Floor #',
-    ),
-    validator: (value) {
-      if (value.isEmpty) {
-        return "Enter Floor Number";
-      } else {
-        return null;
-      }
-    },
-    items: options.map<DropdownMenuItem<String>>((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    onChanged: (value) {
-      model.floor = value;
-    },
-    onSaved: (value) {
-      model.floor = value;
     },
   );
 }

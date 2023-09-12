@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iaqapp/user_info/user_info_model.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserInitialInfo extends StatelessWidget {
   const UserInitialInfo({super.key});
@@ -59,11 +59,12 @@ class UserInitialInfoFormState extends State<UserInitialInfoForm> {
             ),
           );
         } else {
-          storage.write(key: 'email', value: values['email']);
-          storage.write(key: 'fName', value: values['firstName']);
-          storage.write(key: 'lName', value: values['lastName']);
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('email', values['email']);
+          prefs.setString('First Name', values['firstName']);
+          prefs.setString('Last Name', values['lastName']);
           return Future.delayed(
-            const Duration(seconds: 2),
+            const Duration(seconds: 1),
             () {
               return <String, dynamic>{
                 'hasError': false,
@@ -201,8 +202,6 @@ Future<void> _alert(BuildContext context, String text) async {
     ),
   );
 }
-
-const storage = FlutterSecureStorage();
 
 class LoggedScreen extends StatelessWidget {
   const LoggedScreen({super.key});
