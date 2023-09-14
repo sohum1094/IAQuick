@@ -36,7 +36,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
     final csvList = csvConverter.convert(csvString);
 
     // Now, each row in csvList should represent a row in your CSV file
-    for (int i = 0; i < csvList.length; i++) {
+    for (int i = 1; i < csvList.length; i++) {
       final row = csvList[i];
       final siteName = row[0];
       final date = row[1];
@@ -198,10 +198,10 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               final filePath = recentFile[4]; // Extract the file path
 
               // Replace backslashes with forward slashes
-              final correctedPath = filePath.replaceAll(r'\', '/');
+              // final correctedPath = filePath.replaceAll(r'\', '/');
               bool fileExists = await File(filePath).exists();
               debugPrint('File existence: ${fileExists.toString()}');
-              final result = await OpenFile.open(correctedPath);
+              final result = await OpenFile.open(filePath);
               if (result.type == ResultType.done) {
                 debugPrint('Opened successfully');
               } else if (result.type == ResultType.noAppToOpen) {
@@ -224,10 +224,10 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               final filePath = recentFile[5]; // Extract the file path
 
               // Replace backslashes with forward slashes
-              final correctedPath = filePath.replaceAll(r'\', '/');
+              // final correctedPath = filePath.replaceAll(r'\', '/');
               bool fileExists = await File(filePath).exists();
               debugPrint('Folder existence: ${fileExists.toString()}');
-              final result = await OpenFile.open(correctedPath);
+              final result = await OpenFile.open(filePath);
               if (result.type == ResultType.done) {
                 debugPrint('Opened successfully');
               } else if (result.type == ResultType.noAppToOpen) {

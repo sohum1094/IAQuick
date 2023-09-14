@@ -240,7 +240,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
         if (pickedDate != null) {
           dateInput.text = DateFormat('yyyy-MM-dd hh:mm').format(pickedDate);
           SurveyInitialInfoFormState.model.date =
-              DateFormat('yyyyMMdd').format(pickedDate);
+              DateFormat('yyyy-MM-dd').format(pickedDate);
         }
       },
       decoration: const InputDecoration(
