@@ -202,35 +202,32 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
     if (form!.validate()) {
       form.save();
-      final String building = dropdownModel.building;
-      final String floor = dropdownModel.floor;
-      final String roomNumber = roomNumberTextController.text;
-      final String primaryUse = primaryUseTextController.text;
-      final String humidity = humiditiyTextController.text;
-      final String temperature = temperatureTextController.text;
-      final String carbonDioxide =
-          showFieldModel.carbonDioxideReadings ? dioxTextController.text : '';
-      final String carbonMonoxide =
-          showFieldModel.carbonMonoxideReadings ? monoxTextController.text : '';
-      final String vocs = showFieldModel.vocs ? vocsTextController.text : '';
-      final String pm25 = showFieldModel.pm25 ? pm25TextController.text : '';
-      final String pm10 = showFieldModel.pm10 ? pm10TextController.text : '';
       buildingDropdownKey.currentState?.reset();
       floorDropdownKey.currentState?.reset();
 
       List<String> iaqRoomReadingsRow = [
-        building,
-        floor,
-        roomNumber,
-        primaryUse,
-        humidity,
-        temperature,
-        carbonDioxide,
-        carbonMonoxide,
-        vocs,
-        pm25,
-        pm10,
+        dropdownModel.building,
+        dropdownModel.floor,
+        roomNumberTextController.text,
+        primaryUseTextController.text,
+        humiditiyTextController.text,
+        temperatureTextController.text,
       ];
+      if (showFieldModel.carbonDioxideReadings) {
+        iaqRoomReadingsRow.add(dioxTextController.text);
+      }
+      if (showFieldModel.carbonMonoxideReadings) {
+        iaqRoomReadingsRow.add(monoxTextController.text);
+      }
+      if (showFieldModel.vocs) {
+        iaqRoomReadingsRow.add(vocsTextController.text);
+      }
+      if (showFieldModel.pm25) {
+        iaqRoomReadingsRow.add(pm25TextController.text);
+      }
+      if (showFieldModel.pm10) {
+        iaqRoomReadingsRow.add(pm10TextController.text);
+      }
 
       List<String> visualRoomReadingsRow = [
         dropdownModel.building,
@@ -638,8 +635,9 @@ DropdownButtonFormField floorDropdownTemplate(
                   TextFormField(
                     controller: commentTextController,
                     decoration: const InputDecoration(
-                      labelText: "Enter any comments",
-                      hintText: 'Leave empty if no issues are observed'
+                      floatingLabelBehavior:FloatingLabelBehavior.always,
+                      labelText: "Comments",
+                      hintText: 'Enter comments, leave empty if no issues are observed.'
                     ),// Define your text input properties here
                   ),
                   const SizedBox(
@@ -873,12 +871,12 @@ Future<void> writeVisualAssessment(List<dynamic> roomReadingsRow) async {
 Future<void> saveImageLocally(File imageFile, String roomNumber) async {
     final prefs = await SharedPreferences.getInstance();
     final appDir = await getApplicationDocumentsDirectory();
-    final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('lastName')?.substring(0,1)}';
+    final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('Last Name')?.substring(0,1)}';
 
     final localPath = path.join(appDir.path, 'iaQuick', 'csv_files', fileNameBuilder);
     final fileName = '${fileNameBuilder}_room_$roomNumber.jpg'; // You can generate a unique name here
 
-    final localFile = await imageFile.copy(path.join(localPath, fileName));
+    await imageFile.copy(path.join(localPath, fileName));
     // Store the 'localFile.path' in your form data or database.
   }
 

@@ -117,7 +117,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
             child: DataTable(
               headingRowColor: MaterialStateColor.resolveWith(
                   (states) => Colors.indigoAccent),
-              headingRowHeight: MediaQuery.of(context).size.height * 0.04,
+              headingRowHeight: MediaQuery.of(context).size.height * 0.06,
               border: TableBorder.symmetric(
                   outside: const BorderSide(color: Colors.grey, width: 0.5)),
               columns: const <DataColumn>[
@@ -146,11 +146,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Date'),
                   ),
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text('Time'),
-                  ),
-                ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('Time'),
+                //   ),
+                // ),
               ],
               rows: _buildRecentFileRows(recentFiles),
             ),
@@ -251,7 +251,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           Text(date), // Display date
         ),
         // Add an empty DataCell to match the number of columns
-        DataCell(Container()),
+        // DataCell(Container()),
       ]);
     }).toList();
   }
@@ -272,7 +272,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
             child: DataTable(
               headingRowColor: MaterialStateColor.resolveWith(
                   (states) => Colors.indigoAccent),
-              headingRowHeight: MediaQuery.of(context).size.height * 0.04,
+              headingRowHeight: MediaQuery.of(context).size.height * 0.06,
               border: TableBorder.symmetric(
                   outside: const BorderSide(color: Colors.grey, width: 0.5)),
               columns: const <DataColumn>[
@@ -301,11 +301,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Date'),
                   ),
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text('Time'),
-                  ),
-                ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('Time'),
+                //   ),
+                // ),
               ],
               rows: _buildSearchResultRows(searchResults.toList()),
             ),
@@ -385,7 +385,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           Text(date), // Display date
         ),
         // Add an empty DataCell to match the number of columns
-        DataCell(Container()),
+        // DataCell(Container()),
       ]);
     }).toList();
   }
