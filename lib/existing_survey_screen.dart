@@ -590,9 +590,9 @@ void sendEmail(List<String> recentFile) async {
 
   // Save the Excel files
   String iaqFilePath =
-      Directory(path.join(outPath.path, '${siteName}_${date}_IAQ')).path;
+      File(path.join(outPath.path, '${siteName}_${date}_IAQ.xlsx')).path;
   String visualFilePath =
-      Directory(path.join(outPath.path, '${siteName}_${date}_Visual')).path;
+      File(path.join(outPath.path, '${siteName}_${date}_Visual.xlsx')).path;
   if (iaqExcel != null) {
     var encoded = iaqExcel.encode();
     if (encoded != null) {
