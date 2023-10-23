@@ -589,10 +589,12 @@ void sendEmail(List<String> recentFile) async {
   await outPath.create(recursive: true);
 
   // Save the Excel files
+    String formattedSiteName = siteName.replaceAll(' ', '');
+
   String iaqFilePath =
-      File(path.join(outPath.path, '${siteName}_${date}_IAQ.xlsx')).path;
+      File(path.join(outPath.path, '${formattedSiteName}_${date}_IAQ.xlsx')).path;
   String visualFilePath =
-      File(path.join(outPath.path, '${siteName}_${date}_Visual.xlsx')).path;
+      File(path.join(outPath.path, '${formattedSiteName}_${date}_Visual.xlsx')).path;
   if (iaqExcel != null) {
     var encoded = iaqExcel.encode();
     if (encoded != null) {
