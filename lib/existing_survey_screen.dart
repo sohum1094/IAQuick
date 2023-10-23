@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -8,6 +10,7 @@ import 'dart:convert';
 import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -391,25 +394,36 @@ Future<Excel?> writeIAQExcelTemplate(
     String inputFilePath, String outputFileName) async {
   final csvAsList = await readCSV(inputFilePath);
   final directory = await getApplicationDocumentsDirectory();
-  final templatePath = Directory(path.join('assets', 'IAQ_template.xlsx'));
-  final templateFile = File(templatePath.path);
-  final outPath = Directory(path.join(
+  final templatePath = File(path.join('assets', 'IAQ_template.xlsx'));
+  ByteData templateAsBytes = await rootBundle.load(templatePath.path);
+
+  var bytes = templateAsBytes.buffer.asUint8List(templateAsBytes.offsetInBytes, templateAsBytes.lengthInBytes);
+  var excelCopy = Excel.decodeBytes(bytes);
+
+  fillDataInIAQTemplate(excelCopy, csvAsList);
+
+
+  // final templateFile = File(templatePath.path);
+  String formattedOutputFileName = outputFileName.replaceAll(' ', '');
+  final outPath = File(path.join(
     directory.path,
     'iaQuick',
     'csv_files',
     'for_export',
+    '$formattedOutputFileName.xlsx',
   ));
   await outPath.create(recursive: true);
   // final outputExcel = File(outPath.path);
   // final bytes = await templateFile.readAsBytes();
   // final templateExcel = Excel.decodeBytes(bytes);
-  final outPathToFile = Directory(path.join(outPath.path,'$outputFileName.xlsx')).path;
-  await templateFile.copy(outPathToFile);
-  final excelAsFile = File(outPathToFile);
-  final excelAsBytes = await excelAsFile.readAsBytes();
-  final excel = Excel.decodeBytes(excelAsBytes);
-  fillDataInIAQTemplate(excel, csvAsList);
-  return excel;
+  // final outPathToFile = Directory(path.join(outPath.path,'$outputFileName.xlsx')).path;
+  // await templateFile.copy(outPathToFile);
+  // final excelAsFile = File(outPathToFile);
+  // final excelAsBytes = await excelAsFile.readAsBytes();
+  // final excel = Excel.decodeBytes(excelAsBytes);
+  var outputFileBytes = excelCopy.encode();
+  File(outPath.path).writeAsBytesSync(outputFileBytes!);
+  return excelCopy;
 }
 
 void fillDataInIAQTemplate(Excel excel, List<List<dynamic>> csvData) {
@@ -467,28 +481,36 @@ void fillDataInIAQTemplate(Excel excel, List<List<dynamic>> csvData) {
   // Example: Row 1, Column 2 from CSV
 }
 
+
 Future<Excel?> writeVisualExcelTemplate(
     String inputFilePath, String outputFileName) async {
   final csvAsList = await readCSV(inputFilePath);
   final directory = await getApplicationDocumentsDirectory();
-  final templatePath = Directory(path.join('assets', 'Visual_template.xlsx'));
-  final templateFile = File(templatePath.path);
-  final outPath = Directory(path.join(
+  final templatePath = File(path.join('assets', 'Visual_template.xlsx'));
+
+  // Load the Excel template from the assets
+  ByteData data = await rootBundle.load(templatePath.path);
+
+  // Decode the Excel file
+  var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  var excel = Excel.decodeBytes(bytes);
+
+  // Fill the Excel template with data
+  fillDataInVisualTemplate(excel, csvAsList);
+
+  // Save the filled Excel file to the output path
+  String formattedOutputFileName = outputFileName.replaceAll(' ', '');
+  final outPath = File(path.join(
     directory.path,
     'iaQuick',
     'csv_files',
     'for_export',
+    '$formattedOutputFileName.xlsx',
   ));
   await outPath.create(recursive: true);
-  // final outputExcel = File(outPath.path);
-  // final bytes = await templateFile.readAsBytes();
-  // final templateExcel = Excel.decodeBytes(bytes);
-  final outPathToFile = Directory(path.join(outPath.path,'$outputFileName.xlsx')).path;
-  await templateFile.copy(outPathToFile);
-  final excelAsFile = File(outPathToFile);
-  final excelAsBytes = await excelAsFile.readAsBytes();
-  final excel = Excel.decodeBytes(excelAsBytes);
-  fillDataInVisualTemplate(excel, csvAsList);
+  var outputFileBytes = excel.encode(); // Encode the filled Excel file to bytes
+  File(outPath.path).writeAsBytesSync(outputFileBytes!); // Write the bytes to the output file
+
   return excel;
 }
 
