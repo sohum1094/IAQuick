@@ -28,10 +28,11 @@
 /// - The user is navigated to the LoggedScreen widget.
 import 'package:flutter/material.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
-import 'package:iaqapp/new_survey/outdoor_readings.dart';
-import 'package:iaqapp/new_survey/survey_model.dart';
+import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
+import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+
 
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
@@ -75,10 +76,12 @@ class SurveyInitialInfoForm extends StatefulWidget {
 
 class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   final _initialSurveyInfoKey = GlobalKey<FormState>();
-  static SurveyInfoModel model = SurveyInfoModel();
+  static SurveyInfo model = SurveyInfo();
 
   @override
   EasyForm build(BuildContext context) {
+    model.date = DateTime.now();
+    
     return EasyForm(
         key: _initialSurveyInfoKey,
         onSave: (values, form) async {
@@ -95,24 +98,12 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
               ),
             );
           }
-          model.carbonDioxideReadings =
-              _AllCheckboxesState.readingsSwitches['Carbon Dioxide']!;
-          model.carbonMonoxideReadings =
-              _AllCheckboxesState.readingsSwitches['Carbon Monoxide']!;
+          model.carbonDioxideReadings = _AllCheckboxesState.readingsSwitches['Carbon Dioxide']!;
+          model.carbonMonoxideReadings = _AllCheckboxesState.readingsSwitches['Carbon Monoxide']!;
           model.vocs = _AllCheckboxesState.readingsSwitches['VOCs']!;
           model.pm25 = _AllCheckboxesState.readingsSwitches['PM2.5']!;
           model.pm10 = _AllCheckboxesState.readingsSwitches['PM10']!;
-          final prefs = await SharedPreferences.getInstance();
 
-          await prefs.setString('Site Name', model.siteName);
-          await prefs.setString('Address', model.address);
-          await prefs.setString('Date Time', model.date);
-          await prefs.setString('Occupancy', model.occupancyType);
-          await prefs.setBool('Carbon Dioxide', model.carbonDioxideReadings);
-          await prefs.setBool('Carbon Monoxide', model.carbonMonoxideReadings);
-          await prefs.setBool('VOCs', model.vocs);
-          await prefs.setBool('PM2.5', model.pm25);
-          await prefs.setBool('PM10', model.pm10);
         },
         onSaved: (response, values, form) {
           if (response['hasError'] ?? false) {
@@ -156,7 +147,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
 }
 
 EasyTextFormField siteNameTextFormField(
-    BuildContext context, SurveyInfoModel model) {
+    BuildContext context, SurveyInfo model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'siteName',
@@ -182,7 +173,7 @@ EasyTextFormField siteNameTextFormField(
 }
 
 EasyTextFormField addressTextFormField(
-    BuildContext context, SurveyInfoModel model) {
+    BuildContext context, SurveyInfo model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'siteAddress',
@@ -238,9 +229,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
           lastDate: DateTime(2101),
         );
         if (pickedDate != null) {
-          dateInput.text = DateFormat('yyyy-MM-dd hh:mm').format(pickedDate);
-          SurveyInitialInfoFormState.model.date =
-              DateFormat('yyyy-MM-dd').format(pickedDate);
+          SurveyInitialInfoFormState.model.date = pickedDate;
         }
       },
       decoration: const InputDecoration(
@@ -269,13 +258,11 @@ class LoggedScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (BuildContext context) {
-                        return const OutdoorReadings();
-                      },
-                    ),
-                  );
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OutdoorReadingsScreen(surveyInfo: SurveyInitialInfoFormState.model),
+                  ),
+                );
                 },
               ),
             ],
@@ -287,7 +274,7 @@ class LoggedScreen extends StatelessWidget {
 }
 
 DropdownButtonFormField occupancyTypeDropdown(
-    BuildContext context, SurveyInfoModel model) {
+    BuildContext context, SurveyInfo model) {
   return DropdownButtonFormField(
     items: const <DropdownMenuItem>[
       DropdownMenuItem(

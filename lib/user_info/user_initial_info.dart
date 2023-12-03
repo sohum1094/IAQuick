@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iaqapp/user_info/user_info_model.dart';
+import 'package:iaqapp/models/user_info_model.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -252,3 +252,5 @@ class LoggedErrorScreen extends StatelessWidget {
     );
   }
 }
+
+

@@ -4,17 +4,22 @@ import 'package:iaqapp/new_survey/new_survey_start.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'existing_survey_screen.dart';
 import 'user_info/user_initial_info.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-void main() {
+
+
+void main() async {
+  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     ChangeNotifierProvider(
       create: (context) => UserInfoDialogStatus(),
       child: const MyApp(),
     ),
   );
-  requestPermissions();
 }
 
 class MyApp extends StatelessWidget {
@@ -33,7 +38,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
+     final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
 
     if (userInfoDialogStatus.shouldShowDialog) {
       _showEnterUserInfoDialog(context);
@@ -180,87 +185,5 @@ class UserInfoDialogStatus extends ChangeNotifier {
     notifyListeners();
   }
 }
-
-void requestPermissions() async {
-  var status = await Permission.storage.status;
-  if (!status.isGranted) {
-    await Permission.storage.request();
-  }
-}
-
-// void main() {
-//   runApp(const HomeScreen());
-// }
-
-// class HomeScreen extends StatelessWidget {
-//   const HomeScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // Fetch the boolean value from SharedPreferences
-    
-
-//     getUserInfoDialogStatus().then((shouldShowDialog) {
-//       if (shouldShowDialog) {
-//         debugPrint('should show triggered');
-//         _showEnterUserInfoDialog(context);
-//       }
-//     },
-//     );
-
-//     return MaterialApp(
-//       home: Builder(
-//         builder: (context) => Scaffold(
-//           appBar: 
-//           body: 
-//         ),
-//       ),
-//     );
-//   }
-
-
-
-
-
-// void _showEnterUserInfoDialog(BuildContext context) {
-//   showDialog(
-//     context: context,
-//     barrierDismissible: true, // Dialog can be dismissed by tapping outside
-//     builder: (BuildContext context) {
-//       return AlertDialog(
-//         title: const Text('Welcome to IAQuick!'),
-//         content: const Text('Please enter user information.'),
-//         actions: <Widget>[
-//           TextButton(
-//             child: const Text('OK'),
-//             onPressed: () {
-//               Navigator.of(context).pop(); // Close the dialog
-//               Navigator.of(context).push(
-//                 MaterialPageRoute(
-//                   builder: (BuildContext context) {
-//                     return const UserInitialInfo();
-//                   },
-//                 ),
-//               );
-//             },
-//           ),
-//         ],
-//       );
-//     },
-//   );
-// }
-
-// Future<bool> getUserInfoDialogStatus() async {
-//       final prefs = await SharedPreferences.getInstance();
-//       return (prefs.getString('First Name') == null ||
-//           prefs.getString('First Name') == ''); // Default to true if not found
-//     }
-
-
-// Future<bool> getUserInfoDialogStatus() async {
-//       final prefs = await SharedPreferences.getInstance();
-//       return (prefs.getString('First Name') == null ||
-//           prefs.getString('First Name') == ''); // Default to true if not found
-//     }
 
 

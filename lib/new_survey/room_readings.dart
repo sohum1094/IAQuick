@@ -30,13 +30,15 @@
 /// - The image is saved locally.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:iaqapp/main.dart';
 import 'package:path/path.dart' as path;
+import 'package:iaqapp/models/survey_info.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 
 int roomCount = 0;
@@ -62,10 +64,13 @@ FocusNode temperatureFocusNode = FocusNode();
 File? _imageFile;
 
 bool savedPressed = false; // Initialize the button state
+List<RoomReading> roomReadings = [];
 
 
 class RoomReadingsFormScreen extends StatelessWidget {
-  const RoomReadingsFormScreen({super.key});
+  SurveyInfo surveyInfo = SurveyInfo(); 
+  OutdoorReadings outdoorReadingsInfo = OutdoorReadings();
+  RoomReadingsFormScreen({required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,19 +102,22 @@ class RoomReadingsFormScreen extends StatelessWidget {
 
               savedPressed = false;
             }
-            deleteLastLineFromCSV();
+            if (roomReadings.isNotEmpty) roomReadings.removeLast();
           },
         ),
         title: const Text("Room Readings"),
         centerTitle: true,
       ),
-      body: const RoomReadingsForm(),
+      body: RoomReadingsForm(surveyInfo: surveyInfo,outdoorReadingsInfo: outdoorReadingsInfo),
     );
   }
 }
 
 class RoomReadingsForm extends StatefulWidget {
-  const RoomReadingsForm({super.key});
+  final SurveyInfo surveyInfo = SurveyInfo();
+  final OutdoorReadings outdoorReadingsInfo = OutdoorReadings();
+  RoomReadingsForm({required surveyInfo, required outdoorReadingsInfo, super.key});
+
 
   @override
   RoomReadingsFormState createState() => RoomReadingsFormState();
@@ -141,36 +149,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   @override
   void initState() {
     super.initState();
-    loadSharedPrefs();
-  }
-
-  Future<void> loadSharedPrefs() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    // Check SharedPreferences for a condition to show the text entry fields
-    bool shouldShowDiox = prefs.getBool('Carbon Dioxide') ?? false;
-    bool shouldShowMonox = prefs.getBool('Carbon Monoxide') ?? false;
-    bool shouldShowVOCs = prefs.getBool('VOCs') ?? false;
-    bool shouldShowPM25 = prefs.getBool('PM2.5') ?? false;
-    bool shouldShowPM10 = prefs.getBool('PM10') ?? false;
-    showFieldModel = FieldModel(
-        carbonDioxideReadings: shouldShowDiox,
-        carbonMonoxideReadings: shouldShowMonox,
-        vocs: shouldShowVOCs,
-        pm25: shouldShowPM25,
-        pm10: shouldShowPM10,
-        outdoorCarbonDioxide: prefs.getDouble('outdoorCarbonDioxide') ?? 0,
-        comment: "");
-
-    setState(() {
-      // Set the initial values of your text controllers based on SharedPreferences
-      roomNumberTextController.text = '';
-      primaryUseTextController.text = '';
-      humiditiyTextController.text = '';
-      temperatureTextController.text = '';
-
-      // Add similar logic for other form fields
-    });
   }
 
   Future<void> _getImage() async {
@@ -205,39 +183,18 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       buildingDropdownKey.currentState?.reset();
       floorDropdownKey.currentState?.reset();
 
-      List<String> iaqRoomReadingsRow = [
-        dropdownModel.building,
-        dropdownModel.floor,
-        roomNumberTextController.text,
-        primaryUseTextController.text,
-        humiditiyTextController.text,
-        temperatureTextController.text,
-      ];
-      if (showFieldModel.carbonDioxideReadings) {
-        iaqRoomReadingsRow.add(dioxTextController.text);
-      }
-      if (showFieldModel.carbonMonoxideReadings) {
-        iaqRoomReadingsRow.add(monoxTextController.text);
-      }
-      if (showFieldModel.vocs) {
-        iaqRoomReadingsRow.add(vocsTextController.text);
-      }
-      if (showFieldModel.pm25) {
-        iaqRoomReadingsRow.add(pm25TextController.text);
-      }
-      if (showFieldModel.pm10) {
-        iaqRoomReadingsRow.add(pm10TextController.text);
-      }
+      RoomReading roomReading = RoomReading(building: dropdownModel.building, floorNumber: int.parse(dropdownModel.floor),
+        roomNumber: roomNumberTextController.text, primaryUse: primaryUseTextController.text, relativeHumidity: double.parse(humiditiyTextController.text),
+        temperature: double.parse(temperatureTextController.text), additionalMetrics: {}, comments: commentTextController.text);
 
-      List<String> visualRoomReadingsRow = [
-        dropdownModel.building,
-        dropdownModel.floor,
-        roomNumberTextController.text,
-        primaryUseTextController.text,
-        (commentTextController.text.isNotEmpty)? commentTextController.text : "No issues were observed.",
-      ];
-      writeIAQ(iaqRoomReadingsRow);
-      writeVisualAssessment(visualRoomReadingsRow);
+      if (showFieldModel.carbonDioxideReadings) roomReading.additionalMetrics.addAll({"Carbon Dioxide" :dioxTextController.text});
+      if (showFieldModel.carbonMonoxideReadings) roomReading.additionalMetrics.addAll({"Carbon Monoxide" :monoxTextController.text});
+      if (showFieldModel.vocs) roomReading.additionalMetrics.addAll({"VOCs" :vocsTextController.text});
+      if (showFieldModel.pm25) roomReading.additionalMetrics.addAll({"PM2.5" :pm25TextController.text});
+      if (showFieldModel.pm10) roomReading.additionalMetrics.addAll({ "PM10":pm10TextController.text});
+
+      if(roomReading.comments.isEmpty) roomReading.comments = "No issues were observed.";
+
 
       if (_imageFile != null) {
         await saveImageLocally(_imageFile!, roomNumberTextController.text);
@@ -267,37 +224,37 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     ),
     items: options.map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    onChanged: (value) {
-      model.building = value;
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: (value) {
+        model.building = value;
 
-    },
-    onSaved: (value) {
-      model.floor = value; 
-    },
-  );
-}
+      },
+      onSaved: (value) {
+        model.floor = value; 
+      },
+    );
+  }
 
-DropdownButtonFormField floorDropdownTemplate(
+  DropdownButtonFormField floorDropdownTemplate(
     BuildContext context, DropdownModel model) {
-  List<String> options = [
-    'B',
-    'G',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '10',
-    'Other'
-  ];
+    List<String> options = [
+      'B',
+      'G',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8', 
+      '9',
+      '10',
+      'Other'
+    ];
 
   return DropdownButtonFormField(
     key: floorDropdownKey,
@@ -306,18 +263,18 @@ DropdownButtonFormField floorDropdownTemplate(
     ),
     items: options.map<DropdownMenuItem<String>>((String value) {
       return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    onChanged: (value) {
-      model.floor = value;
-    },
-    onSaved: (value) {
-      model.floor = value;
-    },
-  );
-}
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: (value) {
+        model.floor = value;
+      },
+      onSaved: (value) {
+        model.floor = value;
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -386,6 +343,7 @@ DropdownButtonFormField floorDropdownTemplate(
                   TextFormField(
                     controller: primaryUseTextController,
                     autovalidateMode: AutovalidateMode.always,
+                    keyboardType: TextInputType.text,
                     validator: (value) {
                       if (value == null) {
                         return null;
@@ -422,6 +380,7 @@ DropdownButtonFormField floorDropdownTemplate(
                           controller: humiditiyTextController,
                           autovalidateMode: AutovalidateMode.always,
                           validator: validateRelativeHumidity,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                           onEditingComplete: () {
                             bool seen = false;
 
@@ -456,6 +415,7 @@ DropdownButtonFormField floorDropdownTemplate(
                             TextFormField(
                           controller: temperatureTextController,
                           autovalidateMode: AutovalidateMode.always,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                           validator: (value) {
                             if (value == null) {
                               return null;
@@ -489,6 +449,7 @@ DropdownButtonFormField floorDropdownTemplate(
                     TextFormField(
                       controller: dioxTextController,
                       autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -519,6 +480,7 @@ DropdownButtonFormField floorDropdownTemplate(
                     TextFormField(
                       controller: monoxTextController,
                       autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -549,6 +511,7 @@ DropdownButtonFormField floorDropdownTemplate(
                     TextFormField(
                       controller: vocsTextController,
                       autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -578,6 +541,7 @@ DropdownButtonFormField floorDropdownTemplate(
                     TextFormField(
                       controller: pm25TextController,
                       autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -607,6 +571,7 @@ DropdownButtonFormField floorDropdownTemplate(
                     TextFormField(
                       controller: pm10TextController,
                       autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -638,7 +603,8 @@ DropdownButtonFormField floorDropdownTemplate(
                       floatingLabelBehavior:FloatingLabelBehavior.always,
                       labelText: "Comments",
                       hintText: 'Enter comments, leave empty if no issues are observed.'
-                    ),// Define your text input properties here
+                    ),
+                    keyboardType: TextInputType.multiline,// Define your text input properties here
                   ),
                   const SizedBox(
                     height: 20,
@@ -678,8 +644,6 @@ DropdownButtonFormField floorDropdownTemplate(
                               !(roomNumberTextController.text == '')) {
                             _saveForm();
                             savedPressed = true;
-                            roomCount++;
-                            debugPrint('room count incremented to= $roomCount');
                           } else {
                             _showErrorDialog(context,
                                 'Please enter all room info correctly before saving.');
@@ -704,8 +668,8 @@ DropdownButtonFormField floorDropdownTemplate(
                   backgroundColor: Colors.green,
                 ),
                 onPressed: () {
-                  if (!autofillPrimaryUse.contains(commentTextController.text)) {
-                    autofillPrimaryUse.add(commentTextController.text);
+                  if (!autofillPrimaryUse.contains(primaryUseTextController.text)) {
+                    autofillPrimaryUse.add(primaryUseTextController.text);
                   }
                   
                   roomNumberTextController.clear();
@@ -742,17 +706,25 @@ DropdownButtonFormField floorDropdownTemplate(
                 width: 10,
               ),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate() &&
-                      !(roomNumberTextController.text == '')) {
+                onPressed: ()  {
+                  if (_formKey.currentState!.validate() && !savedPressed) {
+                    _saveForm();
+                  }
+                 if (roomNumberTextController.text.isNotEmpty) {
+                    // Call saveSurveyToFirestore with the appropriate parameters
+                    saveSurveyToFirestore(
+                      widget.surveyInfo,
+                      widget.outdoorReadingsInfo,
+                      roomReadings,
+                    );
+                    
+                    // Navigate to HomeScreen or another appropriate screen
                     Navigator.pop(context);
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) {
-                          return const HomeScreen();
-                        },
+                        builder: (context) => const HomeScreen(),
                       ),
                     );
                   } else {
@@ -801,72 +773,6 @@ class FieldModel {
       this.comment = ""});
 }
 
-Future<void> deleteLastLineFromCSV() async {
-  // Read the existing CSV file
-  final prefs = await SharedPreferences.getInstance();
-  final iaqPath = prefs.getString('iaqPath')!;
-  final iaqCSV = File(iaqPath);
-  final iaqContent = await iaqCSV.readAsString();
-
-  // Parse the CSV data
-  const csvConverter = CsvToListConverter();
-  List<List<dynamic>> iaqData = csvConverter.convert(iaqContent);
-
-  // Check if there are any lines to delete
-  if (iaqData.isNotEmpty) {
-    // Remove the last line from the data
-    iaqData.removeLast();
-    // Write the updated data back to the CSV file
-    final outputContent = const ListToCsvConverter().convert(iaqData);
-    await iaqCSV.writeAsString(outputContent);
-  }
-
-  final visualPath = prefs.getString('visualPath')!;
-  final visualCSV = File(visualPath);
-  final visualContent = await visualCSV.readAsString();
-
-  // Parse the CSV data
-  List<List<dynamic>> visualData = csvConverter.convert(visualContent);
-
-  // Check if there are any lines to delete
-  if (visualData.isNotEmpty) {
-    // Remove the last line from the data
-    visualData.removeLast();
-    // Write the updated data back to the CSV file
-    final outputContent = const ListToCsvConverter().convert(visualData);
-    await visualCSV.writeAsString(outputContent);
-  }
-}
-
-Future<void> writeIAQ(List<dynamic> roomReadingsRow) async {
-  final prefs = await SharedPreferences.getInstance();
-  final iaqCSV = const ListToCsvConverter().convert([roomReadingsRow]);
-  final appDocumentsDirectory = await getApplicationDocumentsDirectory();
-  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('Last Name')?.substring(0,1)}';
-
-  final iaqDirectory = Directory(path.join(appDocumentsDirectory.path, 'iaQuick', 'csv_files', fileNameBuilder));
-  await iaqDirectory.create(recursive: true);
-  final iaqFilePath = path.join(iaqDirectory.path, '${fileNameBuilder}_IAQ.csv');
-  final file = File(iaqFilePath).openWrite(mode: FileMode.append);
-  file.write('\n');
-  file.write(iaqCSV);
-  await file.close(); // Close the file when done writing
-}
-
-Future<void> writeVisualAssessment(List<dynamic> roomReadingsRow) async {
-  final prefs = await SharedPreferences.getInstance();
-  final visualCSV = const ListToCsvConverter().convert([roomReadingsRow]);
-  final appDocumentsDirectory = await getApplicationDocumentsDirectory();
-  final fileNameBuilder = '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0,1)}_${prefs.getString('Last Name')?.substring(0,1)}';
-
-  final visualDirectory = Directory(path.join(appDocumentsDirectory.path, 'iaQuick', 'csv_files', fileNameBuilder));
-  await visualDirectory.create(recursive: true);
-  final visualFilePath = path.join(visualDirectory.path, '${fileNameBuilder}_Visual_Assessment.csv');
-  final file = File(visualFilePath).openWrite(mode: FileMode.append);
-  file.write('\n');
-  file.write(visualCSV);
-  await file.close(); // Close the file when done writing
-}
 
 Future<void> saveImageLocally(File imageFile, String roomNumber) async {
     final prefs = await SharedPreferences.getInstance();
@@ -930,4 +836,39 @@ class DropdownModel {
   String floor = '';
 
   DropdownModel({this.building = '', this.floor = ''});
+}
+
+
+Future<void> saveSurveyToFirestore(SurveyInfo surveyInfo, OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
+  DocumentReference surveyRef = FirebaseFirestore.instance.collection('surveys').doc();
+
+  // Start a batch write
+  WriteBatch batch = FirebaseFirestore.instance.batch();
+
+  // Set the survey info and outdoor readings
+  batch.set(surveyRef, {
+    'siteName': surveyInfo.siteName,
+    'date': surveyInfo.date.toIso8601String(),
+    'occupancyType': surveyInfo.occupancyType,
+    'outdoorBaseline': outdoorReadings.baselineReadings,
+  });
+
+  // Add each room reading
+  for (var roomReading in roomReadings) {
+  DocumentReference roomRef = surveyRef.collection('roomReadings').doc();
+    batch.set(roomRef, {
+      'building': roomReading.building,
+      'floorNumber': roomReading.floorNumber,
+      'roomNumber': roomReading.roomNumber,
+      'primaryUse': roomReading.primaryUse,
+      'temperature': roomReading.temperature,
+      'relativeHumidity': roomReading.relativeHumidity,
+      'additionalMetrics': roomReading.additionalMetrics,
+      'comments': roomReading.comments,
+      // Include other fields as necessary
+    });
+  }
+
+  // Commit the batch write
+  await batch.commit();
 }
