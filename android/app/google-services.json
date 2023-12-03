@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1069851910435",
+    "project_id": "windows-9e44e",
+    "storage_bucket": "windows-9e44e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069851910435:android:603e4983c6aad658322c96",
+        "android_client_info": {
+          "package_name": "com.example.iaqapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069851910435-9etmpg0i6m7afvguouiefhugdtbeiqmd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGGlTbsXQWWUQ7rVXfL23HbO4d3M_Fp-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069851910435-9etmpg0i6m7afvguouiefhugdtbeiqmd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
