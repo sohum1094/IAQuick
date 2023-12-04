@@ -11,6 +11,7 @@ import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
 
@@ -23,49 +24,32 @@ class ExistingSurveyScreen extends StatefulWidget {
 
 class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   TextEditingController searchController = TextEditingController();
-  List<List<String>> fileNames = [];
+  List<DocumentSnapshot> surveyDocuments = [];
   bool showRecentFiles = true;
 
   @override
   void initState() {
     super.initState();
-    _loadFileNames();
+    _loadSurveyData();
   }
 
-  Future<void> _loadFileNames() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final file =
-        File('${directory.path}/iaQuick/csv_files/do_not_edit/survey_meta.csv');
-
-    // Read the CSV file
-    final csvString = await file.readAsString();
-
-    // Parse the CSV data into a list of rows
-    const csvConverter = CsvToListConverter(eol: '\n');
-    final csvList = csvConverter.convert(csvString);
-
-    // Now, each row in csvList should represent a row in your CSV file
-    for (int i = 1; i < csvList.length; i++) {
-      final row = csvList[i];
-      final siteName = row[0].toString();
-      final date = row[1].toString();
-      final address = row[2].toString();
-      final iaqPath = row[3].toString();
-      final visualPath = row[4].toString();
-      final sourcePath = row[5].toString();
-
-      DateTime dateTime = DateTime.parse(date.toString());
-
-      // Format the DateTime object as 'MM/dd/yyyy'
-      String formattedDate = DateFormat('MM/dd/yyyy').format(dateTime);
-
-      fileNames.add(
-          [siteName, formattedDate, address, iaqPath, visualPath, sourcePath]);
-      // Do something with the extracted metadata and data
-    }
+  Future<void> _loadSurveyData() async {
+    // Query Firestore for the list of surveys
+    var querySnapshot = await FirebaseFirestore.instance.collection('surveys').get();
+    surveyDocuments = querySnapshot.docs;
 
     setState(() {});
   }
+
+  Future<List<Map<String, dynamic>>> fetchSurveyData() async {
+  // Fetch surveys from Firestore
+  QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('surveys').get();
+
+  // Convert the query results into a list of maps
+  List<Map<String, dynamic>> surveys = (querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+  return surveys;
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -156,11 +140,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Date'),
                   ),
                 ),
-                // DataColumn(
-                //   label: Expanded(
-                //     child: Text('Time'),
-                //   ),
-                // ),
+
               ],
               rows: _buildRecentFileRows(recentFiles),
             ),
@@ -170,23 +150,30 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
     );
   }
 
-  List<DataRow> _buildRecentFileRows(List<List<String>> recentFiles) {
-    return recentFiles.map((recentFile) {
-      final siteName = recentFile[0]; // Extract site name
-      final date = recentFile[1]; // Extract date
+  List<DataRow> _buildRecentFileRows() {
+    // Show the most recent documents or limit the number as needed
+    final recentSurveys = surveyDocuments.take(10).toList();
+
+    return recentSurveys.map((documentSnapshot) {
+      final surveyData = documentSnapshot.data() as Map<String, dynamic>;
+      final siteName = surveyData['siteName']; // Adjust field names as per your Firestore structure
+      final date = surveyData['date']; // Assuming 'date' is stored in a compatible format
+  // Extract date
 
       return DataRow(cells: [
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // requestPermissions();
-              final filePath = recentFile[3]; // Extract the file path
+              
 
-              // Replace backslashes with forward slashes
-              final correctedPath = filePath.replaceAll(r'\', '/');
-              bool fileExists = await File(filePath).exists();
-              debugPrint('File existence: ${fileExists.toString()}');
-              final result = await OpenFile.open(correctedPath);
+
+
+
+
+
+
+
+              final result = await OpenFile.open();
               if (result.type == ResultType.done) {
                 debugPrint('Opened successfully');
               } else if (result.type == ResultType.noAppToOpen) {
@@ -206,14 +193,14 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // requestPermissions();
-              final filePath = recentFile[4]; // Extract the file path
+              
 
-              // Replace backslashes with forward slashes
-              // final correctedPath = filePath.replaceAll(r'\', '/');
-              bool fileExists = await File(filePath).exists();
-              debugPrint('File existence: ${fileExists.toString()}');
-              final result = await OpenFile.open(filePath);
+
+
+
+
+
+              final result = await OpenFile.open();
               if (result.type == ResultType.done) {
                 debugPrint('Opened successfully');
               } else if (result.type == ResultType.noAppToOpen) {
@@ -234,8 +221,14 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           ElevatedButton(
             onPressed: () async {
               // Trigger the Excel creation and email sending process here
-              // requestPermissions();
-              sendEmail(recentFile);
+              
+
+
+
+
+
+
+
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -301,11 +294,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Date'),
                   ),
                 ),
-                // DataColumn(
-                //   label: Expanded(
-                //     child: Text('Time'),
-                //   ),
-                // ),
+                
               ],
               rows: _buildSearchResultRows(searchResults.toList()),
             ),
@@ -324,9 +313,13 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // requestPermissions();
-              final filePath = recentFile[3]; // Extract the file path
-              final result = await OpenFile.open(filePath);
+              
+              
+
+
+
+
+              final result = await OpenFile.open();
               if (result.type == ResultType.done) {
                 debugPrint('opened successfully');
               } else {
@@ -344,9 +337,12 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // requestPermissions();
-              final filePath = recentFile[4]; // Extract the file path
-              final result = await OpenFile.open(filePath);
+             
+
+
+
+
+              final result = await OpenFile.open();
               if (result.type == ResultType.done) {
                 debugPrint('opened successfully');
               } else {
@@ -364,9 +360,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // Trigger the Excel creation and email sending process here
-              // requestPermissions();
-              sendEmail(recentFile);
+
+
+
+
+
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -387,219 +385,10 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
     }).toList();
   }
 
-  // void handleExcelCreationAndOpening(List<String> recentFile) async {
-  //   // Create the Excel files from the CSV data
-  //   String iaqFilePath = await createAndSaveExcel(recentFile[3], 'IAQ_template.xlsx');
-  //   String visualFilePath = await createAndSaveExcel(recentFile[4], 'Visual_template.xlsx');
-
-  //   // Open the Excel file for the user
-  //   OpenFile.open(iaqFilePath); // Simplified for demonstration
-
-  //   // For email export, use the existing sendEmail function
-  // }
-
-  // Future<String> createAndSaveExcel(String csvPath, String templateName) async {
-  //   // Read CSV and template, create Excel, populate and save it
-  //   // Return the path of the saved Excel file
-  //   // ... Implementation ...
-  // }
-}
-
-Future<List<List<dynamic>>> readCSV(String filePath) async {
-  final input = File(filePath).openRead();
-  final fields = await input
-      .transform(utf8.decoder)
-      .transform(const CsvToListConverter())
-      .toList();
-
-  return fields;
-}
-
-Future<Excel?> writeIAQExcelTemplate(
-    String inputFilePath, String outputFileName) async {
-  final csvAsList = await readCSV(inputFilePath);
-
-  // Copy the template file from assets to the application documents directory
-  final directory = await getApplicationDocumentsDirectory();
-  const templateAssetPath = 'assets/IAQ_template.xlsx';
-  final templateFilePath = path.join(directory.path, 'IAQ_template.xls');
-  ByteData data = await rootBundle.load(templateAssetPath);
-  var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  File(templateFilePath).writeAsBytesSync(bytes);
-
-  // Open the copied file with the Excel package
-  var excel = Excel.decodeBytes(File(templateFilePath).readAsBytesSync());
-
-  // Edit only the 'Entry Sheet'
-  if (excel.tables.containsKey('Entry Sheet')) {
-    fillDataInIAQTemplate(excel, csvAsList);
-  } else {
-    print('Entry Sheet not found in the template');
-    return null;
-  }
-
-  // Save the edited file
-  String formattedOutputFileName = outputFileName.replaceAll(' ', '');
-  final outputFilePath = path.join(
-    directory.path,
-    'iaQuick',
-    'csv_files',
-    'for_export',
-    '$formattedOutputFileName.xls',
-  );
-  var outputFileBytes = excel.encode();
-  File(outputFilePath).writeAsBytesSync(outputFileBytes!);
-
-  // Return the Excel object for further processing if needed
-  return excel;
-}
-
-void fillDataInIAQTemplate(Excel excel, List<List<dynamic>> csvData) {
-  final table = excel['Entry Sheet'];
-  final Map<String, String> columnMapping = {
-    'Building': 'Facility Name',
-    'Floor #': 'Floor Number',
-    'Room #': 'Room Number',
-    'Carbon Dioxide (ppm)': 'Carbon Dioxide (ppm)',
-    'Primary Room Use': 'Primary Room Use',
-    'Temperature (F)': 'Temperature (F)',
-    'Relative Humidity (%)': 'Relative Humidity (%)',
-    'PM2.5 (mg/m3)': 'PM2.5 (mg/m3)',
-    'PM10 (mg/m3)': 'PM10 (mg/m3)',
-    'Carbon Monoxide (ppm)': 'Carbon Monoxide (ppm)',
-    'VOCs (mg/m3)': 'VOCs (mg/m3)'
-  };
-  // Assuming you have placeholders in the template (e.g., A1, A2, etc.)
-  // Replace these with actual cell names or tags from your template
-  String placeholderA2 = 'A2';
-  String placeholderB2 = 'B2';
-  // Find the cell index in the Excel sheet
-  var occupancyCellA2 = table.cell(CellIndex.indexByString(placeholderA2));
-  var dateCellB2 = table.cell(CellIndex.indexByString(placeholderB2));
-  // Insert data from CSV into the Excel template
-  occupancyCellA2.value = csvData[2][0] + ' Occupancy'; // Example: Row 1, Column 1 from CSV
-  dateCellB2.value = csvData[1][0]; // Example: Row 1, Column 2 from CSV
-
-  List<String> csvHeaders = csvData[3].cast<String>();
-
-  // Iterate over each row in the CSV data, skipping the header row
-  for (int i = 4; i < csvData.length; i++) {
-    List<dynamic> row = csvData[i];
-
-    // Iterate over each cell in the row
-    for (int j = 0; j < row.length; j++) {
-      // Get the CSV column name for this cell
-      String csvColumnName = csvHeaders[j];
-
-      // Check if this CSV column has a corresponding Excel column
-      if (columnMapping.containsKey(csvColumnName)) {
-        // Get the Excel column name
-        String excelColumnName = columnMapping[csvColumnName]!;
-
-        // Get the cell in the Excel sheet at the corresponding position
-        var cell = table.cell(
-            CellIndex.indexByString(excelColumnName + (i + 1).toString()));
-
-        // Set the value of the cell to the value from the CSV data
-        cell.value = row[j];
-      }
-    }
-  }
-
-  // Example: Row 1, Column 2 from CSV
 }
 
 
-Future<Excel?> writeVisualExcelTemplate(
-    String inputFilePath, String outputFileName) async {
-  final csvAsList = await readCSV(inputFilePath);
 
-  // Copy the template file from assets to the application documents directory
-  final directory = await getApplicationDocumentsDirectory();
-  const templateAssetPath = 'assets/Visual_template.xlsx';
-  final templateFilePath = path.join(directory.path, 'Visual_template.xls');
-  ByteData data = await rootBundle.load(templateAssetPath);
-  var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  File(templateFilePath).writeAsBytesSync(bytes);
-
-  // Open the copied file with the Excel package
-  var excel = Excel.decodeBytes(File(templateFilePath).readAsBytesSync());
-
-  // Edit only the 'Entry Sheet'
-  if (excel.tables.containsKey('Entry Sheet')) {
-    fillDataInVisualTemplate(excel, csvAsList);
-  } else {
-    print('Entry Sheet not found in the template');
-    return null;
-  }
-
-  // Save the edited file
-  String formattedOutputFileName = outputFileName.replaceAll(' ', '');
-  final outputFilePath = path.join(
-    directory.path,
-    'iaQuick',
-    'csv_files',
-    'for_export',
-    '$formattedOutputFileName.xls',
-  );
-  var outputFileBytes = excel.encode();
-  File(outputFilePath).writeAsBytesSync(outputFileBytes!);
-
-  // Return the Excel object for further processing if needed
-  return excel;
-}
-
-void fillDataInVisualTemplate(Excel excel, List<List<dynamic>> csvData) {
-  final table = excel['Entry Sheet'];
-  final Map<String, String> columnMapping = {
-    'Building': 'Facility Name',
-    'Floor #': 'Floor Number',
-    'Room #': 'Room Number',
-    'Carbon Dioxide (ppm)': 'Carbon Dioxide (ppm)',
-    'Primary Room Use': 'Primary Room Use',
-    'Temperature (F)': 'Temperature (F)',
-    'Relative Humidity (%)': 'Relative Humidity (%)',
-    'Visual Assesment Notes' : 'Comments',
-  };
-  // Assuming you have placeholders in the template (e.g., A1, A2, etc.)
-  // Replace these with actual cell names or tags from your template
-  String placeholderA2 = 'A2';
-  String placeholderB2 = 'B2';
-  // Find the cell index in the Excel sheet
-  var occupancyCellA2 = table.cell(CellIndex.indexByString(placeholderA2));
-  var dateCellB2 = table.cell(CellIndex.indexByString(placeholderB2));
-  // Insert data from CSV into the Excel template
-  occupancyCellA2.value = csvData[2][0] + ' Occupancy'; // Example: Row 1, Column 1 from CSV
-  dateCellB2.value = csvData[1][0]; // Example: Row 1, Column 2 from CSV
-
-  List<String> csvHeaders = csvData[3].cast<String>();
-
-  // Iterate over each row in the CSV data, skipping the header row
-  for (int i = 4; i < csvData.length; i++) {
-    List<dynamic> row = csvData[i];
-
-    // Iterate over each cell in the row
-    for (int j = 0; j < row.length; j++) {
-      // Get the CSV column name for this cell
-      String csvColumnName = csvHeaders[j];
-
-      // Check if this CSV column has a corresponding Excel column
-      if (columnMapping.containsKey(csvColumnName)) {
-        // Get the Excel column name
-        String excelColumnName = columnMapping[csvColumnName]!;
-
-        // Get the cell in the Excel sheet at the corresponding position
-        var cell = table.cell(
-            CellIndex.indexByString(excelColumnName + (i + 1).toString()));
-
-        // Set the value of the cell to the value from the CSV data
-        cell.value = row[j];
-      }
-    }
-  }
-
-  // Example: Row 1, Column 2 from CSV
-}
 
 void sendEmail(List<String> recentFile) async {
   // Extract the necessary data from the selected row
@@ -609,7 +398,6 @@ void sendEmail(List<String> recentFile) async {
   final visualPath = recentFile[4];
 
 
-  // requestPermissions();
   // Create the Excel files from the CSV data
   Excel? iaqExcel =
       await writeIAQExcelTemplate(iaqPath, '${siteName}_${date}_IAQ');
@@ -668,15 +456,3 @@ void main() {
     home: ExistingSurveyScreen(),
   ));
 }
-
-// void requestPermissions() async {
-//   var status = await Permission.storage.status;
-//   if (status.isPermanentlyDenied) {
-//     // The user has previously denied the permission and selected "Don't ask again".
-//     // Direct the user to the app settings to manually enable the permission.
-//     openAppSettings();
-//   } else if (!status.isGranted) {
-//     // The permission has not been granted yet, request it.
-//     status = await Permission.storage.request();
-//   }
-// }

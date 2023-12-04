@@ -1,6 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-
 // class SurveyInfo {
 //   String siteName;
 //   DateTime date;
