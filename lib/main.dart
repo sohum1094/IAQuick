@@ -11,9 +11,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 void main() async {
-  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   runApp(
     ChangeNotifierProvider(
       create: (context) => UserInfoDialogStatus(),

@@ -39,5 +39,15 @@ class RoomReading {
   String comments = "No issues were observed.";
   // Constructor and other methods...
   RoomReading({this.building = "default", this.floorNumber = 0, this.roomNumber = "default", this.primaryUse = "default", this.temperature = 0, this.relativeHumidity =0, this.additionalMetrics = const {}, this.comments = "default"});
+
+  RoomReading.fromMap(Map<String, dynamic> map)
+      : building = map['building'] ?? "default",
+        floorNumber = map['floorNumber'] ?? 0,
+        roomNumber = map['roomNumber'] ?? "default",
+        primaryUse = map['primaryUse'] ?? "default",
+        temperature = map['temperature']?.toDouble() ?? 0,
+        relativeHumidity = map['relativeHumidity']?.toDouble() ?? 0,
+        additionalMetrics = map['additionalMetrics'] ?? {},
+        comments = map['comments'] ?? "No issues were observed.";
 }
 
