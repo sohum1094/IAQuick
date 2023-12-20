@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-
 class SurveyInfo {
   int? id;
   String siteName = "";

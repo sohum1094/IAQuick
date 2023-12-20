@@ -41,7 +41,7 @@ class DatabaseHelper {
       CREATE TABLE outdoor_readings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         surveyId INTEGER,
-        baselineReadings TEXT,  // JSON string
+        baselineReadings TEXT,
         FOREIGN KEY (surveyId) REFERENCES survey_info(id)
       )
     ''');
@@ -56,11 +56,11 @@ class DatabaseHelper {
         primaryUse TEXT,
         temperature REAL,
         relativeHumidity REAL,
-        co2 REAL,            // New field
-        co REAL,             // New field
-        pm25 REAL,           // New field
-        pm10 REAL,           // New field
-        vocs REAL,           // New field
+        co2 REAL,            
+        co REAL,             
+        pm25 REAL,        
+        pm10 REAL,         
+        vocs REAL,           
         comments TEXT,
         FOREIGN KEY (surveyId) REFERENCES survey_info(id)
       )

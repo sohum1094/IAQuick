@@ -12,7 +12,7 @@ class OutdoorReadingsScreen extends StatelessWidget {
   final SurveyInfo surveyInfo; 
   static final OutdoorReadings outdoorReadings = OutdoorReadings();
 
-  OutdoorReadingsScreen({required this.surveyInfo, super.key});
+  const OutdoorReadingsScreen({required this.surveyInfo, super.key});
   
 
 

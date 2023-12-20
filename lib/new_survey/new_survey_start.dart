@@ -1,7 +1,7 @@
 /// This code snippet is a part of a Flutter application that handles the initial survey information form. It includes form fields for site name, address, date, occupancy type, and checkboxes for different readings. The form data is saved using shared preferences and validated before submission.
 ///
 /// Example Usage:
-/// 
+///
 /// // Creating an instance of the SurveyInitialInfoForm
 /// final form = SurveyInitialInfoForm();
 ///
@@ -32,8 +32,6 @@ import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
 
-
-
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
 
@@ -41,6 +39,7 @@ class NewSurveyStart extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: const Text('New Survey Information'),
           centerTitle: true,
@@ -81,56 +80,65 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   @override
   EasyForm build(BuildContext context) {
     model.date = DateTime.now();
-    
-    return EasyForm(
-        key: _initialSurveyInfoKey,
-        onSave: (values, form) async {
-          if (values['siteName'].isEmpty ||
-              values['siteAddress'].isEmpty ||
-              !form.validate()) {
-            showDialog<String>(
-                context: context,
-                builder: (BuildContext context) => errorDialog(context));
-          } else {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const LoggedScreen(),
-              ),
-            );
-          }
-          model.carbonDioxideReadings = _AllCheckboxesState.readingsSwitches['Carbon Dioxide']!;
-          model.carbonMonoxideReadings = _AllCheckboxesState.readingsSwitches['Carbon Monoxide']!;
-          model.vocs = _AllCheckboxesState.readingsSwitches['VOCs']!;
-          model.pm25 = _AllCheckboxesState.readingsSwitches['PM2.5']!;
-          model.pm10 = _AllCheckboxesState.readingsSwitches['PM10']!;
 
-        },
-        onSaved: (response, values, form) {
-          if (response['hasError'] ?? false) {
-            _alert(context, response['error']);
-          } else {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const LoggedScreen(),
+    return EasyForm(
+      key: _initialSurveyInfoKey,
+      onSave: (values, form) async {
+        if (values['siteName'].isEmpty ||
+            values['siteAddress'].isEmpty ||
+            !form.validate()) {
+          showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => errorDialog(context));
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const LoggedScreen(),
+            ),
+          );
+        }
+        model.carbonDioxideReadings =
+            _AllCheckboxesState.readingsSwitches['Carbon Dioxide']!;
+        model.carbonMonoxideReadings =
+            _AllCheckboxesState.readingsSwitches['Carbon Monoxide']!;
+        model.vocs = _AllCheckboxesState.readingsSwitches['VOCs']!;
+        model.pm25 = _AllCheckboxesState.readingsSwitches['PM2.5']!;
+        model.pm10 = _AllCheckboxesState.readingsSwitches['PM10']!;
+      },
+      onSaved: (response, values, form) {
+        if (response['hasError'] ?? false) {
+          _alert(context, response['error']);
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const LoggedScreen(),
+            ),
+          );
+        }
+      },
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * .9,
+            child: Center(
+              child: Column(
+                children: [
+                  siteNameTextFormField(context, model),
+                  addressTextFormField(context, model),
+                  const DateTimePicker(),
+                  occupancyTypeDropdown(context, model),
+                  const AllCheckboxes(),
+                  EasyFormSaveButton.text('Submit'),
+                ],
               ),
-            );
-          }
-        },
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height * .9,
-          child: Center(
-            child: Column(
-              children: [
-                siteNameTextFormField(context, model),
-                addressTextFormField(context, model),
-                const DateTimePicker(),
-                occupancyTypeDropdown(context, model),
-                const AllCheckboxes(),
-                EasyFormSaveButton.text('Submit'),
-              ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   AlertDialog errorDialog(BuildContext context) {
@@ -172,8 +180,7 @@ EasyTextFormField siteNameTextFormField(
   );
 }
 
-EasyTextFormField addressTextFormField(
-    BuildContext context, SurveyInfo model) {
+EasyTextFormField addressTextFormField(BuildContext context, SurveyInfo model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'siteAddress',
@@ -229,7 +236,10 @@ class _DateTimePickerState extends State<DateTimePicker> {
           lastDate: DateTime(2101),
         );
         if (pickedDate != null) {
+          // Update the model
           SurveyInitialInfoFormState.model.date = pickedDate;
+          // Set the date in the controller
+          dateInput.text = DateFormat('MM-dd-yyyy').format(pickedDate);
         }
       },
       decoration: const InputDecoration(
@@ -258,11 +268,12 @@ class LoggedScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => OutdoorReadingsScreen(surveyInfo: SurveyInitialInfoFormState.model),
-                  ),
-                );
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OutdoorReadingsScreen(
+                          surveyInfo: SurveyInitialInfoFormState.model),
+                    ),
+                  );
                 },
               ),
             ],
