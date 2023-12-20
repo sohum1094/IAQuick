@@ -37,7 +37,7 @@ import 'package:iaqapp/main.dart';
 import 'package:path/path.dart' as path;
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:iaqapp/database_helper.dart';
 
 
 
@@ -176,31 +176,39 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   void _saveForm() async {
-    final form = _formKey.currentState;
+  final form = _formKey.currentState;
 
-    if (form!.validate()) {
-      form.save();
-      buildingDropdownKey.currentState?.reset();
-      floorDropdownKey.currentState?.reset();
+  if (form!.validate()) {
+    form.save();
+    buildingDropdownKey.currentState?.reset();
+    floorDropdownKey.currentState?.reset();
 
-      RoomReading roomReading = RoomReading(building: dropdownModel.building, floorNumber: int.parse(dropdownModel.floor),
-        roomNumber: roomNumberTextController.text, primaryUse: primaryUseTextController.text, relativeHumidity: double.parse(humiditiyTextController.text),
-        temperature: double.parse(temperatureTextController.text), additionalMetrics: {}, comments: commentTextController.text);
+    // Instantiate RoomReading with the collected data
+    RoomReading roomReading = RoomReading(
+      building: dropdownModel.building,
+      floorNumber: int.parse(dropdownModel.floor),
+      roomNumber: roomNumberTextController.text,
+      primaryUse: primaryUseTextController.text,
+      temperature: double.parse(temperatureTextController.text),
+      relativeHumidity: double.parse(humiditiyTextController.text),
+      co2: showFieldModel.carbonDioxideReadings ? double.tryParse(dioxTextController.text) : null,
+      co: showFieldModel.carbonMonoxideReadings ? double.tryParse(monoxTextController.text) : null,
+      vocs: showFieldModel.vocs ? double.tryParse(vocsTextController.text) : null,
+      pm25: showFieldModel.pm25 ? double.tryParse(pm25TextController.text) : null,
+      pm10: showFieldModel.pm10 ? double.tryParse(pm10TextController.text) : null,
+      comments: commentTextController.text.isEmpty ? "No issues were observed." : commentTextController.text,
+    );
 
-      if (showFieldModel.carbonDioxideReadings) roomReading.additionalMetrics.addAll({"Carbon Dioxide" :dioxTextController.text});
-      if (showFieldModel.carbonMonoxideReadings) roomReading.additionalMetrics.addAll({"Carbon Monoxide" :monoxTextController.text});
-      if (showFieldModel.vocs) roomReading.additionalMetrics.addAll({"VOCs" :vocsTextController.text});
-      if (showFieldModel.pm25) roomReading.additionalMetrics.addAll({"PM2.5" :pm25TextController.text});
-      if (showFieldModel.pm10) roomReading.additionalMetrics.addAll({ "PM10":pm10TextController.text});
+    // Add the roomReading to the list of room readings
+    roomReadings.add(roomReading);
 
-      if(roomReading.comments.isEmpty) roomReading.comments = "No issues were observed.";
-
-
-      if (_imageFile != null) {
-        await saveImageLocally(_imageFile!, roomNumberTextController.text);
-      }
+    // Save the image locally if one is selected
+    if (_imageFile != null) {
+      await saveImageLocally(_imageFile!, roomNumberTextController.text);
     }
   }
+}
+
 
   String? validateRelativeHumidity(String? value) {
     if (value == null) {
@@ -712,7 +720,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   }
                  if (roomNumberTextController.text.isNotEmpty) {
                     // Call saveSurveyToFirestore with the appropriate parameters
-                    saveSurveyToFirestore(
+                    saveSurveyToLocalDatabase(
                       widget.surveyInfo,
                       widget.outdoorReadingsInfo,
                       roomReadings,
@@ -839,36 +847,22 @@ class DropdownModel {
 }
 
 
-Future<void> saveSurveyToFirestore(SurveyInfo surveyInfo, OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
-  DocumentReference surveyRef = FirebaseFirestore.instance.collection('surveys').doc();
+Future<void> saveSurveyToLocalDatabase(SurveyInfo surveyInfo, OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
+  final db = await DatabaseHelper.instance.database;
 
-  // Start a batch write
-  WriteBatch batch = FirebaseFirestore.instance.batch();
+  // Start a transaction
+  await db.transaction((txn) async {
+    // Insert SurveyInfo
+    int surveyID = await txn.insert('survey_info', surveyInfo.toJson());
 
-  // Set the survey info and outdoor readings
-  batch.set(surveyRef, {
-    'siteName': surveyInfo.siteName,
-    'date': surveyInfo.date.toIso8601String(),
-    'occupancyType': surveyInfo.occupancyType,
-    'outdoorBaseline': outdoorReadings.baselineReadings,
+    // Insert OutdoorReadings with surveyId
+    outdoorReadings.surveyID = surveyID; // Assuming you have a surveyId field in OutdoorReadings
+    await txn.insert('outdoor_readings', outdoorReadings.toJson());
+
+    // Insert each RoomReading with surveyId
+    for (var roomReading in roomReadings) {
+      roomReading.surveyID = surveyID; // Assuming you have a surveyId field in RoomReading
+      await txn.insert('room_readings', roomReading.toJson());
+    }
   });
-
-  // Add each room reading
-  for (var roomReading in roomReadings) {
-  DocumentReference roomRef = surveyRef.collection('roomReadings').doc();
-    batch.set(roomRef, {
-      'building': roomReading.building,
-      'floorNumber': roomReading.floorNumber,
-      'roomNumber': roomReading.roomNumber,
-      'primaryUse': roomReading.primaryUse,
-      'temperature': roomReading.temperature,
-      'relativeHumidity': roomReading.relativeHumidity,
-      'additionalMetrics': roomReading.additionalMetrics,
-      'comments': roomReading.comments,
-      // Include other fields as necessary
-    });
-  }
-
-  // Commit the batch write
-  await batch.commit();
 }

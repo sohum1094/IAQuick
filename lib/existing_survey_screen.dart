@@ -6,8 +6,8 @@ import 'package:open_file/open_file.dart';
 import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iaqapp/models/survey_info.dart';
+import 'package:iaqapp/database_helper.dart';
 
 // import 'package:permission_handler/permission_handler.dart';
 
@@ -30,9 +30,8 @@ class ExistingSurveyScreen extends StatefulWidget {
 
 class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   TextEditingController searchController = TextEditingController();
-  List<DocumentSnapshot> surveyDocuments = [];
-  bool showRecentFiles = true;
-
+  List<SurveyInfo> surveyList = []; // This will hold surveys fetched from SQLite
+  bool showRecentFiles = true; 
   @override
   void initState() {
     super.initState();
@@ -40,20 +39,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   }
 
   Future<void> _loadSurveyData() async {
-    // Query Firestore for the list of surveys
-    var querySnapshot = await FirebaseFirestore.instance.collection('surveys').get();
-    surveyDocuments = querySnapshot.docs;
-
+    surveyList = await DatabaseHelper.instance.readAllSurveys();
     setState(() {});
-  }
-
-  Future<List<Map<String, dynamic>>> fetchSurveyData() async {
-    // Fetch surveys from Firestore
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('surveys').get();
-
-    // Convert the query results into a list of maps
-    List<Map<String, dynamic>> surveys = (querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
-    return surveys;
   }
 
 
@@ -106,16 +93,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   Widget _recentFilesList() {
    // Assuming that 'date' in surveyDocuments can be parsed into DateTime
   // and is in descending order (most recent first)
-   surveyDocuments.sort((a, b) {
-    var dataA = a.data() as Map<String, dynamic>?;
-    var dataB = b.data() as Map<String, dynamic>?;
-    var dateA = dataA != null ? DateTime.parse(dataA['date'] as String) : null;
-    var dateB = dataB != null ? DateTime.parse(dataB['date'] as String) : null;
-    if (dateA != null && dateB != null) {
-      return dateB.compareTo(dateA);
-    }
-    return 0; // or handle this case appropriately
-  });
+    surveyList.sort((a, b) => b.date.compareTo(a.date));
+
 
   // Take the 10 most recent files
     return Flexible(
@@ -170,23 +149,16 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
   List<DataRow> _buildRecentFileRows() {
     // Show the most recent documents or limit the number as needed
-    final recentSurveys = surveyDocuments.take(10).toList();
-    return recentSurveys.map((documentSnapshot) {
-      final surveyData = documentSnapshot.data() as Map<String, dynamic>;
-      final siteName = surveyData['siteName']; // Adjust field names as per your Firestore structure
-      final date = surveyData['date']; // Assuming 'date' is stored in a compatible format
+    final recentSurveys = surveyList.take(10).toList();
+    return recentSurveys.map((surveyInfo) {
   // Extract date
       return DataRow(cells: [
-        DataCell(
-          Text(siteName), // Display site name
-        ),
-        DataCell(
-          Text(date), // Display date
-        ),
+        DataCell(Text(surveyInfo.siteName)),
+        DataCell(Text(surveyInfo.date.toIso8601String())),
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              final result = await OpenFile.open( path.join(directory.path, '${siteName}_${date}_IAQ.xlsx'));
+              final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx'));
               if (result.type == ResultType.done) {
                 debugPrint('Opened successfully');
               } else if (result.type == ResultType.noAppToOpen) {
@@ -229,12 +201,12 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           ElevatedButton(
             onPressed: () async {
               // Trigger the Excel creation and email sending process here
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(documentSnapshot.id);
-              File iaqExcel = await createIAQExcelFile('${siteName}_${date}_IAQ',surveyData,roomReadings);
+              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id!);
+              File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
               ];
-              sendEmail(siteName, date, attachments);
+              sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
 
             },
             style: ElevatedButton.styleFrom(
@@ -249,23 +221,13 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   }
 
   Widget _searchResultsList() {
-    // Filter the survey documents based on the search query
-    final searchResults = surveyDocuments.where((doc) {
-      var data = doc.data() as Map<String, dynamic>?;
-      return data != null && data['siteName'].toLowerCase().contains(searchController.text.toLowerCase());
+    final String query = searchController.text.toLowerCase();
+    final searchResults = surveyList.where((survey) {
+      return survey.siteName.toLowerCase().contains(query);
     }).toList();
 
     // Sort the filtered results by date, newest first
-    searchResults.sort((a, b) {
-      var dataA = a.data() as Map<String, dynamic>;
-      var dataB = b.data() as Map<String, dynamic>;
-      var dateA = DateTime.parse(dataA['date']);
-      var dateB = DateTime.parse(dataB['date']);
-      return dateB.compareTo(dateA);
-    });
-
-    // Take up to 10 results to display
-    final recentFiles = searchResults.take(10).toList();
+    searchResults.sort((a, b) => b.date.compareTo(a.date));
 
     // Build the widget using the filtered and sorted list
     return Flexible(
@@ -309,7 +271,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 ),
                 
               ],
-              rows: _buildSearchResultRows(recentFiles),
+              rows: _buildSearchResultRows(searchResults),
             ),
           ),
         ),
@@ -317,22 +279,19 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
     );
   }
 
-  List<DataRow> _buildSearchResultRows(List<DocumentSnapshot<Object?>> documents) {
-    return documents.map((doc) {
-      var data = doc.data() as Map<String, dynamic>;
-      var siteName = data['siteName'];
-      var date = data['date'];
+  List<DataRow> _buildSearchResultRows(List<SurveyInfo> surveys) {
+    return surveys.map((surveyInfo) {
       return DataRow(cells: [
         DataCell(
-          Text(siteName), // Display site name
+          Text(surveyInfo.siteName), // Display site name
         ),
         DataCell(
-          Text(date), // Display date
+          Text(surveyInfo.date.toIso8601String()), // Display date
         ),
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              final result = await OpenFile.open( path.join(directory.path, '${siteName}_${date}_IAQ.xlsx'));              
+              final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx'));              
               if (result.type == ResultType.done) {
                 debugPrint('opened successfully');
               } else {
@@ -370,12 +329,12 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(doc.id);
-              File iaqExcel = await createIAQExcelFile('${siteName}_${date}_IAQ',data,roomReadings);
+              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id!);
+              File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
               ];
-              sendEmail(siteName, date, attachments);
+              sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
 
             },
             style: ElevatedButton.styleFrom(
@@ -433,13 +392,14 @@ Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPa
 
 
 
-Future<File> createIAQExcelFile(String fileName, Map<String, dynamic> surveyData, List<RoomReading> roomReadings) async {
+Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   // Get the path to the document directory
+
   final directory = await getApplicationDocumentsDirectory();
   // Path to the Excel template
   final templatePath = path.join(directory.path, 'IAQ_template_v2.xlsx');
   // Path for the new Excel file
-  final newFilePath = path.join(directory.path, '$fileName.xlsx');
+  final newFilePath = path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx');
 
   // Read the template
   var excel = Excel.decodeBytes(File(templatePath).readAsBytesSync());
@@ -448,38 +408,29 @@ Future<File> createIAQExcelFile(String fileName, Map<String, dynamic> surveyData
   var sheet = excel['Data for Print']; // Replace with your actual sheet name
   // Assume 'sheet' is not null
   // Example: Fill in the site name and date
-  sheet.cell(CellIndex.indexByString('A1')).value = surveyData['siteName'];
-  sheet.cell(CellIndex.indexByString('A2')).value = surveyData['date'];
-  sheet.cell(CellIndex.indexByString('A3')).value = surveyData['occupancyType'];
+  sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
+  sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
+  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
 
   int startRow = 5;
 
   for (var reading in roomReadings) {
-    // Calculate the row index for each room reading based on startRow
-    var rowIndex = startRow + roomReadings.indexOf(reading);
+    int rowIndex = startRow + roomReadings.indexOf(reading);
 
-    // Write the room reading data to the corresponding cells
-    var cellBuilding = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex));
-    var cellFloorNumber = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex));
-    var cellRoomNumber = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex));
-    var cellPrimaryUse = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex));
-    var cellTemperature = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex));
-    var cellRelativeHumidity = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex));
-    var cellCO2 = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex));
-    var cellPM25 = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex));
-    
     // Assign values from the RoomReading object to the cells
-    cellBuilding.value = reading.building;
-    cellFloorNumber.value = reading.floorNumber;
-    cellRoomNumber.value = reading.roomNumber;
-    cellPrimaryUse.value = reading.primaryUse;
-    cellTemperature.value = reading.temperature;
-    cellRelativeHumidity.value = reading.relativeHumidity;
-    cellCO2.value = reading.additionalMetrics['Carbon Dioxide'];
-    cellPM25.value = reading.additionalMetrics['PM2.5'];
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), reading.building);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+    // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
 
-    // ... Write other additional metrics if needed ...
-    
     // Increment the row for the next set of data
     startRow++;
   }
@@ -493,21 +444,8 @@ Future<File> createIAQExcelFile(String fileName, Map<String, dynamic> surveyData
   return File(newFilePath);
 }
 
-Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
-  List<RoomReading> roomReadings = [];
-
-  var roomReadingsSnapshot = await FirebaseFirestore.instance
-      .collection('surveys')
-      .doc(surveyId)
-      .collection('roomReadings')
-      .get();
-
-  for (var doc in roomReadingsSnapshot.docs) {
-    var data = doc.data();
-    // Assuming 'RoomReading' has a constructor that accepts a Map
-    RoomReading reading = RoomReading.fromMap(data);
-    roomReadings.add(reading);
-  }
-
-  return roomReadings;
+Future<List<RoomReading>> fetchRoomReadingsForSurvey(int surveyId) async {
+  return await DatabaseHelper.instance.readRoomReadings(surveyId);
 }
+
+
