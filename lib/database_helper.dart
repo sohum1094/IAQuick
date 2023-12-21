@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:iaqapp/models/survey_info.dart';
@@ -82,13 +84,13 @@ class DatabaseHelper {
     return db.insert('survey_info', json);
   }
 
-  Future<SurveyInfo?> readSurvey(String id) async {
+  Future<SurveyInfo?> readSurvey(String ID) async {
     final db = await instance.database;
     final maps = await db.query(
       'survey_info',
-      columns: ['id', 'siteName', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
-      where: 'id = ?',
-      whereArgs: [id],
+      columns: ['ID', 'siteName', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
+      where: 'ID = ?',
+      whereArgs: [ID],
     );
 
     if (maps.isNotEmpty) {
@@ -103,26 +105,28 @@ class DatabaseHelper {
     return db.update(
       'survey_info',
       surveyInfo.toJson(),
-      where: 'id = ?',
-      whereArgs: [surveyInfo.id],
+      where: 'ID = ?',
+      whereArgs: [surveyInfo.ID],
     );
   }
 
-  Future<int> deleteSurvey(String id) async {
+  Future<int> deleteSurvey(String ID) async {
     final db = await instance.database;
     return db.delete(
       'survey_info',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'ID = ?',
+      whereArgs: [ID],
     );
   }
 
   Future<List<SurveyInfo>> readAllSurveys() async {
     final db = await instance.database;
     final result = await db.query('survey_info');
-
+    print("readAllSurveys result = " + result.toString());
     if (result.isNotEmpty) {
-      return result.map((json) => SurveyInfo.fromMap(json)).toList();
+      var list = result.map((json) => SurveyInfo.fromMap(json)).toList();
+      print("readAllSurvey list: " + list.toString());
+      return list;
     } else {
       return [];
     }
@@ -141,7 +145,7 @@ class DatabaseHelper {
     final maps = await db.query(
       'outdoor_readings',
       columns: [
-        'id',
+        'ID',
         'surveyID',
         'temperature',
         'relativeHumidity',
@@ -173,24 +177,34 @@ class DatabaseHelper {
 
   Future<List<RoomReading>> readRoomReadings(String surveyID) async {
     final db = await instance.database;
+    print(await getAllRoomReadingsJson());
     final result = await db.query(
       'room_readings',
       where: 'surveyID = ?',
       whereArgs: [surveyID],
     );
-
-    return result.isNotEmpty
-        ? result.map((json) => RoomReading.fromMap(json)).toList()
-        : [];
+    print(result.toString());
+    List<RoomReading> readings = (result.isNotEmpty)? result.map((json) => RoomReading.fromMap(json)).toList() : [];
+    print("readRoomReadings input: $surveyID \n readRoomReadings output: roomReadings list of size " + readings.length.toString());
+    return readings;
   }
+
+  Future<String> getAllRoomReadingsJson() async {
+    final db = await instance.database;
+    final List<Map<String, dynamic>> maps = await db.query('room_readings');
+    List<RoomReading> readings = maps.map((map) => RoomReading.fromMap(map)).toList();
+    String json = jsonEncode(readings.map((reading) => reading.toJson()).toList());
+    return json;
+  }
+
 
   Future<int> updateRoomReading(RoomReading roomReading) async {
     final db = await instance.database;
     return db.update(
       'room_readings',
       roomReading.toJson(),
-      where: 'id = ?',
-      whereArgs: [roomReading.id],
+      where: 'ID = ?',
+      whereArgs: [roomReading.ID],
     );
   }
 

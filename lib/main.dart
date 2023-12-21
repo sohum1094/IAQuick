@@ -4,14 +4,13 @@ import 'package:iaqapp/new_survey/new_survey_start.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'existing_survey_screen.dart';
 import 'user_info/user_initial_info.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => UserInfoDialogStatus(),

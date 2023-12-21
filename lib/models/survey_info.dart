@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
 class SurveyInfo {
-  String id; // id is now a non-nullable String
+  String ID; // id is now a non-nullable String
   String siteName;
   DateTime date;
   String address;
@@ -14,7 +14,7 @@ class SurveyInfo {
 
   // Default constructor
   SurveyInfo()
-      : id = const Uuid().v4(), // Generate a new UUID
+      : ID = const Uuid().v4(), // Generate a new UUID
         siteName = "",
         date = DateTime.parse("19700101"),
         address = "",
@@ -27,7 +27,7 @@ class SurveyInfo {
 
   // Parameterized constructor
   SurveyInfo.parameterized({
-    String? id, // Accept an existing ID as nullable
+    String? ID, // Accept an existing ID as nullable
     required this.siteName,
     required this.date,
     required this.address,
@@ -37,11 +37,11 @@ class SurveyInfo {
     this.vocs = false,
     this.pm25 = false,
     this.pm10 = false,
-  }) : id = id ?? const Uuid().v4();
+  }) : ID = ID ?? const Uuid().v4();
 
   Map<String, dynamic> toJson() {
     final Map<String,dynamic> data = {
-      'id' : id,
+      'ID' : ID,
       'siteName': siteName,
       'date': date.toIso8601String(),
       'address': address,
@@ -56,7 +56,7 @@ class SurveyInfo {
   }
 
   SurveyInfo.fromMap(Map<String, dynamic> map)
-    : id = map['id'] ?? const Uuid().v4(), // Assign an existing ID or generate a new one
+    : ID = map['ID'], // Assign an existing ID or generate a new one
       siteName = map['siteName'] ?? "",
       date = DateTime.tryParse(map['date']) ?? DateTime.parse("1970-01-01"),
       address = map['address'] ?? "",
@@ -118,7 +118,7 @@ class OutdoorReadings {
 
 
 class RoomReading {
-  int? id;
+  int? ID;
   String surveyID;
   String building;
   String floorNumber;
@@ -134,7 +134,7 @@ class RoomReading {
   String comments;
 
   RoomReading({
-    this.id, // Optional id
+    this.ID, // Optional id
     String? surveyID,
     this.building = "default",
     this.floorNumber = "0",
@@ -151,7 +151,7 @@ class RoomReading {
   }): surveyID = surveyID ?? const Uuid().v4(); // Assign a new UUID if id is not provided
 
   RoomReading.fromMap(Map<String, dynamic> map)
-      : id = map['id'] ?? -1, // Use existing id or generate a new one
+      : ID = map['ID'] ?? -1, // Use existing id or generate a new one
         surveyID = map['surveyID'] ?? "default",
         building = map['building'] ?? "default",
         floorNumber = map['floorNumber'] ?? "0",
@@ -182,8 +182,8 @@ class RoomReading {
       'vocs': vocs,
       'comments': comments,
     };
-    if (id != null) {
-      data['id'] = id;
+    if (ID != null) {
+      data['ID'] = ID;
     }
 
     return data;

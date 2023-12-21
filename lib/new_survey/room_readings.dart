@@ -202,7 +202,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
       // Instantiate RoomReading with the collected data
       RoomReading roomReading = RoomReading(
-        surveyID: widget.surveyInfo.id,
+        surveyID: widget.surveyInfo.ID,
         building: dropdownModel.building,
         floorNumber: dropdownModel.floor,
         roomNumber: roomNumberTextController.text,
@@ -881,11 +881,11 @@ Future<void> saveSurveyToLocalDatabase(SurveyInfo surveyInfo,
     await db.transaction((txn) async {
       await txn.insert('survey_info', surveyInfo.toJson());
 
-      outdoorReadings.surveyID = surveyInfo.id; // Correctly handle as string
+      outdoorReadings.surveyID = surveyInfo.ID; // Correctly handle as string
       await txn.insert('outdoor_readings', outdoorReadings.toJson());
 
       for (var roomReading in roomReadings) {
-        roomReading.surveyID = surveyInfo.id; // Correctly handle as string
+        roomReading.surveyID = surveyInfo.ID; // Correctly handle as string
         await txn.insert('room_readings', roomReading.toJson());
       }
     });
