@@ -8,8 +8,8 @@ import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/database_helper.dart';
+import 'package:share_plus/share_plus.dart';
 
-// import 'package:permission_handler/permission_handler.dart';
 
     Directory directory = Directory('path');
 
@@ -207,7 +207,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
               ];
-              sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
+              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
+              shareFiles(surveyInfo.siteName,surveyInfo.date,attachments);
 
             },
             style: ElevatedButton.styleFrom(
@@ -336,8 +337,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
               ];
-              sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
-
+              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
+              shareFiles(surveyInfo.siteName,surveyInfo.date,attachments);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -377,7 +378,16 @@ Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPa
 }
 
 
+Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentPaths) async {
+  String message = "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on ${DateFormat('MM-dd-yyyy').format(date)} created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick";
 
+  try {
+    await Share.shareFiles(attachmentPaths, text: message);
+  } catch (e) {
+    // Handle error or inform the user
+    print('Error sharing files: $e');
+  }
+}
 
 
 Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
@@ -441,5 +451,7 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
 Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
   return await DatabaseHelper.instance.readRoomReadings(surveyId);
 }
+
+
 
 
