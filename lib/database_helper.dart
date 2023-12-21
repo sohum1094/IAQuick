@@ -136,7 +136,7 @@ class DatabaseHelper {
   }
 
 
-  Future<OutdoorReadings?> readOutdoorReadings(String surveyId) async {
+  Future<OutdoorReadings?> readOutdoorReadings(String surveyID) async {
     final db = await instance.database;
     final maps = await db.query(
       'outdoor_readings',
@@ -153,7 +153,7 @@ class DatabaseHelper {
         // Add other columns as needed based on your OutdoorReadings class
       ],
       where: 'surveyID = ?',
-      whereArgs: [surveyId],
+      whereArgs: [surveyID],
     );
 
     if (maps.isNotEmpty) {
@@ -164,19 +164,19 @@ class DatabaseHelper {
   }
 
 
-  Future<int> createRoomReading(RoomReading roomReading, String surveyId) async {
+  Future<int> createRoomReading(RoomReading roomReading, String surveyID) async {
     final db = await instance.database;
     final json = roomReading.toJson();  // Convert to JSON map
-    json['surveyId'] = surveyId;
+    json['surveyID'] = surveyID;
     return db.insert('room_readings', json);
   }
 
-  Future<List<RoomReading>> readRoomReadings(String surveyId) async {
+  Future<List<RoomReading>> readRoomReadings(String surveyID) async {
     final db = await instance.database;
     final result = await db.query(
       'room_readings',
-      where: 'surveyId = ?',
-      whereArgs: [surveyId],
+      where: 'surveyID = ?',
+      whereArgs: [surveyID],
     );
 
     return result.isNotEmpty
@@ -194,7 +194,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deleteRoomReading(int id) async {
+  Future<int> deleteRoomReading(String id) async {
     final db = await instance.database;
     return db.delete(
       'room_readings',
