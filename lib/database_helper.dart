@@ -23,55 +23,56 @@ class DatabaseHelper {
 
   Future _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE survey_info (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        siteName TEXT,
-        date TEXT,
-        address TEXT,
-        occupancyType TEXT,
-        carbonDioxideReadings INTEGER,
-        carbonMonoxideReadings INTEGER,
-        vocs INTEGER,
-        pm25 INTEGER,
-        pm10 INTEGER
-      )
-    ''');
+    CREATE TABLE survey_info (
+      ID TEXT PRIMARY KEY,
+      siteName TEXT,
+      date TEXT,
+      address TEXT,
+      occupancyType TEXT,
+      carbonDioxideReadings INTEGER,
+      carbonMonoxideReadings INTEGER,
+      vocs INTEGER,
+      pm25 INTEGER,
+      pm10 INTEGER
+    )
+  ''');
 
     await db.execute('''
-      CREATE TABLE outdoor_readings (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        surveyID INTEGER,
-        temperature REAL,
-        relativeHumidity REAL,
-        co2 REAL,            
-        co REAL,             
-        pm25 REAL,        
-        pm10 REAL,         
-        vocs REAL,           
-        FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
-      )
-    ''');
+    CREATE TABLE outdoor_readings (
+      ID INTEGER PRIMARY KEY AUTOINCREMENT,
+      surveyID TEXT,
+      temperature REAL,
+      relativeHumidity REAL,
+      co2 REAL,
+      co REAL,
+      pm25 REAL,
+      pm10 REAL,
+      vocs REAL,
+      FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
+    )
+  ''');
 
     await db.execute('''
-      CREATE TABLE room_readings (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        surveyID INTEGER,
-        building TEXT,
-        floorNumber TEXT,
-        roomNumber TEXT,
-        primaryUse TEXT,
-        temperature REAL,
-        relativeHumidity REAL,
-        co2 REAL,            
-        co REAL,             
-        pm25 REAL,        
-        pm10 REAL,         
-        vocs REAL,           
-        comments TEXT,
-        FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
-      )
-    ''');
+    CREATE TABLE room_readings (
+      ID INTEGER PRIMARY KEY AUTOINCREMENT,
+      surveyID TEXT,
+      building TEXT,
+      floorNumber TEXT,
+      roomNumber TEXT,
+      primaryUse TEXT,
+      temperature REAL,
+      relativeHumidity REAL,
+      co2 REAL,
+      co REAL,
+      pm25 REAL,
+      pm10 REAL,
+      vocs REAL,
+      comments TEXT,
+      FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
+    )
+  ''');
   }
+
 
 
   // Add methods for CRUD operations
@@ -81,7 +82,7 @@ class DatabaseHelper {
     return db.insert('survey_info', json);
   }
 
-  Future<SurveyInfo?> readSurvey(int id) async {
+  Future<SurveyInfo?> readSurvey(String id) async {
     final db = await instance.database;
     final maps = await db.query(
       'survey_info',
@@ -107,7 +108,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deleteSurvey(int id) async {
+  Future<int> deleteSurvey(String id) async {
     final db = await instance.database;
     return db.delete(
       'survey_info',
@@ -127,19 +128,31 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> createOutdoorReadings(OutdoorReadings outdoorReadings, int surveyId) async {
-      final db = await instance.database;
-      final json = outdoorReadings.toJson();  // Convert to JSON map
-      json['surveyId'] = surveyId;
-      return db.insert('outdoor_readings', json);
-    }
+  Future<int> createOutdoorReadings(OutdoorReadings outdoorReadings) async {
+    final db = await instance.database;
+    final json = outdoorReadings.toJson(); // Convert to JSON map
+    // Assuming outdoorReadings.toJson() includes 'surveyID'
+    return db.insert('outdoor_readings', json);
+  }
 
-    Future<OutdoorReadings?> readOutdoorReadings(int surveyId) async {
+
+  Future<OutdoorReadings?> readOutdoorReadings(String surveyId) async {
     final db = await instance.database;
     final maps = await db.query(
       'outdoor_readings',
-      columns: ['id', 'surveyId', 'baselineReadings'],
-      where: 'surveyId = ?',
+      columns: [
+        'id',
+        'surveyID',
+        'temperature',
+        'relativeHumidity',
+        'co2',
+        'co',
+        'pm25',
+        'pm10',
+        'vocs'
+        // Add other columns as needed based on your OutdoorReadings class
+      ],
+      where: 'surveyID = ?',
       whereArgs: [surveyId],
     );
 
@@ -150,14 +163,15 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> createRoomReading(RoomReading roomReading, int surveyId) async {
+
+  Future<int> createRoomReading(RoomReading roomReading, String surveyId) async {
     final db = await instance.database;
     final json = roomReading.toJson();  // Convert to JSON map
     json['surveyId'] = surveyId;
     return db.insert('room_readings', json);
   }
 
-  Future<List<RoomReading>> readRoomReadings(int surveyId) async {
+  Future<List<RoomReading>> readRoomReadings(String surveyId) async {
     final db = await instance.database;
     final result = await db.query(
       'room_readings',

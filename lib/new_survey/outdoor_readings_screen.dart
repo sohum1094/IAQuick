@@ -10,7 +10,6 @@ final GlobalKey<EasyDataFormState> formKey = GlobalKey<EasyDataFormState>();
 
 class OutdoorReadingsScreen extends StatelessWidget {
   final SurveyInfo surveyInfo; 
-  static final OutdoorReadings outdoorReadings = OutdoorReadings();
 
   const OutdoorReadingsScreen({required this.surveyInfo, super.key});
   
@@ -49,6 +48,8 @@ class OutdoorReadingsScreen extends StatelessWidget {
 }
 
 Widget outdoorReadingsInfoForm(BuildContext context, SurveyInfo surveyInfo) {
+  final OutdoorReadings outdoorReadings = OutdoorReadings();
+
   return FutureBuilder<SharedPreferences>(
     future: SharedPreferences.getInstance(),
     builder: (context, snapshot) {
@@ -57,13 +58,13 @@ Widget outdoorReadingsInfoForm(BuildContext context, SurveyInfo surveyInfo) {
           key: formKey,
           onSaved: (values, fieldValues, form) {
             if (form.validate()) {
-              OutdoorReadingsScreen.outdoorReadings.temperature = double.tryParse(fieldValues['Temperature (F)Field']) ?? 0;
-              OutdoorReadingsScreen.outdoorReadings.relativeHumidity = double.tryParse(fieldValues['Relative Humidity (%)Field']) ?? 0;
-              if (surveyInfo.carbonDioxideReadings) OutdoorReadingsScreen.outdoorReadings.co2 = double.tryParse(fieldValues['Carbon DioxideField']);
-              if(surveyInfo.carbonMonoxideReadings) OutdoorReadingsScreen.outdoorReadings.co = double.tryParse(fieldValues['Carbon MonoxideField']);
-              if(surveyInfo.vocs) OutdoorReadingsScreen.outdoorReadings.vocs = double.tryParse(fieldValues['VOCsField']);
-              if(surveyInfo.pm25) OutdoorReadingsScreen.outdoorReadings.pm25 = double.tryParse(fieldValues['PM2.5Field']);
-              if(surveyInfo.pm10) OutdoorReadingsScreen.outdoorReadings.pm10 = double.tryParse(fieldValues['PM10Field']);
+              outdoorReadings.temperature = double.tryParse(fieldValues['Temperature (F)Field']) ?? 0;
+              outdoorReadings.relativeHumidity = double.tryParse(fieldValues['Relative Humidity (%)Field']) ?? 0;
+              if (surveyInfo.carbonDioxideReadings) outdoorReadings.co2 = double.tryParse(fieldValues['Carbon DioxideField']);
+              if(surveyInfo.carbonMonoxideReadings) outdoorReadings.co = double.tryParse(fieldValues['Carbon MonoxideField']);
+              if(surveyInfo.vocs) outdoorReadings.vocs = double.tryParse(fieldValues['VOCsField']);
+              if(surveyInfo.pm25) outdoorReadings.pm25 = double.tryParse(fieldValues['PM2.5Field']);
+              if(surveyInfo.pm10) outdoorReadings.pm10 = double.tryParse(fieldValues['PM10Field']);
             }
           },
           child: Column(
@@ -85,7 +86,10 @@ Widget outdoorReadingsInfoForm(BuildContext context, SurveyInfo surveyInfo) {
                       context,
                       MaterialPageRoute(
                         builder: (BuildContext context) {
-                          return RoomReadingsFormScreen(surveyInfo: surveyInfo, outdoorReadingsInfo: OutdoorReadingsScreen.outdoorReadings);
+                          print('Outdoor readings: ');
+                          print(surveyInfo.toJson().toString());
+                          print(outdoorReadings.toJson().toString());
+                          return RoomReadingsFormScreen(surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadings);
                         },
                       ),
                     );

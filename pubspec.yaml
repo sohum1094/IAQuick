@@ -52,6 +52,7 @@ dependencies:
   permission_handler: ^8.1.6
   firebase_core: ^2.24.0
   sqflite: ^2.0.0+3
+  uuid: ^4.2.2
 
 
 dev_dependencies:
@@ -108,3 +109,4 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
   assets:
       - assets/
+      - assets/IAQ_template_v2.xlsx

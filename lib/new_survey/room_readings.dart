@@ -69,6 +69,10 @@ class RoomReadingsFormScreen extends StatelessWidget {
       {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
   @override
   Widget build(BuildContext context) {
+    print('Carbon Dioxide Readings: ${surveyInfo.carbonDioxideReadings}');
+    print('Carbon Monoxide Readings: ${surveyInfo.carbonMonoxideReadings}');
+
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -111,10 +115,10 @@ class RoomReadingsFormScreen extends StatelessWidget {
 }
 
 class RoomReadingsForm extends StatefulWidget {
-  final SurveyInfo surveyInfo = SurveyInfo();
-  final OutdoorReadings outdoorReadingsInfo = OutdoorReadings();
-  RoomReadingsForm(
-      {required surveyInfo, required outdoorReadingsInfo, super.key});
+  final SurveyInfo surveyInfo;
+  final OutdoorReadings outdoorReadingsInfo;
+  const RoomReadingsForm(
+      {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
 
   @override
   RoomReadingsFormState createState() => RoomReadingsFormState();
@@ -198,8 +202,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
       // Instantiate RoomReading with the collected data
       RoomReading roomReading = RoomReading(
+        surveyID: widget.surveyInfo.id,
         building: dropdownModel.building,
-        floorNumber: int.parse(dropdownModel.floor),
+        floorNumber: dropdownModel.floor,
         roomNumber: roomNumberTextController.text,
         primaryUse: primaryUseTextController.text,
         temperature: double.parse(temperatureTextController.text),
@@ -268,8 +273,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     );
   }
 
-  DropdownButtonFormField floorDropdownTemplate(
-      BuildContext context, DropdownModel model) {
+  DropdownButtonFormField floorDropdownTemplate(BuildContext context, DropdownModel model) {
     List<String> options = [
       'B',
       'G',
@@ -308,6 +312,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   @override
   Widget build(BuildContext context) {
+    print('Carbon Monoxide Readings: ${widget.surveyInfo.carbonMonoxideReadings}');
+
+    
     return Form(
       key: _formKey,
       child: Column(
@@ -378,7 +385,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       if (value == null) {
                         return null;
                       } else if (value.isNotEmpty &&
-                          !RegExp(r'^[a-zA-Z\s\-\/]+$').hasMatch(value)) {
+                          !RegExp(r'^[a-zA-Z\s\-]+$').hasMatch(value)) {
                         return "Enter Valid Primary Use Value";
                       } else {
                         return null;
@@ -707,29 +714,35 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   backgroundColor: Colors.green,
                 ),
                 onPressed: () {
-                  if (!autofillPrimaryUse
-                      .contains(primaryUseTextController.text)) {
-                    autofillPrimaryUse.add(primaryUseTextController.text);
+                  if (savedPressed) {
+                    if (!autofillPrimaryUse
+                        .contains(primaryUseTextController.text)) {
+                      autofillPrimaryUse.add(primaryUseTextController.text);
+                    }
+
+                    roomNumberTextController.clear();
+                    primaryUseTextController.clear();
+                    humiditiyTextController.clear();
+                    temperatureTextController.clear();
+                    //add dropdowns
+                    dioxTextController.clear();
+                    monoxTextController.clear();
+                    vocsTextController.clear();
+                    pm25TextController.clear();
+                    pm10TextController.clear();
+
+                    commentTextController.clear();
+                    buildingDropdownKey.currentState?.reset();
+                    floorDropdownKey.currentState?.reset();
+
+                    _imageFile = null;
+
+                    savedPressed = false;
+                  } else {
+                    _showErrorDialog(context,
+                        'Please click "Save Info" to save current room info before adding new room.');
                   }
-
-                  roomNumberTextController.clear();
-                  primaryUseTextController.clear();
-                  humiditiyTextController.clear();
-                  temperatureTextController.clear();
-                  //add dropdowns
-                  dioxTextController.clear();
-                  monoxTextController.clear();
-                  vocsTextController.clear();
-                  pm25TextController.clear();
-                  pm10TextController.clear();
-
-                  commentTextController.clear();
-                  buildingDropdownKey.currentState?.reset();
-                  floorDropdownKey.currentState?.reset();
-
-                  _imageFile = null;
-
-                  savedPressed = false;
+                  
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * .33,
@@ -862,23 +875,18 @@ class DropdownModel {
 
 Future<void> saveSurveyToLocalDatabase(SurveyInfo surveyInfo,
     OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
-  final db = await DatabaseHelper.instance.database;
+    final db = await DatabaseHelper.instance.database;
 
-  // Start a transaction
-  await db.transaction((txn) async {
-    // Insert SurveyInfo
-    int surveyID = await txn.insert('survey_info', surveyInfo.toJson());
+    // Start a transaction
+    await db.transaction((txn) async {
+      await txn.insert('survey_info', surveyInfo.toJson());
 
-    // Insert OutdoorReadings with surveyId
-    outdoorReadings.surveyID =
-        surveyID; // Assuming you have a surveyId field in OutdoorReadings
-    await txn.insert('outdoor_readings', outdoorReadings.toJson());
+      outdoorReadings.surveyID = surveyInfo.id; // Correctly handle as string
+      await txn.insert('outdoor_readings', outdoorReadings.toJson());
 
-    // Insert each RoomReading with surveyId
-    for (var roomReading in roomReadings) {
-      roomReading.surveyID =
-          surveyID; // Assuming you have a surveyId field in RoomReading
-      await txn.insert('room_readings', roomReading.toJson());
-    }
-  });
+      for (var roomReading in roomReadings) {
+        roomReading.surveyID = surveyInfo.id; // Correctly handle as string
+        await txn.insert('room_readings', roomReading.toJson());
+      }
+    });
 }

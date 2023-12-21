@@ -1,8 +1,8 @@
-
+import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
 import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
@@ -121,16 +121,17 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   label: Expanded(
                     child: Text('Date'),
                   ),
-                ),DataColumn(
-                  label: Expanded(
-                    child: Text('IAQ'),
-                  ),
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text('Visual\nAssesment'),
-                  ),
-                ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('IAQ'),
+                //   ),
+                // ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('Visual\nAssesment'),
+                //   ),
+                // ),
                 DataColumn(
                   label: Expanded(
                     child: Text('Export\nto Email'),
@@ -153,55 +154,55 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
     return recentSurveys.map((surveyInfo) {
   // Extract date
       return DataRow(cells: [
-        DataCell(Text(surveyInfo.siteName)),
-        DataCell(Text(surveyInfo.date.toIso8601String())),
-        DataCell(
-          ElevatedButton(
-            onPressed: () async {
-              final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx'));
-              if (result.type == ResultType.done) {
-                debugPrint('Opened successfully');
-              } else if (result.type == ResultType.noAppToOpen) {
-                debugPrint('No app to open this file');
-              } else {
-                // Error occurred while opening the file
-                debugPrint('Error opening the file: ${result.message}');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-              elevation: 0,
-            ),
-            child: const Icon(Icons.file_open),
-          ),
-        ),
-        DataCell(
-          ElevatedButton(
-            onPressed: () async {
-              
-
-              // final result = await OpenFile.open();
-              // if (result.type == ResultType.done) {
-              //   debugPrint('Opened successfully');
-              // } else if (result.type == ResultType.noAppToOpen) {
-              //   debugPrint('No app to open this file');
-              // } else {
-              //   // Error occurred while opening the file
-              //   debugPrint('Error opening the file: ${result.message}');
-              // }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-              elevation: 0,
-            ),
-            child: const Icon(Icons.file_open),
-          ),
-        ),
+        DataCell(Text(surveyInfo.siteName),),
+        DataCell(Text(DateFormat('MM-dd-yyyy').format(surveyInfo.date)),),
+        // DataCell(
+        //   ElevatedButton(
+        //     onPressed: () async {
+        //       final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx'));
+        //       if (result.type == ResultType.done) {
+        //         debugPrint('Opened successfully');
+        //       } else if (result.type == ResultType.noAppToOpen) {
+        //         debugPrint('No app to open this file');
+        //       } else {
+        //         // Error occurred while opening the file
+        //         debugPrint('Error opening the file: ${result.message}');
+        //       }
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: Colors.grey,
+        //       elevation: 0,
+        //     ),
+        //     child: const Icon(Icons.file_open),
+        //   ),
+        // ),
+        // DataCell(
+        //   ElevatedButton(
+        //     onPressed: () async {
+        //
+        //
+        //       // final result = await OpenFile.open();
+        //       // if (result.type == ResultType.done) {
+        //       //   debugPrint('Opened successfully');
+        //       // } else if (result.type == ResultType.noAppToOpen) {
+        //       //   debugPrint('No app to open this file');
+        //       // } else {
+        //       //   // Error occurred while opening the file
+        //       //   debugPrint('Error opening the file: ${result.message}');
+        //       // }
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: Colors.grey,
+        //       elevation: 0,
+        //     ),
+        //     child: const Icon(Icons.file_open),
+        //   ),
+        // ),
         DataCell(
           ElevatedButton(
             onPressed: () async {
               // Trigger the Excel creation and email sending process here
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id!);
+              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id);
               File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
@@ -254,16 +255,17 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   label: Expanded(
                     child: Text('Date'),
                   ),
-                ),DataColumn(
-                  label: Expanded(
-                    child: Text('IAQ'),
-                  ),
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text('Visual\nAssessment'),
-                  ),
-                ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('IAQ'),
+                //   ),
+                // ),
+                // DataColumn(
+                //   label: Expanded(
+                //     child: Text('Visual\nAssessment'),
+                //   ),
+                // ),
                 DataColumn(
                   label: Expanded(
                     child: Text('Export\nto Email'),
@@ -286,50 +288,50 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           Text(surveyInfo.siteName), // Display site name
         ),
         DataCell(
-          Text(surveyInfo.date.toIso8601String()), // Display date
+          Text(DateFormat('MM-dd-yyyy').format(surveyInfo.date)), // Display date
         ),
+        // DataCell(
+        //   ElevatedButton(
+        //     onPressed: () async {
+        //       final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx'));
+        //       if (result.type == ResultType.done) {
+        //         debugPrint('opened successfully');
+        //       } else {
+        //         // Unable to open the file
+        //         debugPrint('file not opened properly');
+        //       }
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: Colors.grey,
+        //       elevation: 0,
+        //     ),
+        //     child: const Icon(Icons.file_open),
+        //   ),
+        // ),
+        // DataCell(
+        //   ElevatedButton(
+        //     onPressed: () async {
+        //
+        //
+        //       // final result = await OpenFile.open();
+        //       // if (result.type == ResultType.done) {
+        //       //   debugPrint('opened successfully');
+        //       // } else {
+        //       //   // Unable to open the file
+        //       //   debugPrint('file not opened properly');
+        //       // }
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: Colors.grey,
+        //       elevation: 0,
+        //     ),
+        //     child: const Icon(Icons.file_open),
+        //   ),
+        // ),
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              final result = await OpenFile.open( path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx'));              
-              if (result.type == ResultType.done) {
-                debugPrint('opened successfully');
-              } else {
-                // Unable to open the file
-                debugPrint('file not opened properly');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-              elevation: 0,
-            ),
-            child: const Icon(Icons.file_open),
-          ),
-        ),
-        DataCell(
-          ElevatedButton(
-            onPressed: () async {
-            
-
-              // final result = await OpenFile.open();
-              // if (result.type == ResultType.done) {
-              //   debugPrint('opened successfully');
-              // } else {
-              //   // Unable to open the file
-              //   debugPrint('file not opened properly');
-              // }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-              elevation: 0,
-            ),
-            child: const Icon(Icons.file_open),
-          ),
-        ),
-        DataCell(
-          ElevatedButton(
-            onPressed: () async {
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id!);
+              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id);
               File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
               //File visualExcel = await createVisualExcelFile();
               List<String> attachments = [iaqExcel.path, //visualExcel.path
@@ -356,27 +358,13 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPaths) async {
   // Extract the necessary data from the selected row
   // final visualPath = recentFile[4];
-
-  // Create the Excel files from the CSV data
-  
-  // Excel? visualExcel =
-  //     await writeVisualExcelTemplate(visualPath, '${siteName}_${date}_Visual');
-
-  final directory = await getApplicationDocumentsDirectory();
-  final outPath = Directory(path.join(
-    directory.path,
-    'iaQuick',
-    'csv_files',
-    'for_export',
-  ));
-  await outPath.create(recursive: true);
   String iaqFilePath = attachmentPaths[0];
   // String visualFilePath = attachmentPaths[1];
   // Create the email
   final Email email = Email(
     body:
-        "Hello,\n\nHere are the IAQ and Visual Assesment Files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
-    subject: 'IAQ and Visual Assesment Excel Files for $siteName',
+        "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
+    subject: 'IAQ and Visual Assessment Excel Files for $siteName',
     recipients: [], // Add the recipient's email address here
     attachmentPaths: [iaqFilePath
     // ,visualFilePath
@@ -394,18 +382,20 @@ Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPa
 
 Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   // Get the path to the document directory
-
   final directory = await getApplicationDocumentsDirectory();
-  // Path to the Excel template
-  final templatePath = path.join(directory.path, 'IAQ_template_v2.xlsx');
-  // Path for the new Excel file
-  final newFilePath = path.join(directory.path, '${surveyInfo.siteName}_${surveyInfo.date}_IAQ.xlsx');
 
-  // Read the template
-  var excel = Excel.decodeBytes(File(templatePath).readAsBytesSync());
+  // Load the Excel template from assets
+  final ByteData data = await rootBundle.load('assets/IAQ_template_v2.xlsx');
+  final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+  // Decode the bytes to get Excel object
+  var excel = Excel.decodeBytes(bytes);
+
+  var sheet = excel['Data for Print']; // Replace with your actual sheet name
+
+
 
   // Modify the sheet with your data
-  var sheet = excel['Data for Print']; // Replace with your actual sheet name
   // Assume 'sheet' is not null
   // Example: Fill in the site name and date
   sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
@@ -435,16 +425,20 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     startRow++;
   }
 
-  // Save the filled-in Excel file
+  // Path for the new Excel file
+  final newFilePath = path.join(directory.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
+
+
+  // Save the modified Excel file to the document directory
   var onValue = excel.encode();
-  File(newFilePath)
+  File file = File(newFilePath)
     ..createSync(recursive: true)
     ..writeAsBytesSync(onValue!);
 
-  return File(newFilePath);
+  return file;
 }
 
-Future<List<RoomReading>> fetchRoomReadingsForSurvey(int surveyId) async {
+Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
   return await DatabaseHelper.instance.readRoomReadings(surveyId);
 }
 

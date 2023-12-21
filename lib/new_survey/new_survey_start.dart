@@ -106,9 +106,9 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
         model.pm10 = _AllCheckboxesState.readingsSwitches['PM10']!;
       },
       onSaved: (response, values, form) {
-        if (response['hasError'] ?? false) {
-          _alert(context, response['error']);
-        } else {
+        if (values['siteName'].isNotEmpty &&
+            values['siteAddress'].isNotEmpty &&
+            form.validate()) {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const LoggedScreen(),
@@ -266,10 +266,12 @@ class LoggedScreen extends StatelessWidget {
               TextButton(
                 child: const Text('Next'),
                 onPressed: () {
+                  print(SurveyInitialInfoFormState.model.toJson().toString());
                   Navigator.of(context).pop();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      
                       builder: (context) => OutdoorReadingsScreen(
                           surveyInfo: SurveyInitialInfoFormState.model),
                     ),
@@ -320,15 +322,6 @@ DropdownButtonFormField occupancyTypeDropdown(
   );
 }
 
-Future<void> _alert(BuildContext context, String text) async {
-  return showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Error'),
-      content: Text(text),
-    ),
-  );
-}
 
 class AllCheckboxes extends StatefulWidget {
   const AllCheckboxes({super.key});

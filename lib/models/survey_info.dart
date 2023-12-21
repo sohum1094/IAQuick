@@ -1,18 +1,20 @@
+import 'package:uuid/uuid.dart';
+
 class SurveyInfo {
-  int? id;
-  String siteName = "";
-  DateTime date = DateTime.parse("19700101");
-  String address = "";
-  String occupancyType = "";
-  bool carbonDioxideReadings = false;
-  bool carbonMonoxideReadings = false;
-  bool vocs = false;
-  bool pm25 = false;
-  bool pm10 = false;
-  
-    // Default constructor
+  String id; // id is now a non-nullable String
+  String siteName;
+  DateTime date;
+  String address;
+  String occupancyType;
+  bool carbonDioxideReadings;
+  bool carbonMonoxideReadings;
+  bool vocs;
+  bool pm25;
+  bool pm10;
+
+  // Default constructor
   SurveyInfo()
-      : id = -1, 
+      : id = const Uuid().v4(), // Generate a new UUID
         siteName = "",
         date = DateTime.parse("19700101"),
         address = "",
@@ -25,7 +27,7 @@ class SurveyInfo {
 
   // Parameterized constructor
   SurveyInfo.parameterized({
-    this.id, // Allow passing an existing ID
+    String? id, // Accept an existing ID as nullable
     required this.siteName,
     required this.date,
     required this.address,
@@ -35,10 +37,11 @@ class SurveyInfo {
     this.vocs = false,
     this.pm25 = false,
     this.pm10 = false,
-  }); // Use existing ID or generate a new one
+  }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toJson() {
     final Map<String,dynamic> data = {
+      'id' : id,
       'siteName': siteName,
       'date': date.toIso8601String(),
       'address': address,
@@ -49,14 +52,11 @@ class SurveyInfo {
       'pm25': pm25 ? 1 : 0,
       'pm10': pm10 ? 1 : 0,
     };
-    if (id != null) {
-      data['id'] = id;
-    }
     return data;
   }
 
   SurveyInfo.fromMap(Map<String, dynamic> map)
-    : id = map['id'], // Assign an existing ID or generate a new one
+    : id = map['id'] ?? const Uuid().v4(), // Assign an existing ID or generate a new one
       siteName = map['siteName'] ?? "",
       date = DateTime.tryParse(map['date']) ?? DateTime.parse("1970-01-01"),
       address = map['address'] ?? "",
@@ -66,12 +66,10 @@ class SurveyInfo {
       vocs = map['vocs'] == 1,
       pm25 = map['pm25'] == 1,
       pm10 = map['pm10'] == 1;
-
-
 }
 
 class OutdoorReadings {
-  int surveyID;
+  String surveyID;
   double temperature;
   double relativeHumidity;
   double? co2; // nullable
@@ -81,7 +79,7 @@ class OutdoorReadings {
   double? vocs; // nullable
 
   OutdoorReadings({
-    this.surveyID = -1,
+    String? surveyID,
     this.temperature = 0.0,
     this.relativeHumidity = 0.0,
     this.co2,
@@ -89,7 +87,7 @@ class OutdoorReadings {
     this.pm25,
     this.pm10,
     this.vocs,
-  });
+  }): surveyID = surveyID ?? const Uuid().v4();
 
   Map<String, dynamic> toJson() {
     return {
@@ -106,7 +104,7 @@ class OutdoorReadings {
 
   factory OutdoorReadings.fromMap(Map<String, dynamic> map) {
     return OutdoorReadings(
-      surveyID: map['surveyID']?.toInt() ?? -1,
+      surveyID: map['surveyID'],
       temperature: map['temperature']?.toDouble() ?? -1.0,
       relativeHumidity: map['relativeHumidity']?.toDouble() ?? -1.0,
       co2: map['co2']?.toDouble(),
@@ -121,9 +119,9 @@ class OutdoorReadings {
 
 class RoomReading {
   int? id;
-  int surveyID;
+  String surveyID;
   String building;
-  int floorNumber;
+  String floorNumber;
   String roomNumber;
   String primaryUse;
   double temperature;
@@ -137,9 +135,9 @@ class RoomReading {
 
   RoomReading({
     this.id, // Optional id
-    this.surveyID = -1,
+    String? surveyID,
     this.building = "default",
-    this.floorNumber = 0,
+    this.floorNumber = "0",
     this.roomNumber = "default",
     this.primaryUse = "default",
     this.temperature = 0,
@@ -150,13 +148,13 @@ class RoomReading {
     this.pm10,
     this.vocs,
     this.comments = "No issues were observed.",
-  }); // Assign a new UUID if id is not provided
+  }): surveyID = surveyID ?? const Uuid().v4(); // Assign a new UUID if id is not provided
 
   RoomReading.fromMap(Map<String, dynamic> map)
       : id = map['id'] ?? -1, // Use existing id or generate a new one
-        surveyID = map['surveyID'] ?? -1,
+        surveyID = map['surveyID'] ?? "default",
         building = map['building'] ?? "default",
-        floorNumber = map['floorNumber'] ?? 0,
+        floorNumber = map['floorNumber'] ?? "0",
         roomNumber = map['roomNumber'] ?? "default",
         primaryUse = map['primaryUse'] ?? "default",
         temperature = map['temperature']?.toDouble() ?? 0,
