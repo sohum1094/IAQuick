@@ -24,7 +24,7 @@ class DatabaseHelper {
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE survey_info (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
         siteName TEXT,
         date TEXT,
         address TEXT,
@@ -39,19 +39,25 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE outdoor_readings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        surveyId INTEGER,
-        baselineReadings TEXT,
-        FOREIGN KEY (surveyId) REFERENCES survey_info(id)
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        surveyID INTEGER,
+        temperature REAL,
+        relativeHumidity REAL,
+        co2 REAL,            
+        co REAL,             
+        pm25 REAL,        
+        pm10 REAL,         
+        vocs REAL,           
+        FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
       )
     ''');
 
     await db.execute('''
       CREATE TABLE room_readings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        surveyId INTEGER,
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        surveyID INTEGER,
         building TEXT,
-        floorNumber INTEGER,
+        floorNumber TEXT,
         roomNumber TEXT,
         primaryUse TEXT,
         temperature REAL,
@@ -62,7 +68,7 @@ class DatabaseHelper {
         pm10 REAL,         
         vocs REAL,           
         comments TEXT,
-        FOREIGN KEY (surveyId) REFERENCES survey_info(id)
+        FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
       )
     ''');
   }
