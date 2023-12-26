@@ -1,36 +1,9 @@
-/// This code snippet is a part of a Flutter application that handles the initial survey information form. It includes form fields for site name, address, date, occupancy type, and checkboxes for different readings. The form data is saved using shared preferences and validated before submission.
-///
-/// Example Usage:
-///
-/// // Creating an instance of the SurveyInitialInfoForm
-/// final form = SurveyInitialInfoForm();
-///
-/// // Building the form widget
-/// final formWidget = form.build(context);
-///
-/// // Displaying the form widget
-/// return formWidget;
-///
-/// Inputs:
-/// - BuildContext context: The build context of the widget.
-/// - SurveyInfoModel model: The model object that holds the survey information.
-///
-/// Flow:
-/// 1. The SurveyInitialInfoForm widget is built, which contains form fields for site name, address, date, occupancy type, and checkboxes for different readings.
-/// 2. The form data is validated and saved when the form is submitted.
-/// 3. If any field is empty or the form validation fails, an error dialog is shown.
-/// 4. If the form is successfully submitted, the survey information is saved using shared preferences.
-/// 5. The user is navigated to the LoggedScreen widget.
-///
-/// Outputs:
-/// - The SurveyInitialInfoForm widget is built and displayed.
-/// - The form data is saved using shared preferences.
-/// - The user is navigated to the LoggedScreen widget.
 import 'package:flutter/material.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
+import 'address_autocomplete_widget.dart';
 
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
@@ -127,7 +100,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
               child: Column(
                 children: [
                   siteNameTextFormField(context, model),
-                  addressTextFormField(context, model),
+                  AddressAutoCompleteFormField(model: model),
                   const DateTimePicker(),
                   occupancyTypeDropdown(context, model),
                   const AllCheckboxes(),
@@ -180,28 +153,46 @@ EasyTextFormField siteNameTextFormField(
   );
 }
 
-EasyTextFormField addressTextFormField(BuildContext context, SurveyInfo model) {
-  return EasyTextFormField(
-    initialValue: '',
-    name: 'siteAddress',
-    autovalidateMode: EasyAutovalidateMode.always,
-    validator: (value, [values]) {
-      if (value == null) {
-        return "Enter Correct Site Address";
-      } else {
-        return null;
-      }
-    },
-    decoration: const InputDecoration(
-      labelText: 'Street Address*',
-    ),
-    onSaved: (tempAddress) {
-      if (tempAddress != null) {
-        model.address = tempAddress;
-      }
-    },
-  );
-}
+// class AddressAutoCompleteFormField extends StatelessWidget {
+//   final SurveyInfo model;
+
+//   AddressAutoCompleteFormField({required this.model});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return TextFormField(
+//       onTap: () async {
+//         // Trigger the autocomplete
+//         Prediction? p = await PlacesAutocomplete.show(
+//           context: context,
+//           apiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
+//           mode: Mode.overlay, // Mode.fullscreen
+//           language: "en",
+//           components: [Component(Component.country, "us")],
+//         );
+
+//         // Handle the result
+//         if (p != null) {
+//           // You might want to get more details here, like the place ID or coordinates
+//           model.address = p.description!;
+//         }
+//       },
+//       initialValue: model.address,
+//       decoration: InputDecoration(labelText: 'Street Address*'),
+//       validator: (value) {
+//         if (value == null || value.isEmpty) {
+//           return 'Enter Correct Site Address';
+//         }
+//         return null;
+//       },
+//       onSaved: (value) {
+//         if (value != null) {
+//           model.address = value;
+//         }
+//       },
+//     );
+//   }
+// }
 
 class DateTimePicker extends StatefulWidget {
   const DateTimePicker({super.key});
@@ -291,11 +282,11 @@ DropdownButtonFormField occupancyTypeDropdown(
   return DropdownButtonFormField(
     items: const <DropdownMenuItem>[
       DropdownMenuItem(
-        value: 'Full',
+        value: 'Full Occupancy',
         child: Text('Full Occupany'),
       ),
       DropdownMenuItem(
-        value: 'Partial',
+        value: 'Partial Occupancy',
         child: Text('Partial Occupany'),
       ),
       DropdownMenuItem(
