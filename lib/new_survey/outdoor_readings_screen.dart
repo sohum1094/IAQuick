@@ -9,15 +9,17 @@ import 'package:iaqapp/models/survey_info.dart';
 final GlobalKey<EasyDataFormState> formKey = GlobalKey<EasyDataFormState>();
 
 class OutdoorReadingsScreen extends StatelessWidget {
-  final SurveyInfo surveyInfo; 
-
+  final SurveyInfo surveyInfo;
+  static bool _isDialogShown = false;  // Add a static flag to track the dialog display
   const OutdoorReadingsScreen({required this.surveyInfo, super.key});
   
 
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showCalibrationDialog(context));
+    if (!_isDialogShown) {  // Check if the dialog has already been shown
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showCalibrationDialog(context));
+    }
 
     return MaterialApp(
       home: Scaffold(
@@ -49,7 +51,8 @@ class OutdoorReadingsScreen extends StatelessWidget {
   }
 
   void _showCalibrationDialog(BuildContext context) {
-    showDialog(
+    if (!_isDialogShown) {  // Check the flag inside the method as well
+      showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -66,6 +69,8 @@ class OutdoorReadingsScreen extends StatelessWidget {
         );
       },
     );
+      _isDialogShown = true;
+    }
   }
 }
 
@@ -103,7 +108,6 @@ Widget outdoorReadingsInfoForm(BuildContext context, SurveyInfo surveyInfo) {
                 onPressed: () {
                   if (formKey.currentState!.validate()) {
                     formKey.currentState!.save();
-
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -177,4 +181,8 @@ void _showErrorDialog(BuildContext context, String message) {
       );
     },
   );
+}
+
+void resetOutdoorZCal() {
+  OutdoorReadingsScreen._isDialogShown = false;
 }

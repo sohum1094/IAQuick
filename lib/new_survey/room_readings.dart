@@ -168,6 +168,30 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     super.initState();
   }
 
+  bool _validateAndSaveForm() {
+    final form = _formKey.currentState;
+    if (form!.validate()) {
+      form.save();
+      _saveFormData();
+      return true;
+    }
+    _showErrorDialog(context, 'Please enter all room info correctly before proceeding.');
+    return false;
+  }
+
+  void _saveFormData() {
+      if (!savedPressed) {
+          if (_formKey.currentState!.validate() &&
+              !(roomNumberTextController.text == '')) {
+            _saveForm();
+            savedPressed = true;
+          } else {
+            _showErrorDialog(context,
+                'Please enter all room info correctly before saving.');
+          }
+      }
+  }
+
   Future<void> _getImage() async {
     final imagePicker = ImagePicker();
     final pickedImage =
@@ -195,7 +219,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   void _saveForm() async {
     final form = _formKey.currentState;
 
-    if (form!.validate()) {
+    if (temperatureTextController.text.isNotEmpty && humiditiyTextController.text.isNotEmpty && form!.validate()) {
       form.save();
       buildingDropdownKey.currentState?.reset();
       floorDropdownKey.currentState?.reset();
@@ -312,9 +336,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   @override
   Widget build(BuildContext context) {
-    print('Carbon Monoxide Readings: ${widget.surveyInfo.carbonMonoxideReadings}');
 
-    
     return Form(
       key: _formKey,
       child: Column(
@@ -609,7 +631,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         labelText: 'PM 2.5',
                         suffixText: 'mg/m^3',
                       ),
-                      // Define your text input properties here
                     ),
                   if (widget.surveyInfo.pm10)
                     TextFormField(
@@ -676,32 +697,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           )
                         : const Text('No Image Selected'),
                   ),
-                  // Save button
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * .30,
-                    height: MediaQuery.of(context).size.height * .07,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (!savedPressed) {
-                          if (_formKey.currentState!.validate() &&
-                              !(roomNumberTextController.text == '')) {
-                            _saveForm();
-                            savedPressed = true;
-                          } else {
-                            _showErrorDialog(context,
-                                'Please enter all room info correctly before saving.');
-                          }
-                        }
-                      },
-                      child: const Text(
-                        'Save Info',
-                        textScaleFactor: 1.2,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -714,7 +709,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   backgroundColor: Colors.green,
                 ),
                 onPressed: () {
-                  if (savedPressed) {
+                  if (_validateAndSaveForm()) {
                     if (!autofillPrimaryUse
                         .contains(primaryUseTextController.text)) {
                       autofillPrimaryUse.add(primaryUseTextController.text);
@@ -740,7 +735,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     savedPressed = false;
                   } else {
                     _showErrorDialog(context,
-                        'Please click "Save Info" to save current room info before adding new room.');
+                        'Please fill all fields to save room info before adding new room.');
                   }
                   
                 },
@@ -760,30 +755,32 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (_formKey.currentState!.validate() && !savedPressed) {
-                    _saveForm();
-                  }
-                  if (roomNumberTextController.text.isNotEmpty) {
-                    // Call saveSurveyToFirestore with the appropriate parameters
-                    saveSurveyToLocalDatabase(
-                      widget.surveyInfo,
-                      widget.outdoorReadingsInfo,
-                      roomReadings,
-                    );
+                  if (_validateAndSaveForm()) {
+                    if (_formKey.currentState!.validate() && !savedPressed) {
+                      _saveForm();
+                    }
+                    if (roomNumberTextController.text.isNotEmpty) {
+                      saveSurveyToLocalDatabase(
+                        widget.surveyInfo,
+                        widget.outdoorReadingsInfo,
+                        roomReadings,
+                      );
 
-                    // Navigate to HomeScreen or another appropriate screen
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
+                      // Navigate to HomeScreen or another appropriate screen
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(),
+                        ),
+                      );
+                    }
                   } else {
                     _showErrorDialog(context,
-                        'Please click "Save Info" to save current room info before closing.');
+                        'Please fill all fields to save current room info before closing.');
                   }
+
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,

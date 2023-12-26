@@ -257,6 +257,7 @@ class LoggedScreen extends StatelessWidget {
               TextButton(
                 child: const Text('Next'),
                 onPressed: () {
+                  resetOutdoorZCal();
                   print(SurveyInitialInfoFormState.model.toJson().toString());
                   Navigator.of(context).pop();
                   Navigator.push(
