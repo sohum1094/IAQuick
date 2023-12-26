@@ -97,6 +97,7 @@ class _AddressAutoCompleteFormFieldState
                   onTap: () {
                     setState(() {
                       _controller.text = _suggestions[index];
+                      widget.model.address = _suggestions[index];
                       _suggestions = [];
                       _focusNode.unfocus();
                     });

@@ -17,6 +17,8 @@ class OutdoorReadingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showCalibrationDialog(context));
+
     return MaterialApp(
       home: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -43,6 +45,26 @@ class OutdoorReadingsScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showCalibrationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Calibration Confirmation'),
+          content: const Text('Has the meter been 0 calibrated?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Closes the dialog
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

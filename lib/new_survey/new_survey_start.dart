@@ -58,7 +58,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
       key: _initialSurveyInfoKey,
       onSave: (values, form) async {
         if (values['siteName'].isEmpty ||
-            values['siteAddress'].isEmpty ||
+            model.address.isEmpty ||
             !form.validate()) {
           showDialog<String>(
               context: context,
@@ -80,7 +80,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
       },
       onSaved: (response, values, form) {
         if (values['siteName'].isNotEmpty &&
-            values['siteAddress'].isNotEmpty &&
+            model.address.isNotEmpty &&
             form.validate()) {
           Navigator.of(context).push(
             MaterialPageRoute(
