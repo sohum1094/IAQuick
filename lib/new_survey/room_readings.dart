@@ -55,8 +55,6 @@ TextEditingController pm10TextController = TextEditingController();
 
 TextEditingController commentTextController = TextEditingController();
 
-FocusNode temperatureFocusNode = FocusNode();
-
 File? _imageFile;
 
 bool savedPressed = false; // Initialize the button state
@@ -126,6 +124,7 @@ class RoomReadingsForm extends StatefulWidget {
 
 class RoomReadingsFormState extends State<RoomReadingsForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool visualAssessmentOnly = true; // Add this line
   final TextEditingController roomNumberTextController =
       TextEditingController();
   final TextEditingController primaryUseTextController =
@@ -143,8 +142,15 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       GlobalKey<FormFieldState<String>>();
   final GlobalKey<FormFieldState<String>> floorDropdownKey =
       GlobalKey<FormFieldState<String>>();
+  bool humidityDialogShown = false;
+  bool temperatureDialogShown = false;
+  bool co2DialogShown = false;
+  bool coDialogShown = false;
+  bool pm25DialogShown = false;
+  bool pm10DialogShown = false;
+  bool vocsDialogShown = false;
 
-  List<String> autofillPrimaryUse = [
+  static List<String> autofillPrimaryUse = [
     'Classroom',
     'Storage',
     'Boys Bathroom',
@@ -161,11 +167,39 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   ];
   bool savedPressed = false;
   late DropdownModel dropdownModel = DropdownModel();
+  late FocusNode humidityFocusNode = FocusNode();
   late FocusNode temperatureFocusNode = FocusNode();
+  late FocusNode dioxFocusNode = FocusNode();
+  late FocusNode monoxFocusNode = FocusNode();
+  late FocusNode vocsFocusNode = FocusNode();
+  late FocusNode pm25FocusNode = FocusNode();
+  late FocusNode pm10FocusNode = FocusNode();
+
 
   @override
   void initState() {
     super.initState();
+    visualAssessmentOnly = true; // Set default to true
+
+    humidityFocusNode.addListener(() {if (!humidityFocusNode.hasFocus) validateRelativeHumidityAndShowDialog();});
+    temperatureFocusNode.addListener(() {if (!temperatureFocusNode.hasFocus) validateTemperatureAndShowDialog();});
+    dioxFocusNode.addListener(() {if (!dioxFocusNode.hasFocus) validateDioxAndShowDialog(); });
+    monoxFocusNode.addListener(() {if (!monoxFocusNode.hasFocus) validateMonoxAndShowDialog();});
+    vocsFocusNode.addListener(() {if (!vocsFocusNode.hasFocus) validateVOCsAndShowDialog();});
+    pm25FocusNode.addListener(() {if (!pm25FocusNode.hasFocus) validatePM25AndShowDialog();});
+    pm10FocusNode.addListener(() {if (!pm10FocusNode.hasFocus) validatePM10AndShowDialog();});
+  }
+
+  @override
+  void dispose() {
+    humidityFocusNode.dispose();
+    temperatureFocusNode.dispose();
+    dioxFocusNode.dispose();
+    monoxFocusNode.dispose();
+    vocsFocusNode.dispose();
+    pm25FocusNode.dispose();
+    pm10FocusNode.dispose();
+    super.dispose();
   }
 
   bool _validateAndSaveForm() {
@@ -204,18 +238,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     }
   }
 
-  void validateTemperatureAndShowDialog() {
-    if (temperatureFocusNode.hasFocus) {
-      final temperatureValue = temperatureTextController.text;
-      if (temperatureValue.isNotEmpty) {
-        final temperature = double.parse(temperatureValue);
-        if (temperature > 76 || temperature < 68) {
-          _showConfirmValueDialog(context, 'temperature');
-        }
-      }
-    }
-  }
-
+  
   void _saveForm() async {
     final form = _formKey.currentState;
 
@@ -264,18 +287,84 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   String? validateRelativeHumidity(String? value) {
-    if (value == null) {
-      return null;
-    } else if (value.isNotEmpty && !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+
+    if (value != null && value.isNotEmpty && !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
       return "Enter Correct Relative Humidity Value";
-    } else {
-      return null;
+    } else if (value != null && value.isNotEmpty && !humidityDialogShown && double.parse(humiditiyTextController.text) > 65) {
+      humidityDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showConfirmValueDialog(context, 'relative humidity');
+      });
+    }
+    return null;
+  }
+
+  void validateRelativeHumidityAndShowDialog() {
+    String value = humiditiyTextController.text;
+    if (value.isNotEmpty && !humidityDialogShown && double.parse(humiditiyTextController.text) > 65) {
+      humidityDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showConfirmValueDialog(context, 'relative humidity');
+      });
     }
   }
 
+  void validateTemperatureAndShowDialog() {
+      final temperatureValue = temperatureTextController.text;
+      if (temperatureValue.isNotEmpty && !temperatureDialogShown) {
+        final temperature = double.parse(temperatureValue);
+        if (temperature > 76 || temperature < 68) {
+          temperatureDialogShown = true;
+          _showConfirmValueDialog(context, 'temperature');
+        }
+      }
+  }
+
+  void validateDioxAndShowDialog() {
+    if (!co2DialogShown && (double.parse(dioxTextController.text) >
+        widget.outdoorReadingsInfo.co2! + 700 || double.parse(dioxTextController.text) < 0)) {
+      co2DialogShown = true;
+      _showConfirmValueDialog(context, 'Carbon Dioxide');
+    }
+  }
+
+  void validateMonoxAndShowDialog() {
+    if (!coDialogShown &&
+        (double.parse(monoxTextController.text) > 10  || double.parse(monoxTextController.text) < 0)) {
+      coDialogShown = true;
+      _showConfirmValueDialog(context, 'Carbon Monoxide');
+    }
+  }
+
+  void validateVOCsAndShowDialog() {
+    if (!vocsDialogShown &&
+        double.parse(vocsTextController.text) > 3.0) {
+      vocsDialogShown = true;
+      _showConfirmValueDialog(context, 'VOCs');
+    }
+  }
+
+  void validatePM25AndShowDialog() {
+    if (!pm25DialogShown &&
+      double.parse(pm25TextController.text) > 35) {
+      pm25DialogShown = true;
+      _showConfirmValueDialog(context, 'PM 2.5');
+    }
+  }
+
+  void validatePM10AndShowDialog() {
+    if (!pm10DialogShown &&
+        double.parse(pm10TextController.text) > 150) {
+      pm10DialogShown = true;
+      _showConfirmValueDialog(context, 'PM 10');
+    }
+  }
+  
+  
+
   DropdownButtonFormField buildingDropdownTemplate(
       BuildContext context, DropdownModel model) {
-    List<String> options = ['Main', 'Annex', 'Other'];
+    List<String> options = ['Main', 'Annex', 'Modular 1', 'Modular 2', 'Other'];
 
     return DropdownButtonFormField(
       key: buildingDropdownKey,
@@ -334,6 +423,16 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     );
   }
 
+  void resetDialogFlags() {
+    humidityDialogShown = false;
+    temperatureDialogShown = false;
+    co2DialogShown = false;
+    coDialogShown = false;
+    pm25DialogShown = false;
+    pm10DialogShown = false;
+    vocsDialogShown = false;
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -347,10 +446,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: <Widget>[
-                  // Static text and dropdown fields that are always shown
+
                   //Room desc title
                   SizedBox(
-                    height: 20,
+                    height: 15,
                     width: MediaQuery.of(context).size.width * .4,
                     child: const Center(
                       child: Text(
@@ -379,7 +478,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         flex: 6,
                         child: TextFormField(
                           controller: roomNumberTextController,
-                          autovalidateMode: AutovalidateMode.always,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (value) {
                             if (value == null) {
                               return null;
@@ -401,7 +500,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   //Primary Use
                   TextFormField(
                     controller: primaryUseTextController,
-                    autovalidateMode: AutovalidateMode.always,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     keyboardType: TextInputType.text,
                     validator: (value) {
                       if (value == null) {
@@ -418,8 +517,25 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     ),
                     autofillHints: autofillPrimaryUse,
                     // primaryUse
+                  ),//room readings
+                  CheckboxListTile(
+                    title: const Text("Visual Assessment Only"),
+                    value: visualAssessmentOnly,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        visualAssessmentOnly = value ?? true;
+                      });
+                      if (value != null && value == true) {
+                        humiditiyTextController.clear();
+                        temperatureTextController.clear();
+                        dioxTextController.clear();
+                        monoxTextController.clear();
+                        vocsTextController.clear();
+                        pm25TextController.clear();
+                        pm10TextController.clear();
+                      }
+                    },
                   ),
-                  //room readings
                   const SizedBox(height: 20),
                   SizedBox(
                     height: 20,
@@ -437,29 +553,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         flex: 3,
                         child: TextFormField(
                           controller: humiditiyTextController,
-                          autovalidateMode: AutovalidateMode.always,
+                          enabled: !visualAssessmentOnly,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: validateRelativeHumidity,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: false),
                           onEditingComplete: () {
-                            bool seen = false;
-
-                            if (!seen &&
-                                double.parse(humiditiyTextController.text) >
-                                    65) {
-                              seen = true;
-                              _showConfirmValueDialog(
-                                  context, 'relative humidity');
-                            }
-                          },
-                          onChanged: (value) {
-                            bool seen = false;
-
-                            if (!seen && (double.parse(value) > 65)) {
-                              seen = true;
-                              _showConfirmValueDialog(
-                                  context, 'relative humidity');
-                            }
+                            validateRelativeHumidityAndShowDialog();
                           },
                           decoration: const InputDecoration(
                               suffixText: '%',
@@ -475,30 +575,24 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         child: //Temperature
                             TextFormField(
                           controller: temperatureTextController,
-                          autovalidateMode: AutovalidateMode.always,
+                          enabled: !visualAssessmentOnly,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: false),
                           validator: (value) {
-                            if (value == null) {
-                              return null;
-                            } else if (value.isNotEmpty &&
+                            if (value != null &&  value.isNotEmpty &&
                                 !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
-                              return "Enter Correct Temperature Value";
-                            } else {
-                              return null;
+                              return "Enter Valid Temperature Value";
                             }
+                              return null;
                           },
                           focusNode: temperatureFocusNode,
-                          // onChanged: (value) {
-                          //   validateTemperatureAndShowDialog();
-                          // },
                           decoration: const InputDecoration(
                             labelText: "Temperature (F)",
                             suffixText: 'F',
                           ),
                           onEditingComplete: () {
                             validateTemperatureAndShowDialog();
-                            FocusScope.of(context).unfocus();
                           },
                           // temperature
                         ),
@@ -510,6 +604,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   if (widget.surveyInfo.carbonDioxideReadings)
                     TextFormField(
                       controller: dioxTextController,
+                      enabled: !visualAssessmentOnly,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
@@ -517,21 +612,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value) ) {
                           return "Enter Correct Carbon Dioxide Value";
-                        } else {
-                          return null;
                         }
+                        return null;
                       },
-                      onChanged: (value) {
-                        bool seen = false;
-
-                        if (!seen &&
-                            double.parse(value) >
-                                widget.outdoorReadingsInfo.co2! + 700) {
-                          seen = true;
-                          _showConfirmValueDialog(context, 'Carbon Dioxide');
-                        }
+                      onEditingComplete: () {
+                        validateDioxAndShowDialog();
                       },
                       decoration: const InputDecoration(
                         labelText: 'Carbon Dioxide',
@@ -542,6 +629,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   if (widget.surveyInfo.carbonMonoxideReadings)
                     TextFormField(
                       controller: monoxTextController,
+                      enabled: !visualAssessmentOnly,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
@@ -556,13 +644,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         }
                       },
                       onEditingComplete: () {
-                        bool seen = false;
-
-                        if (!seen &&
-                            double.parse(monoxTextController.text) > 10) {
-                          seen = true;
-                          _showConfirmValueDialog(context, 'Carbon Monoxide');
-                        }
+                        validateMonoxAndShowDialog();
                       },
                       decoration: const InputDecoration(
                         labelText: 'Carbon Monoxide',
@@ -574,6 +656,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   if (widget.surveyInfo.vocs)
                     TextFormField(
                       controller: vocsTextController,
+                      enabled: !visualAssessmentOnly,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
@@ -588,13 +671,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         }
                       },
                       onEditingComplete: () {
-                        bool seen = false;
-
-                        if (!seen &&
-                            double.parse(vocsTextController.text) > 3.0) {
-                          seen = true;
-                          _showConfirmValueDialog(context, 'VOCs');
-                        }
+                        validateVOCsAndShowDialog();
                       },
                       decoration: const InputDecoration(
                         labelText: 'VOCs',
@@ -605,6 +682,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   if (widget.surveyInfo.pm25)
                     TextFormField(
                       controller: pm25TextController,
+                      enabled: !visualAssessmentOnly,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
@@ -619,13 +697,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         }
                       },
                       onEditingComplete: () {
-                        bool seen = false;
-
-                        if (!seen &&
-                            double.parse(pm25TextController.text) > 35) {
-                          seen = true;
-                          _showConfirmValueDialog(context, 'PM 2.5');
-                        }
+                        validatePM25AndShowDialog();
                       },
                       decoration: const InputDecoration(
                         labelText: 'PM 2.5',
@@ -635,6 +707,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   if (widget.surveyInfo.pm10)
                     TextFormField(
                       controller: pm10TextController,
+                      enabled: !visualAssessmentOnly,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
@@ -649,13 +722,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         }
                       },
                       onEditingComplete: () {
-                        bool seen = false;
-
-                        if (!seen &&
-                            double.parse(pm10TextController.text) > 150) {
-                          seen = true;
-                          _showConfirmValueDialog(context, 'PM 10');
-                        }
+                        validatePM10AndShowDialog();
                       },
                       decoration: const InputDecoration(
                         labelText: 'PM 10',
@@ -710,6 +777,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                 ),
                 onPressed: () {
                   if (_validateAndSaveForm()) {
+                    resetDialogFlags();
                     if (!autofillPrimaryUse
                         .contains(primaryUseTextController.text)) {
                       autofillPrimaryUse.add(primaryUseTextController.text);
@@ -756,6 +824,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
               ElevatedButton(
                 onPressed: () {
                   if (_validateAndSaveForm()) {
+                    resetDialogFlags();
                     if (_formKey.currentState!.validate() && !savedPressed) {
                       _saveForm();
                     }
@@ -854,7 +923,7 @@ void _showConfirmValueDialog(BuildContext context, String message) {
           TextButton(
             child: const Text('OK'),
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
+              Future.microtask(() => Navigator.of(context).pop());
             },
           ),
         ],
