@@ -156,12 +156,12 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
             onPressed: () async {
               print("Export button pressed for " + surveyInfo.toJson().toString());
               List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.ID);
-              String iaqExcelLink = await createIAQGoogleSheet(surveyInfo,roomReadings);
+              String iaqSheetsLink = await createIAQGoogleSheet(surveyInfo,roomReadings);
               // File visualExcel = await createVisualExcelFile();
               // List<String> attachments = [iaqExcel.path, //visualExcel.path
               // ];
-              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
-              shareLinks(surveyInfo.siteName,surveyInfo.date,link1: iaqExcelLink);
+              sendEmail(surveyInfo.siteName, surveyInfo.date, link1: iaqSheetsLink);
+              // shareLinks(surveyInfo.siteName,surveyInfo.date,link1: iaqExcelLink);
 
             },
             style: ElevatedButton.styleFrom(
@@ -239,12 +239,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
             onPressed: () async {
               print("Export button pressed for " + surveyInfo.toJson().toString());
               List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.ID);
-              String iaqExcelLink = await createIAQGoogleSheet(surveyInfo,roomReadings);
-              //File visualExcel = await createVisualExcelFile();
+              String iaqSheetsLink = await createIAQGoogleSheet(surveyInfo,roomReadings);
+              // File visualExcel = await createVisualExcelFile();
               // List<String> attachments = [iaqExcel.path, //visualExcel.path
               // ];
-              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
-              shareLinks(surveyInfo.siteName,surveyInfo.date,link1: iaqExcelLink);
+              sendEmail(surveyInfo.siteName, surveyInfo.date, link1: iaqSheetsLink);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -262,20 +261,38 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
 
 
-Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPaths) async {
+Future<void> sendEmail(String siteName, DateTime date, {String? link1, String? link2}) async {
   // Extract the necessary data from the selected row
   // final visualPath = recentFile[4];
-  String iaqFilePath = attachmentPaths[0];
-  // String visualFilePath = attachmentPaths[1];
+  final appDir = await getApplicationDocumentsDirectory();
+  final imageDirPath = path.join(appDir.path, 'iaQuick', '${siteName.replaceAll(" ", "")}-${DateFormat('ddMMyy').format(date)}-images');
+  print("looking for pictures in imageDirPath: $imageDirPath");
+  // Get all image files in the directory
+  final imageDir = Directory(imageDirPath);
+  List<String> attachmentPaths = [];
+  if (imageDir.existsSync()) {
+    attachmentPaths = imageDir.listSync()
+        .where((item) => item.path.endsWith('.jpg'))
+        .map((item) => item.path)
+        .toList();
+  }
+  print("${attachmentPaths.length} images found for $siteName");
+
+  String message = "Hello,\n\nHere are the links for the IAQ and Visual Assessment Files for $siteName recorded on ${DateFormat('MM-dd-yyyy').format(date)} created using IAQuick.\n\n";
+
+
+  if (link1 != null) {
+    message += "Link 1: $link1\n";
+  }
+  if (link2 != null) {
+    message += "Link 2: $link2\n";
+  }
   // Create the email
   final Email email = Email(
-    body:
-        "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
+    body: message,
     subject: 'IAQ and Visual Assessment Excel Files for $siteName',
     recipients: [], // Add the recipient's email address here
-    attachmentPaths: [iaqFilePath
-    // ,visualFilePath
-    ],
+    attachmentPaths: attachmentPaths,
     isHTML: false,
   );
 
@@ -320,111 +337,6 @@ Future<void> shareLinks(String siteName, DateTime date, {String? link1, String? 
 }
 
 
-// Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
-//   // Get the path to the document directory
-//   final directory = await getApplicationDocumentsDirectory();
-//
-//   // Load the Excel template from assets
-//   final ByteData data = await rootBundle.load('assets/IAQ_template_v2.xlsx');
-//   final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-//
-//   // Decode the bytes to get Excel object
-//   var excel = Excel.decodeBytes(bytes);
-//
-//   var sheet = excel['Data for Print']; // Replace with your actual sheet name
-//
-//
-//
-//   // Modify the sheet with your data
-//   // Assume 'sheet' is not null
-//   // Example: Fill in the site name and date
-//   sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
-//   sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
-//   sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
-//
-//   int startRow = 5;
-//
-//   for (var reading in roomReadings) {
-//     int rowIndex = startRow + roomReadings.indexOf(reading);
-//
-//     // Assign values from the RoomReading object to the cells
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), reading.building);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
-//     // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
-//
-//     // Increment the row for the next set of data
-//     startRow++;
-//   }
-//
-//   // Path for the new Excel file
-//   final newFilePath = path.join(directory.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
-//
-//
-//   // Save the modified Excel file to the document directory
-//   var onValue = excel.encode();
-//   File file = File(newFilePath)
-//     ..createSync(recursive: true)
-//     ..writeAsBytesSync(onValue!);
-//
-//   return file;
-// }
-
-// Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
-//   // Get the template file
-//   File templateFile = await getIAQTemplateFile();
-
-//   // Open the Excel file
-//   var excel = Excel.decodeBytes(templateFile.readAsBytesSync());
-
-//   // Get specific sheet from Excel
-//   var sheet = excel['Data for Print']; // Replace with your actual sheet name
-
-//   // Modify the sheet with your data
-//   sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
-//   sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
-//   sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
-
-//   int startRow = 5;
-//   print('entering readings loop');
-//   for (var reading in roomReadings) {
-//     int rowIndex = startRow + roomReadings.indexOf(reading);
-//     print('Writing to file: ' + reading.toJson().toString());
-//     // Assign values from the RoomReading object to the cells
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), reading.building);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
-//     // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
-
-//     // Increment the row for the next set of data
-//     startRow++;
-//   }
-//   final String newFilePath = path.join(templateFile.parent.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
-
-//   // Save the modified Excel file to a new file
-//     var onValue = excel.encode();
-//     File file = File(newFilePath)
-//       ..createSync(recursive: true)
-//       ..writeAsBytesSync(onValue!);
-
-//     return file;
-// }
 
 Future<String> createIAQGoogleSheet(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   var credentials = await loadGoogleCredentials();
@@ -520,6 +432,5 @@ Future<File> getIAQTemplateFile() async {
   await file.writeAsBytes(bytes);
   return file;
 }
-
 
 

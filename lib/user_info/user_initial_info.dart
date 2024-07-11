@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iaqapp/models/user_info_model.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class UserInitialInfo extends StatelessWidget {
   const UserInitialInfo({super.key});
@@ -52,36 +54,30 @@ class UserInitialInfoFormState extends State<UserInitialInfoForm> {
     return EasyForm(
       key: _initialUserFormKey,
       onSave: (values, form) async {
-        if (values['email'].isEmpty || values['firstName'].isEmpty || values['lastName'].isEmpty || !form.validate()) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const LoggedErrorScreen(),
-            ),
-          );
-        } else {
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('email', values['email']);
-          prefs.setString('First Name', values['firstName']);
-          prefs.setString('Last Name', values['lastName']);
-          return Future.delayed(
-            const Duration(seconds: 1),
-            () {
-              return <String, dynamic>{
-                'hasError': false,
-              };
+        if (form.validate()) {
+          // Basic frontend validation: non-empty fields
+          final response = await http.post(
+            Uri.parse('http://localhost:3000/user'),
+            headers: <String, String>{
+              'Content-Type': 'application/json',
             },
+            body: jsonEncode(<String, String>{
+              'email': values['email'],
+              'firstName': values['firstName'],
+              'lastName': values['lastName'],
+            }),
           );
-        }
-      },
-      onSaved: (response, values, form) {
-        if (response['hasError'] || values['email'].isEmpty || values['firstName'].isEmpty || values['lastName'].isEmpty || !form.validate()) {
-          _alert(context, response['error']);
+
+          if (response.statusCode == 200) {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const LoggedScreen()));
+          } else {
+            _alert(context,
+                'Failed to save data'); // Handle errors based on backend response
+          }
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const LoggedScreen(),
-            ),
-          );
+          _alert(context,
+              'Please fill all fields correctly'); // Local error handling
         }
       },
       child: Center(
@@ -107,28 +103,20 @@ class UserInitialInfoFormState extends State<UserInitialInfoForm> {
   }
 }
 
-EasyTextFormField emailTextFormField(
-    BuildContext context, UserInfoModel model) {
+EasyTextFormField emailTextFormField(BuildContext context, UserInfoModel model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'email',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
-      const pattern = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'"
-          r'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-'
-          r'\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*'
-          r'[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4]'
-          r'[0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9]'
-          r'[0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\'
-          r'x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])';
-      final regex = RegExp(pattern);
-      return value!.isNotEmpty && !regex.hasMatch(value)
-          ? 'Enter a valid email address'
-          : null;
+      if (value == null || value.isEmpty) {
+        return 'Email is required';  // Ensure email is not empty
+      }
+      return null;  // No error
     },
     decoration: const InputDecoration(
       suffixIcon: Icon(Icons.email_outlined),
-      hintText: 'What address should the survey file be sent to?',
+      hintText: 'Enter your email address',
       labelText: 'Email Address *',
     ),
     onSaved: (tempEmail) {
@@ -139,59 +127,56 @@ EasyTextFormField emailTextFormField(
   );
 }
 
-EasyTextFormField firstNameTextFormField(
-    BuildContext context, UserInfoModel model) {
+EasyTextFormField firstNameTextFormField(BuildContext context, UserInfoModel model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'firstName',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
-      if (value == null) {
-        return null;
-      } else if (value.isNotEmpty && !RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
-        return "Enter Correct First Name";
-      } else {
-        return null;
+      if (value == null || value.isEmpty) {
+        return 'First name is required';
+      } else if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+        return "Enter a valid first name";
       }
+      return null;
     },
     decoration: const InputDecoration(
-      hintText: 'Enter first name to name saved files',
+      hintText: 'Enter your first name',
       labelText: 'First Name *',
     ),
     onSaved: (tempFName) {
       if (tempFName != null) {
-        model.email = tempFName;
+        model.firstName = tempFName; // assuming there is a firstName field in model
       }
     },
   );
 }
 
-EasyTextFormField lastNameTextFormField(
-    BuildContext context, UserInfoModel model) {
+EasyTextFormField lastNameTextFormField(BuildContext context, UserInfoModel model) {
   return EasyTextFormField(
     initialValue: '',
     name: 'lastName',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
-      if (value == null) {
-        return null;
-      } else if (value.isNotEmpty && !RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
-        return "Enter Correct Last Name";
-      } else {
-        return null;
+      if (value == null || value.isEmpty) {
+        return 'Last name is required';
+      } else if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+        return "Enter a valid last name";
       }
+      return null;
     },
     decoration: const InputDecoration(
-      hintText: 'Enter last name to name saved files',
+      hintText: 'Enter your last name',
       labelText: 'Last Name *',
     ),
     onSaved: (tempLName) {
       if (tempLName != null) {
-        model.email = tempLName;
+        model.lastName = tempLName; // assuming there is a lastName field in model
       }
     },
   );
 }
+
 
 Future<void> _alert(BuildContext context, String text) async {
   return showDialog(
@@ -252,5 +237,3 @@ class LoggedErrorScreen extends StatelessWidget {
     );
   }
 }
-
-

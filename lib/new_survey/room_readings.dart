@@ -30,19 +30,20 @@
 /// - The image is saved locally.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:iaqapp/main.dart';
 import 'package:path/path.dart' as path;
 import 'package:iaqapp/models/survey_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/database_helper.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 int roomCount = 0;
 TextEditingController roomNumberTextController = TextEditingController();
 TextEditingController primaryUseTextController = TextEditingController();
-TextEditingController humiditiyTextController = TextEditingController();
+TextEditingController humidityTextController = TextEditingController();
 TextEditingController temperatureTextController = TextEditingController();
 DropdownModel dropdownModel = DropdownModel();
 
@@ -55,22 +56,17 @@ TextEditingController pm10TextController = TextEditingController();
 
 TextEditingController commentTextController = TextEditingController();
 
-File? _imageFile;
-
 bool savedPressed = false; // Initialize the button state
 List<RoomReading> roomReadings = [];
 
 class RoomReadingsFormScreen extends StatelessWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
-  const RoomReadingsFormScreen(
+  final List<File> _imageFiles = [];
+  RoomReadingsFormScreen(
       {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
   @override
   Widget build(BuildContext context) {
-    print('Carbon Dioxide Readings: ${surveyInfo.carbonDioxideReadings}');
-    print('Carbon Monoxide Readings: ${surveyInfo.carbonMonoxideReadings}');
-
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -85,7 +81,7 @@ class RoomReadingsFormScreen extends StatelessWidget {
               debugPrint('room count decrement to = $roomCount');
               roomNumberTextController.clear();
               primaryUseTextController.clear();
-              humiditiyTextController.clear();
+              humidityTextController.clear();
               temperatureTextController.clear();
               //add dropdowns
               dioxTextController.clear();
@@ -96,7 +92,7 @@ class RoomReadingsFormScreen extends StatelessWidget {
 
               commentTextController.clear();
 
-              _imageFile = null;
+              _imageFiles.clear();
 
               savedPressed = false;
             }
@@ -107,7 +103,7 @@ class RoomReadingsFormScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: RoomReadingsForm(
-          surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadingsInfo),
+          surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadingsInfo, imageFiles: _imageFiles),
     );
   }
 }
@@ -115,8 +111,9 @@ class RoomReadingsFormScreen extends StatelessWidget {
 class RoomReadingsForm extends StatefulWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
+  final List<File> imageFiles;
   const RoomReadingsForm(
-      {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
+      {required this.surveyInfo, required this.outdoorReadingsInfo, required this.imageFiles, super.key});
 
   @override
   RoomReadingsFormState createState() => RoomReadingsFormState();
@@ -124,12 +121,13 @@ class RoomReadingsForm extends StatefulWidget {
 
 class RoomReadingsFormState extends State<RoomReadingsForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool visualAssessmentOnly = true; // Add this line
+  bool visualAssessmentOnly = true; 
+  bool outdoorReadingOnly = false;
   final TextEditingController roomNumberTextController =
       TextEditingController();
   final TextEditingController primaryUseTextController =
       TextEditingController();
-  final TextEditingController humiditiyTextController = TextEditingController();
+  final TextEditingController humidityTextController = TextEditingController();
   final TextEditingController temperatureTextController =
       TextEditingController();
   final TextEditingController dioxTextController = TextEditingController();
@@ -150,21 +148,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   bool pm10DialogShown = false;
   bool vocsDialogShown = false;
 
-  static List<String> autofillPrimaryUse = [
-    'Classroom',
-    'Storage',
-    'Boys Bathroom',
-    'Girls Bathroom',
-    'Corridor',
-    'Library',
-    'Electrical Room',
-    'Janitor Closet',
-    'Nurse',
-    'Office',
-    'Cafeteria',
-    'Principal\'s Office',
-    'Breakroom'
-  ];
+
+  static List<String> autofillPrimaryUse = ['Classroom','Storage','Boys Bathroom','Girls Bathroom','Corridor','Library','Electrical Room','Janitor Closet','Nurse','Office','Cafeteria','Principal\'s Office','Breakroom'];
+
   bool savedPressed = false;
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode humidityFocusNode = FocusNode();
@@ -175,19 +161,32 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   late FocusNode pm25FocusNode = FocusNode();
   late FocusNode pm10FocusNode = FocusNode();
 
-
   @override
   void initState() {
     super.initState();
     visualAssessmentOnly = true; // Set default to true
 
-    humidityFocusNode.addListener(() {if (!humidityFocusNode.hasFocus) validateRelativeHumidityAndShowDialog();});
-    temperatureFocusNode.addListener(() {if (!temperatureFocusNode.hasFocus) validateTemperatureAndShowDialog();});
-    dioxFocusNode.addListener(() {if (!dioxFocusNode.hasFocus) validateDioxAndShowDialog(); });
-    monoxFocusNode.addListener(() {if (!monoxFocusNode.hasFocus) validateMonoxAndShowDialog();});
-    vocsFocusNode.addListener(() {if (!vocsFocusNode.hasFocus) validateVOCsAndShowDialog();});
-    pm25FocusNode.addListener(() {if (!pm25FocusNode.hasFocus) validatePM25AndShowDialog();});
-    pm10FocusNode.addListener(() {if (!pm10FocusNode.hasFocus) validatePM10AndShowDialog();});
+    humidityFocusNode.addListener(() {
+      if (!humidityFocusNode.hasFocus) validateRelativeHumidityAndShowDialog();
+    });
+    temperatureFocusNode.addListener(() {
+      if (!temperatureFocusNode.hasFocus) validateTemperatureAndShowDialog();
+    });
+    dioxFocusNode.addListener(() {
+      if (!dioxFocusNode.hasFocus) validateDioxAndShowDialog();
+    });
+    monoxFocusNode.addListener(() {
+      if (!monoxFocusNode.hasFocus) validateMonoxAndShowDialog();
+    });
+    vocsFocusNode.addListener(() {
+      if (!vocsFocusNode.hasFocus) validateVOCsAndShowDialog();
+    });
+    pm25FocusNode.addListener(() {
+      if (!pm25FocusNode.hasFocus) validatePM25AndShowDialog();
+    });
+    pm10FocusNode.addListener(() {
+      if (!pm10FocusNode.hasFocus) validatePM10AndShowDialog();
+    });
   }
 
   @override
@@ -209,88 +208,140 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       _saveFormData();
       return true;
     }
-    _showErrorDialog(context, 'Please enter all room info correctly before proceeding.');
+    _showErrorDialog(
+        context, 'Please enter all room info correctly before proceeding.');
     return false;
   }
 
   void _saveFormData() {
-      if (!savedPressed) {
-          if (_formKey.currentState!.validate() &&
-              !(roomNumberTextController.text == '')) {
-            _saveForm();
-            savedPressed = true;
-          } else {
-            _showErrorDialog(context,
-                'Please enter all room info correctly before saving.');
-          }
+    if (!savedPressed) {
+      if (_formKey.currentState!.validate() &&
+          !(roomNumberTextController.text == '')) {
+        _saveForm();
+        savedPressed = true;
+      } else {
+        _showErrorDialog(
+            context, 'Please enter all room info correctly before saving.');
       }
+    }
   }
 
   Future<void> _getImage() async {
-    final imagePicker = ImagePicker();
-    final pickedImage =
-        await imagePicker.pickImage(source: ImageSource.gallery);
+    // Show options to the user
+    await showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                    leading: const Icon(Icons.photo_library),
+                    title: const Text('Photo Library'),
+                    onTap: () {
+                      _pickImageFromSource(ImageSource.gallery);
+                      Navigator.of(context).pop();
+                    }),
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    _pickImageFromSource(ImageSource.camera);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        });
+  }
 
-    if (pickedImage != null) {
+  Future<void> _pickImageFromSource(ImageSource source) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
+
+    if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedImage.path);
+        // If multiple image selection is enabled, add to the list
+        widget.imageFiles.add(File(pickedFile.path));
       });
     }
   }
 
-  
   void _saveForm() async {
     final form = _formKey.currentState;
 
-    if (temperatureTextController.text.isNotEmpty && humiditiyTextController.text.isNotEmpty && form!.validate()) {
+    if (roomNumberTextController.text.isNotEmpty &&
+        primaryUseTextController.text.isNotEmpty &&
+        form!.validate()) {
       form.save();
+      print('form save complete');
       buildingDropdownKey.currentState?.reset();
       floorDropdownKey.currentState?.reset();
 
       // Instantiate RoomReading with the collected data
-      RoomReading roomReading = RoomReading(
-        surveyID: widget.surveyInfo.ID,
-        building: dropdownModel.building,
-        floorNumber: dropdownModel.floor,
-        roomNumber: roomNumberTextController.text,
-        primaryUse: primaryUseTextController.text,
-        temperature: double.parse(temperatureTextController.text),
-        relativeHumidity: double.parse(humiditiyTextController.text),
-        co2: widget.surveyInfo.carbonDioxideReadings
-            ? double.tryParse(dioxTextController.text)
-            : null,
-        co: widget.surveyInfo.carbonMonoxideReadings
-            ? double.tryParse(monoxTextController.text)
-            : null,
-        vocs: widget.surveyInfo.vocs
-            ? double.tryParse(vocsTextController.text)
-            : null,
-        pm25: widget.surveyInfo.pm25
-            ? double.tryParse(pm25TextController.text)
-            : null,
-        pm10: widget.surveyInfo.pm10
-            ? double.tryParse(pm10TextController.text)
-            : null,
-        comments: commentTextController.text.isEmpty
-            ? "No issues were observed."
-            : commentTextController.text,
-      );
+      if (!visualAssessmentOnly) {
+        RoomReading roomReading = RoomReading(
+          surveyID: widget.surveyInfo.ID,
+          building: dropdownModel.building,
+          floorNumber: dropdownModel.floor,
+          roomNumber: roomNumberTextController.text,
+          primaryUse: primaryUseTextController.text,
+          temperature: double.parse(temperatureTextController.text),
+          relativeHumidity: double.parse(humidityTextController.text),
+          co2: widget.surveyInfo.carbonDioxideReadings
+              ? double.tryParse(dioxTextController.text)
+              : null,
+          co: widget.surveyInfo.carbonMonoxideReadings
+              ? double.tryParse(monoxTextController.text)
+              : null,
+          vocs: widget.surveyInfo.vocs
+              ? double.tryParse(vocsTextController.text)
+              : null,
+          pm25: widget.surveyInfo.pm25
+              ? double.tryParse(pm25TextController.text)
+              : null,
+          pm10: widget.surveyInfo.pm10
+              ? double.tryParse(pm10TextController.text)
+              : null,
+          comments: commentTextController.text.isEmpty
+              ? "No issues were observed."
+              : commentTextController.text,
+        );
 
-      // Add the roomReading to the list of room readings
-      roomReadings.add(roomReading);
+        // Add the roomReading to the list of room readings
+        roomReadings.add(roomReading);
+      }
+
 
       // Save the image locally if one is selected
-      if (_imageFile != null) {
-        await saveImageLocally(_imageFile!, roomNumberTextController.text);
+      int photoCounter = 1;
+
+
+      for (File imageFile in widget.imageFiles) {
+        // Save each image with the specific naming convention
+        await saveImageLocally(
+            imageFile, widget.surveyInfo.siteName, DateFormat('ddMMyy').format(widget.surveyInfo.date), roomNumberTextController.text, photoCounter);
+        photoCounter++;
       }
+
+      print('saved ${photoCounter - 1} images for ${widget.surveyInfo.siteName}');
+
+      setState(() {
+        widget.imageFiles.clear();
+      });
+
+
     }
   }
 
   String? validateRelativeHumidity(String? value) {
-
-    if (value != null && value.isNotEmpty && !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+    if (value != null &&
+        value.isNotEmpty &&
+        !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
       return "Enter Correct Relative Humidity Value";
-    } else if (value != null && value.isNotEmpty && !humidityDialogShown && double.parse(humiditiyTextController.text) > 65) {
+    } else if (value != null &&
+        value.isNotEmpty &&
+        !humidityDialogShown &&
+        double.parse(humidityTextController.text) > 65) {
       humidityDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showConfirmValueDialog(context, 'relative humidity');
@@ -300,8 +351,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   void validateRelativeHumidityAndShowDialog() {
-    String value = humiditiyTextController.text;
-    if (value.isNotEmpty && !humidityDialogShown && double.parse(humiditiyTextController.text) > 65) {
+    String value = humidityTextController.text;
+    if (value.isNotEmpty &&
+        !humidityDialogShown &&
+        double.parse(humidityTextController.text) > 65) {
       humidityDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showConfirmValueDialog(context, 'relative humidity');
@@ -310,19 +363,21 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   void validateTemperatureAndShowDialog() {
-      final temperatureValue = temperatureTextController.text;
-      if (temperatureValue.isNotEmpty && !temperatureDialogShown) {
-        final temperature = double.parse(temperatureValue);
-        if (temperature > 76 || temperature < 68) {
-          temperatureDialogShown = true;
-          _showConfirmValueDialog(context, 'temperature');
-        }
+    final temperatureValue = temperatureTextController.text;
+    if (temperatureValue.isNotEmpty && !temperatureDialogShown) {
+      final temperature = double.parse(temperatureValue);
+      if (temperature > 76 || temperature < 68) {
+        temperatureDialogShown = true;
+        _showConfirmValueDialog(context, 'temperature');
       }
+    }
   }
 
   void validateDioxAndShowDialog() {
-    if (!co2DialogShown && (double.parse(dioxTextController.text) >
-        widget.outdoorReadingsInfo.co2! + 700 || double.parse(dioxTextController.text) < 0)) {
+    if (!co2DialogShown &&
+        (double.parse(dioxTextController.text) >
+                widget.outdoorReadingsInfo.co2! + 700 ||
+            double.parse(dioxTextController.text) < 0)) {
       co2DialogShown = true;
       _showConfirmValueDialog(context, 'Carbon Dioxide');
     }
@@ -330,37 +385,33 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   void validateMonoxAndShowDialog() {
     if (!coDialogShown &&
-        (double.parse(monoxTextController.text) > 10  || double.parse(monoxTextController.text) < 0)) {
+        (double.parse(monoxTextController.text) > 10 ||
+            double.parse(monoxTextController.text) < 0)) {
       coDialogShown = true;
       _showConfirmValueDialog(context, 'Carbon Monoxide');
     }
   }
 
   void validateVOCsAndShowDialog() {
-    if (!vocsDialogShown &&
-        double.parse(vocsTextController.text) > 3.0) {
+    if (!vocsDialogShown && double.parse(vocsTextController.text) > 3.0) {
       vocsDialogShown = true;
       _showConfirmValueDialog(context, 'VOCs');
     }
   }
 
   void validatePM25AndShowDialog() {
-    if (!pm25DialogShown &&
-      double.parse(pm25TextController.text) > 35) {
+    if (!pm25DialogShown && double.parse(pm25TextController.text) > 35) {
       pm25DialogShown = true;
       _showConfirmValueDialog(context, 'PM 2.5');
     }
   }
 
   void validatePM10AndShowDialog() {
-    if (!pm10DialogShown &&
-        double.parse(pm10TextController.text) > 150) {
+    if (!pm10DialogShown && double.parse(pm10TextController.text) > 150) {
       pm10DialogShown = true;
       _showConfirmValueDialog(context, 'PM 10');
     }
   }
-  
-  
 
   DropdownButtonFormField buildingDropdownTemplate(
       BuildContext context, DropdownModel model) {
@@ -369,7 +420,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     return DropdownButtonFormField(
       key: buildingDropdownKey,
       decoration: const InputDecoration(
-        labelText: 'Building',
+        labelText: 'Bldg',
       ),
       items: options.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
@@ -386,27 +437,15 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     );
   }
 
-  DropdownButtonFormField floorDropdownTemplate(BuildContext context, DropdownModel model) {
-    List<String> options = [
-      'B',
-      'G',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      'Other'
-    ];
+  DropdownButtonFormField floorDropdownTemplate(
+      BuildContext context, DropdownModel model) {
+    List<String> options = ['B','G','1','2','3','4','5','6','7','8','9','10','Other'];
 
     return DropdownButtonFormField(
       key: floorDropdownKey,
+      disabledHint: const Text('Outdoor'),
       decoration: const InputDecoration(
-        labelText: 'Floor #',
+        labelText: 'Fl #',
       ),
       items: options.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
@@ -420,6 +459,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       onSaved: (value) {
         model.floor = value;
       },
+      
     );
   }
 
@@ -435,7 +475,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   @override
   Widget build(BuildContext context) {
-
     return Form(
       key: _formKey,
       child: Column(
@@ -446,8 +485,26 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: <Widget>[
-
                   //Room desc title
+                  CheckboxListTile(
+                    title: const Text("Outdoor Reading"),
+                    value: outdoorReadingOnly,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        outdoorReadingOnly = value ?? true;
+                      });
+                      if (value != null && value == true) {
+                        roomNumberTextController.clear();
+                        humidityTextController.clear();
+                        temperatureTextController.clear();
+                        dioxTextController.clear();
+                        monoxTextController.clear();
+                        vocsTextController.clear();
+                        pm25TextController.clear();
+                        pm10TextController.clear();
+                      }
+                    },
+                  ),
                   SizedBox(
                     height: 15,
                     width: MediaQuery.of(context).size.width * .4,
@@ -460,14 +517,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   Row(
                     children: [
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: buildingDropdownTemplate(context, dropdownModel),
                       ),
                       const Spacer(
                         flex: 1,
                       ),
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: floorDropdownTemplate(context, dropdownModel),
                       ),
                       const Spacer(
@@ -475,7 +532,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                       //Room number
                       Expanded(
-                        flex: 6,
+                        flex: 4,
                         child: TextFormField(
                           controller: roomNumberTextController,
                           autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -517,7 +574,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     ),
                     autofillHints: autofillPrimaryUse,
                     // primaryUse
-                  ),//room readings
+                  ), //room readings
                   CheckboxListTile(
                     title: const Text("Visual Assessment Only"),
                     value: visualAssessmentOnly,
@@ -526,7 +583,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         visualAssessmentOnly = value ?? true;
                       });
                       if (value != null && value == true) {
-                        humiditiyTextController.clear();
+                        humidityTextController.clear();
                         temperatureTextController.clear();
                         dioxTextController.clear();
                         monoxTextController.clear();
@@ -552,7 +609,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       Expanded(
                         flex: 3,
                         child: TextFormField(
-                          controller: humiditiyTextController,
+                          controller: humidityTextController,
                           enabled: !visualAssessmentOnly,
                           autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: validateRelativeHumidity,
@@ -580,11 +637,12 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: false),
                           validator: (value) {
-                            if (value != null &&  value.isNotEmpty &&
+                            if (value != null &&
+                                value.isNotEmpty &&
                                 !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
                               return "Enter Valid Temperature Value";
                             }
-                              return null;
+                            return null;
                           },
                           focusNode: temperatureFocusNode,
                           decoration: const InputDecoration(
@@ -612,7 +670,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value) ) {
+                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
                           return "Enter Correct Carbon Dioxide Value";
                         }
                         return null;
@@ -751,18 +809,38 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     height: 20,
                     child: Text("Click image to delete."),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _imageFile = null; // Remove the selected image
-                      });
-                    },
-                    child: _imageFile != null
-                        ? Image.file(
-                            _imageFile!,
-                            height: 100,
-                          )
-                        : const Text('No Image Selected'),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: widget.imageFiles.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        File file = widget.imageFiles[index];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              // Use Image.file to display the image from a File
+                              Image.file(
+                                file,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.fitHeight,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle),
+                                onPressed: () {
+                                  setState(() {
+                                    widget.imageFiles.removeAt(index);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -785,7 +863,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
                     roomNumberTextController.clear();
                     primaryUseTextController.clear();
-                    humiditiyTextController.clear();
+                    humidityTextController.clear();
                     temperatureTextController.clear();
                     //add dropdowns
                     dioxTextController.clear();
@@ -798,14 +876,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     buildingDropdownKey.currentState?.reset();
                     floorDropdownKey.currentState?.reset();
 
-                    _imageFile = null;
+                    widget.imageFiles.clear();
+
 
                     savedPressed = false;
                   } else {
                     _showErrorDialog(context,
                         'Please fill all fields to save room info before adding new room.');
                   }
-                  
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * .33,
@@ -849,7 +927,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     _showErrorDialog(context,
                         'Please fill all fields to save current room info before closing.');
                   }
-
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
@@ -873,20 +950,20 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 }
 
-
-Future<void> saveImageLocally(File imageFile, String roomNumber) async {
-  final prefs = await SharedPreferences.getInstance();
+Future<void> saveImageLocally(
+    File imageFile, String siteName, String date, String roomNumber, int photoCounter) async {
+  // final prefs = await SharedPreferences.getInstance();
   final appDir = await getApplicationDocumentsDirectory();
-  final fileNameBuilder =
-      '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0, 1)}_${prefs.getString('Last Name')?.substring(0, 1)}';
+  // final fileNameBuilder =
+  //     '${siteName}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0, 1)}_${prefs.getString('Last Name')?.substring(0, 1)}';
 
+  checkPermissions();
   final localPath =
-      path.join(appDir.path, 'iaQuick', 'csv_files', fileNameBuilder);
+      path.join(appDir.path, 'iaQuick', '${siteName.replaceAll(" ", "")}-$date-images');
   final fileName =
-      '${fileNameBuilder}_room_$roomNumber.jpg'; // You can generate a unique name here
-
-  await imageFile.copy(path.join(localPath, fileName));
-  // Store the 'localFile.path' in your form data or database.
+      '${siteName.replaceAll(" ", "")}_room_${roomNumber}_photo$photoCounter.jpg';
+  print("filePath should be ${path.join(localPath, fileName)}");
+  copyFile(imageFile.path,path.join(localPath, fileName));
 }
 
 void _showErrorDialog(BuildContext context, String message) {
@@ -941,18 +1018,48 @@ class DropdownModel {
 
 Future<void> saveSurveyToLocalDatabase(SurveyInfo surveyInfo,
     OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
-    final db = await DatabaseHelper.instance.database;
+  final db = await DatabaseHelper.instance.database;
 
-    // Start a transaction
-    await db.transaction((txn) async {
-      await txn.insert('survey_info', surveyInfo.toJson());
+  // Start a transaction
+  await db.transaction((txn) async {
+    await txn.insert('survey_info', surveyInfo.toJson());
 
-      outdoorReadings.surveyID = surveyInfo.ID; // Correctly handle as string
-      await txn.insert('outdoor_readings', outdoorReadings.toJson());
+    outdoorReadings.surveyID = surveyInfo.ID; // Correctly handle as string
+    await txn.insert('outdoor_readings', outdoorReadings.toJson());
 
-      for (var roomReading in roomReadings) {
-        roomReading.surveyID = surveyInfo.ID; // Correctly handle as string
-        await txn.insert('room_readings', roomReading.toJson());
-      }
-    });
+    for (var roomReading in roomReadings) {
+      roomReading.surveyID = surveyInfo.ID; // Correctly handle as string
+      await txn.insert('room_readings', roomReading.toJson());
+    }
+  });
+}
+
+Future<void> checkPermissions() async {
+  var status = await Permission.storage.status;
+  if (!status.isGranted) {
+    await Permission.storage.request();
+  }
+}
+
+Future<void> copyFile(String sourcePath, String destinationPath) async {
+  try {
+    final file = File(sourcePath);
+    final destinationDir = Directory(destinationPath);
+
+    // Check if source file exists
+    if (!await file.exists()) {
+      print('Source file does not exist');
+      return;
+    }
+
+    // Ensure the destination directory exists
+    if (!await destinationDir.exists()) {
+      await destinationDir.create(recursive: true);
+    }
+
+    // Copy the file
+    await file.copy('$destinationPath/${file.uri.pathSegments.last}');
+  } catch (e) {
+    print('Error during file copy: $e');
+  }
 }
