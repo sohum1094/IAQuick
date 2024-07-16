@@ -1,4 +1,14 @@
 const createTables = `
+    
+    CREATE TABLE IF NOT EXISTS user_info (
+        ID SERIAL PRIMARY KEY,
+        email TEXT,
+        firstName TEXT,
+        lastName TEXT
+    );
+
+
+
     CREATE TABLE IF NOT EXISTS survey_info (
         ID SERIAL PRIMARY KEY,
         siteName TEXT,
