@@ -1,0 +1,10 @@
+{
+    "name": "iaqapp",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+      "start": "cd node_backend && npm start",
+      "dev": "cd node_backend && npm run dev"
+    }
+  }
+  
