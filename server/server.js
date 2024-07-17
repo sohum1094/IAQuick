@@ -1,31 +1,20 @@
-// const express = require('express')
-// const app = express()
 import 'dotenv/config';
-import app from './app.js'
-import { runDBMigrations} from '../db/migrations/index.js'
-
+import app from './app.js';
+import { runDBMigrations } from './db/migrations/index.js';
+import config from './config/config.js';
 
 async function start() {
-    await runDBMigrations();
-    
-    const port = process.env.EXPRESS_PORT || 3000;
+    try {
+        await runDBMigrations();
+        
+        const port = config.port;
 
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}`)
-    });
+        app.listen(port, () => {
+            console.log(`Server running at http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('Error starting server:', error);
+    }
 }
 
-app.get("/", (req,res) => {
-    res.json({ message: "Welcome to IAQuick."});
-})
-
-
 start();
-
-
-
-
-
-
-
-  
