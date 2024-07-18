@@ -20,6 +20,11 @@ export const getUserById = async (id) => {
     const client = await pool.connect();
     try {
         const res = await client.query(`SELECT * FROM user_info WHERE ID = $1`, [id]);
+        if (res.rows.length === 0) {
+            const error = new Error('User not found');
+            error.status = 404;
+            throw error;
+        }
         return res.rows[0];
     } finally {
         client.release();
@@ -33,9 +38,14 @@ export const updateUserById = async (id, newUserData) => {
         const res = await client.query(`UPDATE user_info 
                                         SET email = $1,
                                             firstName = $2,
-                                            lastNames = $3,
+                                            lastName = $3
                                         WHERE ID = $4
                                         RETURNING *`, [email, firstName, lastName, id]);
+        if (res.rows.length === 0) {
+            const error = new Error('User not found');
+            error.status = 404;
+            throw error;
+        }
         return res.rows[0];
     } finally {
         client.release();
