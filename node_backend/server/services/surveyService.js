@@ -1,4 +1,4 @@
-import { createSurvey, getSurveyById } from '../models/surveyModel.js';
+import { createSurvey, getSurveyById, getSurveyLast, deleteSurveyById, deleteSurveyById } from '../models/surveyModel.js';
 
 export const createSurveyService = async (surveyData) => {
     return await createSurvey(surveyData);
@@ -6,4 +6,16 @@ export const createSurveyService = async (surveyData) => {
 
 export const getSurveyService = async (id) => {
     return await getSurveyById(id);
+};
+
+export const getSurveyLastService = async () => {
+    return await getSurveyLast();
+};
+
+export const updateSurveyService = async (id, newSurveyData) => {
+    return await updateSurveyById(id, new newSurveyData);
+};
+
+export const deleteSurveyService = async (id) => {
+    return await deleteSurveyById(id);
 };
