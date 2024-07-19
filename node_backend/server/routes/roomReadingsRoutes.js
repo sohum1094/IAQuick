@@ -1,9 +1,18 @@
 import express from 'express';
-import { createRoomReadingHandler, getRoomReadingsHandler } from '../controllers/roomReadingsController.js';
+import {
+    createRoomReadingHandler, getRoomReadingHandlerByRoomIdHandler, getRoomReadingsBySurveyIdHandler,
+    updateRoomReadingByRoomIdHandler, deleteRoomReadingsBySurveyIdHandler, deleteRoomReadingsByRoomIdHandler
+} from '../controllers/roomReadingsController.js';
 
 const router = express.Router();
 
 router.post('/create', createRoomReadingHandler);
-router.get('/:surveyID', getRoomReadingsHandler);
+router.get('/room/:roomID', getRoomReadingHandlerByRoomIdHandler)
+router.get('/survey/:surveyID', getRoomReadingsBySurveyIdHandler);
+router.put('/room/:roomID', updateRoomReadingByRoomIdHandler);
+router.delete('/survey/:surveyID', deleteRoomReadingsBySurveyIdHandler);
+router.delete('/room/:roomID', deleteRoomReadingsByRoomIdHandler)
+
+
 
 export default router;
