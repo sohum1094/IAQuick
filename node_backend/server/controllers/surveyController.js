@@ -22,12 +22,12 @@ export const getSurveyLastHandler = async (req, res) => {
 export const updateSurveyHandler = async (req, res) => {
     const { id } = req.params;
     const surveyData = req.body;
-    const survey = await updateSurveyService(id, surveyData);
-    res.json(survey);
+    const updatedSurvey = await updateSurveyService(id, surveyData);
+    res.json(updatedSurvey);
 };
 
 export const deleteSurveyHandler = async (req, res) => {
     const { id } = req.params;
-    const survey = await deleteSurveyService(id);
-    res.json(survey);
+    const deletedSurvey = await deleteSurveyService(id);
+    res.json(deletedSurvey);
 };
