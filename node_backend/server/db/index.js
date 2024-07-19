@@ -1,5 +1,7 @@
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 import config from '../config/config.js';
+
 
 const pool = new Pool(config.db);
 
