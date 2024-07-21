@@ -1,9 +1,15 @@
 import pool from '../db/index.js';
+import { validateSurveyReadingsCheckbox } from '../utils/validators.js';
 
 export const createSurvey = async (surveyData) => {
     const { siteName, date, address, occupancyType, carbonDioxideReadings, carbonMonoxideReadings, vocs, pm25, pm10 } = surveyData;
     const client = await pool.connect();
     try {
+        if (!validateSurveyReadingsCheckbox(surveyData)) {
+            const error = new Error('Invalid input data');
+            error.status = 400;
+            throw error;
+        }
         const res = await client.query(
             `INSERT INTO survey_info (siteName, date, address, occupancyType, carbonDioxideReadings, carbonMonoxideReadings, vocs, pm25, pm10) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
@@ -20,6 +26,11 @@ export const getSurveyById = async (id) => {
     const client = await pool.connect();
     try {
         const res = await client.query(`SELECT * FROM survey_info WHERE ID = $1`, [id]);
+        if (res.rows.length === 0) {
+            const error = new Error('Survey not found');
+            error.status = 404;
+            throw error;
+        }
         return res.rows[0];
     } finally {
         client.release();
@@ -29,7 +40,12 @@ export const getSurveyById = async (id) => {
 export const getSurveyLast = async () => {
     const client = await pool.connect();
     try {
-        const res = await client.query(`SELECT * FROM survey_info WHERE ID =( SELECT MAX(ID) FROM survey_info)`);
+        const res = await client.query(`SELECT * FROM survey_info WHERE ID = ( SELECT MAX(ID) FROM survey_info)`);
+        if (res.rows.length === 0) {
+            const error = new Error('No surveys in DB');
+            error.status = 404;
+            throw error;
+        }
         return res.rows[0];
     } finally {
         client.release();
@@ -50,8 +66,8 @@ export const updateSurveyById = async (id, newSurveyData) => {
                 carbonMonoxideReadings = $6,
                 vocs = $7,
                 pm25 = $8,
-                pm10 = $9, 
-            WHERE ID = $11 
+                pm10 = $9 
+            WHERE ID = $10 
             RETURNING *`,
             [siteName, date, address, occupancyType, carbonDioxideReadings, carbonMonoxideReadings, vocs, pm25, pm10, id]
         );
@@ -80,3 +96,4 @@ export const deleteSurveyById = async (id) => {
         client.release();
     }
 };
+

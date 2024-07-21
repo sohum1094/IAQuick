@@ -4,8 +4,8 @@ import { createSurveyHandler, getSurveyHandler, getSurveyLastHandler, updateSurv
 const router = express.Router();
 
 router.post('/create', createSurveyHandler);
+router.get('/lastSurvey', getSurveyLastHandler);
 router.get('/:id', getSurveyHandler);
-router.get('/lastSurvey/', getSurveyLastHandler);
 router.put('/:id', updateSurveyHandler);
 router.delete('/:id', deleteSurveyHandler);
 
