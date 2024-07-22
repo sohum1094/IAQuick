@@ -46,54 +46,46 @@ function validateRoomReadings(readings) {
             errors.push(`${field} should be a string`);
         }
 
-        // Temperature must be a number and within specified range
-        if (field === 'temperature') {
-            if (!isNumber(value)) {
-                isValid = false;
-                errors.push(`${field} should be a number`);
-            } else if (value < 68 || value > 76) {
-                errors.push(`${field} is outside the comfortable range (68-76 F)`);
-            }
-        }
-
-        // Relative humidity must be a number and within specified range
-        if (field === 'relativeHumidity') {
-            if (!isNumber(value)) {
-                isValid = false;
-                errors.push(`${field} should be a number`);
-            } else if (value > 65) {
-                errors.push(`${field} is above the recommended level (65%)`);
-            }
-        }
-
-        // CO2 must be a number and greater than 700
-        if (field === 'co2' && (!isNumber(value) || value <= 700)) {
+        // Temperature must be a number
+        if (field === 'temperature' && !isNumber(value)) {
             isValid = false;
-            errors.push(`${field} should be a number greater than 700 ppm`);
+            errors.push(`${field} should be a number`);
         }
 
-        // CO must be a number and greater than 10
-        if (field === 'co' && (!isNumber(value) || value <= 10)) {
+        // Relative humidity must be a number
+        if (field === 'relativeHumidity' && !isNumber(value)) {
             isValid = false;
-            errors.push(`${field} should be a number greater than 10 ppm`);
+            errors.push(`${field} should be a number`);
         }
 
-        // VOCs must be a number and greater than 3.0
-        if (field === 'vocs' && (!isNumber(value) || value <= 3.0)) {
+        // CO2 must be a number
+        if (field === 'co2' && !isNumber(value)) {
             isValid = false;
-            errors.push(`${field} should be a number greater than 3.0 mg/m^3`);
+            errors.push(`${field} should be a number`);
         }
 
-        // PM2.5 must be a number and greater than 35
-        if (field === 'pm25' && (!isNumber(value) || value <= 35)) {
+        // CO must be a number
+        if (field === 'co' && !isNumber(value)) {
             isValid = false;
-            errors.push(`${field} should be a number greater than 35 µg/m^3`);
+            errors.push(`${field} should be a number`);
         }
 
-        // PM10 must be a number and greater than 150
-        if (field === 'pm10' && (!isNumber(value) || value <= 150)) {
+        // VOCs must be a number
+        if (field === 'vocs' && !isNumber(value)) {
             isValid = false;
-            errors.push(`${field} should be a number greater than 150 µg/m^3`);
+            errors.push(`${field} should be a number`);
+        }
+
+        // PM2.5 must be a number
+        if (field === 'pm25' && !isNumber(value)) {
+            isValid = false;
+            errors.push(`${field} should be a number`);
+        }
+
+        // PM10 must be a number
+        if (field === 'pm10' && !isNumber(value)) {
+            isValid = false;
+            errors.push(`${field} should be a number`);
         }
 
         // Comments must be a string if provided
@@ -107,14 +99,17 @@ function validateRoomReadings(readings) {
 }
 
 function validateSurveyReadingsCheckbox(readings) {
-    const expectedReadings = ['Carbon Dioxide', 'Carbon Monoxide', 'VOCs', 'PM2.5', 'PM10'];
+    console.log(readings);
+    const expectedReadings = ['carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'];
     let isValid = true;
 
     // Check if all required readings are present and have a boolean value
     expectedReadings.forEach(reading => {
         if (readings[reading] === undefined || typeof readings[reading] !== 'boolean') {
             isValid = false;
+            console.log(`${reading} is invalid`);
         }
+        
     });
 
     return isValid;
