@@ -13,8 +13,8 @@ app.use('/surveys', surveyRoutes);
 app.use('/outdoor-readings', outdoorReadingsRoutes);
 app.use('/room-readings', roomReadingsRoutes);
 
-// app.get("/", (req, res) => {
-//     res.json({ message: "Welcome to IAQuick." });
-// });
+app.get("/", (req, res) => {
+    res.json({ message: "Welcome to IAQuick." });
+});
 
 export default app;
