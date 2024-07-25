@@ -1,29 +1,35 @@
 import pool from '../db/index.js';
+import { validateRoomReadings } from '../utils/validators.js'; // Adjust the path as needed
 
 export const createRoomReading = async (readingData) => {
+    const { isValid, errors } = validateRoomReadings(readingData);
+
+    if (!isValid) {
+        const error = new Error('Invalid input data');
+        error.status = 400;
+        error.details = errors;
+        console.error('Validation errors:', errors);
+        throw error;
+    }
+
     const { surveyID, building, floorNumber, roomNumber, primaryUse, temperature, relativeHumidity, co2, co, pm25, pm10, vocs, comments } = readingData;
     const client = await pool.connect();
     try {
         const res = await client.query(
             `INSERT INTO room_readings (surveyID, building, floorNumber, roomNumber, primaryUse, temperature, relativeHumidity, co2, co, pm25, pm10, vocs, comments) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
             [surveyID, building, floorNumber, roomNumber, primaryUse, temperature, relativeHumidity, co2, co, pm25, pm10, vocs, comments]
         );
         return res.rows[0];
+    } catch (err) {
+        console.error('Database query error:', err);
+        throw err;
     } finally {
         client.release();
     }
 };
 
-export const getRoomReadingsBySurveyId = async (surveyID) => {
-    const client = await pool.connect();
-    try {
-        const res = await client.query(`SELECT * FROM room_readings WHERE surveyID = $1`, [surveyID]);
-        return res.rows;
-    } finally {
-        client.release();
-    }
-};
+
 
 export const getRoomReadingByRoomId = async (roomID) => {
     const client = await pool.connect();
@@ -35,6 +41,21 @@ export const getRoomReadingByRoomId = async (roomID) => {
             throw error;
         };
         return res.rows[0]
+    } finally {
+        client.release();
+    }
+};
+
+export const getRoomReadingsBySurveyId = async (surveyID) => {
+    const client = await pool.connect();
+    try {
+        const res = await client.query(`SELECT * FROM room_readings WHERE surveyID = $1`, [surveyID]);
+        if (res.rows.length === 0) {
+            const error = new Error('Survey not found');
+            error.status = 404;
+            throw error;
+        };
+        return res.rows;
     } finally {
         client.release();
     }
@@ -74,13 +95,14 @@ export const deleteRoomReadingsBySurveyId = async (surveyID) => {
     try {
         const res = await client.query(
             `DELETE FROM room_readings 
-            WHERE surveyID = $1`, [surveyID]);
+            WHERE surveyID = $1
+            RETURNING *`, [surveyID]);
         if (res.rows.length === 0) {
             const error = new Error('No rooms found for provided surveyID');
             error.status = 404;
             throw error;
         };
-        return res.rows[0];
+        return res.rows;
 
     } finally {
         client.release();
@@ -92,7 +114,8 @@ export const deleteRoomReadingByRoomId = async (roomID) => {
     try {
         const res = await client.query(
             `DELETE FROM room_readings 
-            WHERE ID = $1`, [roomID]);
+            WHERE ID = $1
+            RETURNING *`, [roomID]);
         if (res.rows.length === 0) {
             const error = new Error('No room found to delete');
             error.status = 404;
@@ -104,3 +127,4 @@ export const deleteRoomReadingByRoomId = async (roomID) => {
         client.release();
     }
 };
+

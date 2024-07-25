@@ -1,13 +1,13 @@
 import express from 'express';
 import {
-    createRoomReadingHandler, getRoomReadingHandlerByRoomIdHandler, getRoomReadingsBySurveyIdHandler,
+    createRoomReadingHandler, getRoomReadingByRoomIdHandler, getRoomReadingsBySurveyIdHandler,
     updateRoomReadingByRoomIdHandler, deleteRoomReadingsBySurveyIdHandler, deleteRoomReadingsByRoomIdHandler
 } from '../controllers/roomReadingsController.js';
 
 const router = express.Router();
 
 router.post('/create', createRoomReadingHandler);
-router.get('/room/:roomID', getRoomReadingHandlerByRoomIdHandler)
+router.get('/room/:roomID', getRoomReadingByRoomIdHandler)
 router.get('/survey/:surveyID', getRoomReadingsBySurveyIdHandler);
 router.put('/room/:roomID', updateRoomReadingByRoomIdHandler);
 router.delete('/survey/:surveyID', deleteRoomReadingsBySurveyIdHandler);

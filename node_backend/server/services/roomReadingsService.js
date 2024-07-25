@@ -11,7 +11,7 @@ export const getRoomReadingsBySurveyIdService = async (surveyID) => {
     return await getRoomReadingsBySurveyId(surveyID);
 };
 
-export const getRoomReadingHandlerByRoomIdService = async (roomID) => {
+export const getRoomReadingByRoomIdService = async (roomID) => {
     return await getRoomReadingByRoomId(roomID);
 };
 
