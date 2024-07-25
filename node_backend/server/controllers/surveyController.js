@@ -38,12 +38,16 @@ export const updateSurveyHandler = async (req, res) => {
         const updatedSurvey = await updateSurveyService(id, surveyData);
         res.json(updatedSurvey);
     } catch (error) {
-        res.status(error.status || 500).json({error: error.message })
+        res.status(error.status || 500).json({error: error.message });
     }
 };
 
 export const deleteSurveyHandler = async (req, res) => {
     const { id } = req.params;
-    const deletedSurvey = await deleteSurveyService(id);
-    res.json(deletedSurvey);
+    try {
+        const deletedSurvey = await deleteSurveyService(id);
+        res.json(deletedSurvey);
+    } catch (error) {
+        res.status(error.status || 500).json({error: error.message });
+    }
 };

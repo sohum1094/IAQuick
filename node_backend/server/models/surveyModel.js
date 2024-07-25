@@ -91,6 +91,11 @@ export const deleteSurveyById = async (id) => {
             WHERE ID = $1
             RETURNING *`,
             [id]);
+        if (res.rows.length === 0) {
+            const error = new Error('No survey to delete with given ID');
+            error.status = 404;
+            throw error;
+        }
         return res.rows[0];
     } finally {
         client.release();
