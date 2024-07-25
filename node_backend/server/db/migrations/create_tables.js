@@ -20,18 +20,6 @@ const createTables = `
         pm25 BOOLEAN,
         pm10 BOOLEAN
       );
-
-    CREATE TABLE IF NOT EXISTS outdoor_readings (
-        ID SERIAL PRIMARY KEY,
-        surveyID INTEGER REFERENCES survey_info(ID),
-        temperature REAL,
-        relativeHumidity REAL,
-        co2 REAL,
-        co REAL,
-        pm25 REAL,
-        pm10 REAL,
-        vocs REAL
-      );
     
     CREATE TABLE IF NOT EXISTS room_readings (
         ID SERIAL PRIMARY KEY,
