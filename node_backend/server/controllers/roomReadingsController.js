@@ -1,5 +1,5 @@
 import {
-    createRoomReadingService, getRoomReadingsBySurveyIdService, getRoomReadingByRoomIdService,
+    createRoomReadingService, getRoomReadingsBySurveyIdService, getRoomReadingByRoomIdService, getRoomReadingsLastService,
     updateRoomReadingByRoomIdService, deleteRoomReadingsBySurveyIdService, deleteRoomReadingByRoomIdService
 } from '../services/roomReadingsService.js';
 
@@ -29,6 +29,16 @@ export const getRoomReadingByRoomIdHandler = async (req, res) => {
     const { roomID } = req.params;
     try {
         const readings = await getRoomReadingByRoomIdService(roomID);
+        res.json(readings);
+    } catch (error) {
+        res.status(error.status || 500).json({error: error.message });
+    }
+    
+};
+
+export const getRoomReadingsLastHandler = async (req, res) => {
+    try {
+        const readings = await getRoomReadingsLastService();
         res.json(readings);
     } catch (error) {
         res.status(error.status || 500).json({error: error.message });

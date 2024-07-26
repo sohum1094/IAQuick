@@ -15,6 +15,12 @@ export const getRoomReadingByRoomIdService = async (roomID) => {
     return await getRoomReadingByRoomId(roomID);
 };
 
+
+export const getRoomReadingsLastService = async () => {
+    return await getRoomReadingsLast();
+};
+
+
 export const updateRoomReadingByRoomIdService = async (roomID, newRoomData) => {
     return await updateRoomReadingsBySurveyId(roomID, newRoomData);
 };

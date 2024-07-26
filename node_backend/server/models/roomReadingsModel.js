@@ -46,6 +46,22 @@ export const getRoomReadingByRoomId = async (roomID) => {
     }
 };
 
+export const getRoomReadingsLast = async () => {
+    const client = await pool.connect();
+    try {
+        const res = await client.query(`SELECT * FROM room_readings WHERE ID = ( SELECT MAX(ID) FROM room_readings)`);
+        if (res.rows.length === 0) {
+            const error = new Error('No rooms in db');
+            error.status = 404;
+            throw error;
+        };
+        return res.rows[0]
+    } finally {
+        client.release();
+    }
+};
+
+
 export const getRoomReadingsBySurveyId = async (surveyID) => {
     const client = await pool.connect();
     try {
