@@ -40,21 +40,6 @@ class DatabaseHelper {
   ''');
 
     await db.execute('''
-    CREATE TABLE outdoor_readings (
-      ID INTEGER PRIMARY KEY AUTOINCREMENT,
-      surveyID TEXT,
-      temperature REAL,
-      relativeHumidity REAL,
-      co2 REAL,
-      co REAL,
-      pm25 REAL,
-      pm10 REAL,
-      vocs REAL,
-      FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
-    )
-  ''');
-
-    await db.execute('''
     CREATE TABLE room_readings (
       ID INTEGER PRIMARY KEY AUTOINCREMENT,
       surveyID TEXT,
@@ -75,12 +60,10 @@ class DatabaseHelper {
   ''');
   }
 
-
-
   // Add methods for CRUD operations
   Future<int> createSurvey(SurveyInfo surveyInfo) async {
     final db = await instance.database;
-    final json = surveyInfo.toJson();  // Convert SurveyInfo to a JSON map
+    final json = surveyInfo.toJson(); // Convert SurveyInfo to a JSON map
     return db.insert('survey_info', json);
   }
 
@@ -88,9 +71,47 @@ class DatabaseHelper {
     final db = await instance.database;
     final maps = await db.query(
       'survey_info',
-      columns: ['ID', 'siteName', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
+      columns: [
+        'ID',
+        'siteName',
+        'date',
+        'address',
+        'occupancyType',
+        'carbonDioxideReadings',
+        'carbonMonoxideReadings',
+        'vocs',
+        'pm25',
+        'pm10'
+      ],
       where: 'ID = ?',
       whereArgs: [ID],
+    );
+
+    if (maps.isNotEmpty) {
+      return SurveyInfo.fromMap(maps.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<SurveyInfo?> readLastSurvey() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'survey_info',
+      columns: [
+        'ID',
+        'siteName',
+        'date',
+        'address',
+        'occupancyType',
+        'carbonDioxideReadings',
+        'carbonMonoxideReadings',
+        'vocs',
+        'pm25',
+        'pm10'
+      ],
+      orderBy: 'ID DESC',
+      limit: 1,
     );
 
     if (maps.isNotEmpty) {
@@ -119,6 +140,33 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> deleteLastSurvey() async {
+    final db = await instance.database;
+
+    // First, fetch the last survey's ID
+    final maps = await db.query(
+      'survey_info',
+      columns: ['ID'],
+      orderBy: 'ID DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      // Extract the ID of the last survey
+      int lastSurveyId = maps.first['ID'] as int;
+
+      // Now, delete the survey with the fetched ID
+      return db.delete(
+        'survey_info',
+        where: 'ID = ?',
+        whereArgs: [lastSurveyId],
+      );
+    } else {
+      // If no surveys are found, return 0 to indicate no deletion took place
+      return 0;
+    }
+  }
+
   Future<List<SurveyInfo>> readAllSurveys() async {
     final db = await instance.database;
     final result = await db.query('survey_info');
@@ -132,45 +180,10 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> createOutdoorReadings(OutdoorReadings outdoorReadings) async {
+  Future<int> createRoomReading(
+      RoomReading roomReading, String surveyID) async {
     final db = await instance.database;
-    final json = outdoorReadings.toJson(); // Convert to JSON map
-    // Assuming outdoorReadings.toJson() includes 'surveyID'
-    return db.insert('outdoor_readings', json);
-  }
-
-
-  Future<OutdoorReadings?> readOutdoorReadings(String surveyID) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'outdoor_readings',
-      columns: [
-        'ID',
-        'surveyID',
-        'temperature',
-        'relativeHumidity',
-        'co2',
-        'co',
-        'pm25',
-        'pm10',
-        'vocs'
-        // Add other columns as needed based on your OutdoorReadings class
-      ],
-      where: 'surveyID = ?',
-      whereArgs: [surveyID],
-    );
-
-    if (maps.isNotEmpty) {
-      return OutdoorReadings.fromMap(maps.first);
-    } else {
-      return null;
-    }
-  }
-
-
-  Future<int> createRoomReading(RoomReading roomReading, String surveyID) async {
-    final db = await instance.database;
-    final json = roomReading.toJson();  // Convert to JSON map
+    final json = roomReading.toJson(); // Convert to JSON map
     json['surveyID'] = surveyID;
     return db.insert('room_readings', json);
   }
@@ -184,19 +197,39 @@ class DatabaseHelper {
       whereArgs: [surveyID],
     );
     print(result.toString());
-    List<RoomReading> readings = (result.isNotEmpty)? result.map((json) => RoomReading.fromMap(json)).toList() : [];
-    print("readRoomReadings input: $surveyID \n readRoomReadings output: roomReadings list of size " + readings.length.toString());
+    List<RoomReading> readings = (result.isNotEmpty)
+        ? result.map((json) => RoomReading.fromMap(json)).toList()
+        : [];
+    print(
+        "readRoomReadings input: $surveyID \n readRoomReadings output: roomReadings list of size " +
+            readings.length.toString());
     return readings;
+  }
+
+  Future<RoomReading?> readLastRoomReading() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'room_readings',
+      orderBy: 'ID DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return RoomReading.fromMap(maps.first);
+    } else {
+      return null;
+    }
   }
 
   Future<String> getAllRoomReadingsJson() async {
     final db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query('room_readings');
-    List<RoomReading> readings = maps.map((map) => RoomReading.fromMap(map)).toList();
-    String json = jsonEncode(readings.map((reading) => reading.toJson()).toList());
+    List<RoomReading> readings =
+        maps.map((map) => RoomReading.fromMap(map)).toList();
+    String json =
+        jsonEncode(readings.map((reading) => reading.toJson()).toList());
     return json;
   }
-
 
   Future<int> updateRoomReading(RoomReading roomReading) async {
     final db = await instance.database;
@@ -216,13 +249,30 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-  
+
+  Future<int> deleteLastRoomReading() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'room_readings',
+      columns: ['ID'],
+      orderBy: 'ID DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      int lastReadingId = maps.first['ID'] as int;
+      return db.delete(
+        'room_readings',
+        where: 'ID = ?',
+        whereArgs: [lastReadingId],
+      );
+    } else {
+      return 0; // No rows to delete
+    }
+  }
+
   Future close() async {
     final db = await instance.database;
     db.close();
   }
-
-
-  
-
 }
