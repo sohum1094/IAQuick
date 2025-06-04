@@ -5,13 +5,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'existing_survey_screen.dart';
 import 'user_info/user_initial_info.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'survey_service.dart';
 
+final SurveyService surveyService = SurveyService();
 
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await SurveyService.configureFirestoreCache();
+  surveyService.startConnectivityListener();
   runApp(
     ChangeNotifierProvider(
       create: (context) => UserInfoDialogStatus(),
@@ -20,8 +24,19 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void dispose() {
+    surveyService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
