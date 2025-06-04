@@ -11,7 +11,6 @@ import 'package:iaqapp/database_helper.dart';
 import 'package:iaqapp/models.dart' show VisualAssessment;
 import 'package:iaqapp/survey_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_xlsio/xlsio.dart' hide Column;
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -383,44 +382,51 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
 
     // Temperature threshold 68-76 °F
-    var tempCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
+    var tempCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex));
     if (reading.temperature > 76 || reading.temperature < 68) {
       tempCell.cellStyle = exceedStyle;
     }
 
     // Relative humidity threshold >65%
-    var rhCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
+    var rhCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex));
     if (reading.relativeHumidity > 65) {
       rhCell.cellStyle = exceedStyle;
     }
 
     // CO₂ threshold = outdoor CO₂ + 700ppm, default to 1000ppm if outdoor not found
-    var co2Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
+    var co2Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex));
     double co2Threshold = (outdoor?.co2 ?? 300) + 700;
     if (reading.co2 != null && reading.co2! > co2Threshold) {
       co2Cell.cellStyle = exceedStyle;
     }
 
     // CO threshold >10ppm
-    var coCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
+    var coCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex));
     if (reading.co != null && reading.co! > 10) {
       coCell.cellStyle = exceedStyle;
     }
 
     // PM2.5 threshold >35 mg/m^3
-    var pm25Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
+    var pm25Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex));
     if (reading.pm25 != null && reading.pm25! > 35) {
       pm25Cell.cellStyle = exceedStyle;
     }
 
     // PM10 threshold >150 mg/m^3
-    var pm10Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
+    var pm10Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex));
     if (reading.pm10 != null && reading.pm10! > 150) {
       pm10Cell.cellStyle = exceedStyle;
     }
 
     // VOCs threshold >3 mg/m^3
-    var vocsCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+    var vocsCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex));
     if (reading.vocs != null && reading.vocs! > 3) {
       vocsCell.cellStyle = exceedStyle;
     }

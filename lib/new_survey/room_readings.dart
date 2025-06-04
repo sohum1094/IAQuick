@@ -87,10 +87,12 @@ class RoomReadingsFormScreen extends StatelessWidget {
 class RoomReadingsForm extends StatefulWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
-      body: RoomReadingsForm(
-          key: formKey,
-          surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadingsInfo),
-      {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
+
+  const RoomReadingsForm({
+    required this.surveyInfo,
+    required this.outdoorReadingsInfo,
+    super.key,
+  });
 
   @override
   RoomReadingsFormState createState() => RoomReadingsFormState();

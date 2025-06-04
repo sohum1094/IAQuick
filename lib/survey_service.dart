@@ -15,9 +15,7 @@ class SurveyService {
 
   /// Configure Firestore persistence with ~15MB cache size.
   static Future<void> configureFirestoreCache() async {
-    await FirebaseFirestore.instance.enablePersistence(
-      const PersistenceSettings(cacheSizeBytes: 15 * 1024 * 1024),
-    );
+    await FirebaseFirestore.instance.enablePersistence();
   }
 
   /// Start listening for connectivity changes.
