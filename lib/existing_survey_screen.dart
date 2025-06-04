@@ -360,6 +360,12 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
   // Get specific sheet from Excel
   var sheet = excel['Data for Print']; // Replace with your actual sheet name
 
+  // Outdoor readings are used for CO₂ threshold calculations
+  OutdoorReadings? outdoor = await DatabaseHelper.instance.readOutdoorReadings(surveyInfo.id);
+
+  // Style to mark values that exceed thresholds
+  CellStyle exceedStyle = CellStyle(backgroundColorHex: '#FF0000');
+
   // Modify the sheet with your data
   sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
   sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
@@ -375,13 +381,49 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+
+    // Temperature threshold 68-76 °F
+    var tempCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
+    if (reading.temperature > 76 || reading.temperature < 68) {
+      tempCell.cellStyle = exceedStyle;
+    }
+
+    // Relative humidity threshold >65%
+    var rhCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
+    if (reading.relativeHumidity > 65) {
+      rhCell.cellStyle = exceedStyle;
+    }
+
+    // CO₂ threshold = outdoor CO₂ + 700ppm, default to 1000ppm if outdoor not found
+    var co2Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
+    double co2Threshold = (outdoor?.co2 ?? 300) + 700;
+    if (reading.co2 != null && reading.co2! > co2Threshold) {
+      co2Cell.cellStyle = exceedStyle;
+    }
+
+    // CO threshold >10ppm
+    var coCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
+    if (reading.co != null && reading.co! > 10) {
+      coCell.cellStyle = exceedStyle;
+    }
+
+    // PM2.5 threshold >35 mg/m^3
+    var pm25Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
+    if (reading.pm25 != null && reading.pm25! > 35) {
+      pm25Cell.cellStyle = exceedStyle;
+    }
+
+    // PM10 threshold >150 mg/m^3
+    var pm10Cell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
+    if (reading.pm10 != null && reading.pm10! > 150) {
+      pm10Cell.cellStyle = exceedStyle;
+    }
+
+    // VOCs threshold >3 mg/m^3
+    var vocsCell = sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+    if (reading.vocs != null && reading.vocs! > 3) {
+      vocsCell.cellStyle = exceedStyle;
+    }
     // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
 
     // Increment the row for the next set of data
@@ -402,6 +444,10 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
 
 Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
   return await DatabaseHelper.instance.readRoomReadings(surveyId);
+}
+
+Future<OutdoorReadings?> fetchOutdoorReadingsForSurvey(String surveyId) async {
+  return await DatabaseHelper.instance.readOutdoorReadings(surveyId);
 }
 
 Future<File> getIAQTemplateFile() async {
