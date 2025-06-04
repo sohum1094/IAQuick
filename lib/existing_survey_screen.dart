@@ -11,17 +11,6 @@ import 'package:iaqapp/database_helper.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' hide Column;
 
-
-    Directory directory = Directory('path');
-
-void main() async {
-  directory = await getApplicationDocumentsDirectory();
-  
-  runApp(const MaterialApp(
-    home: ExistingSurveyScreen(),
-  ));
-}
-
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
 
