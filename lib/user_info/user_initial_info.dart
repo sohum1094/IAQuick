@@ -160,7 +160,7 @@ EasyTextFormField firstNameTextFormField(
     ),
     onSaved: (tempFName) {
       if (tempFName != null) {
-        model.email = tempFName;
+        model.firstName = tempFName;
       }
     },
   );
@@ -187,7 +187,7 @@ EasyTextFormField lastNameTextFormField(
     ),
     onSaved: (tempLName) {
       if (tempLName != null) {
-        model.email = tempLName;
+        model.lastName = tempLName;
       }
     },
   );
