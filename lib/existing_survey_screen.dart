@@ -8,6 +8,8 @@ import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/database_helper.dart';
+import 'package:iaqapp/models.dart' show VisualAssessment;
+import 'package:iaqapp/survey_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' hide Column;
 
@@ -140,14 +142,18 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              // Trigger the Excel creation and email sending process here
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
-              //File visualExcel = await createVisualExcelFile();
-              List<String> attachments = [iaqExcel.path, //visualExcel.path
-              ];
-              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
-              shareFiles(surveyInfo.siteName,surveyInfo.date,attachments);
+              List<RoomReading> roomReadings =
+                  await fetchRoomReadingsForSurvey(surveyInfo.id);
+              File iaqExcel =
+                  await createIAQExcelFile(surveyInfo, roomReadings);
+
+              List<VisualAssessment> visuals =
+                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+              File visualExcel =
+                  await createVisualExcelFile(surveyInfo, visuals);
+
+              List<String> attachments = [iaqExcel.path, visualExcel.path];
+              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
 
             },
             style: ElevatedButton.styleFrom(
@@ -223,13 +229,18 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
-              List<RoomReading> roomReadings = await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel = await createIAQExcelFile(surveyInfo,roomReadings);
-              //File visualExcel = await createVisualExcelFile();
-              List<String> attachments = [iaqExcel.path, //visualExcel.path
-              ];
-              // sendEmail(surveyInfo.siteName, surveyInfo.date, attachments);
-              shareFiles(surveyInfo.siteName,surveyInfo.date,attachments);
+              List<RoomReading> roomReadings =
+                  await fetchRoomReadingsForSurvey(surveyInfo.id);
+              File iaqExcel =
+                  await createIAQExcelFile(surveyInfo, roomReadings);
+
+              List<VisualAssessment> visuals =
+                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+              File visualExcel =
+                  await createVisualExcelFile(surveyInfo, visuals);
+
+              List<String> attachments = [iaqExcel.path, visualExcel.path];
+              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -427,6 +438,63 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
       ..writeAsBytesSync(onValue!);
 
     return file;
+}
+
+Future<File> createVisualExcelFile(
+    SurveyInfo surveyInfo, List<VisualAssessment> visuals) async {
+  File templateFile = await getVisualTemplateFile();
+  var excel = Excel.decodeBytes(templateFile.readAsBytesSync());
+
+  var entrySheet = excel['Entry Sheet'];
+  var printSheet = excel['VA for Print'];
+
+  entrySheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.occupancyType;
+  entrySheet.cell(CellIndex.indexByString('B2')).value = surveyInfo.date;
+  entrySheet.cell(CellIndex.indexByString('D2')).value = surveyInfo.siteName;
+
+  printSheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
+  printSheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+
+  int startRow = 5;
+  for (var va in visuals) {
+    int rowIndex = startRow + visuals.indexOf(va);
+    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), va.building);
+    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), va.floorNumber);
+    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), va.roomNumber);
+    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), va.primaryRoomUse);
+    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), va.notes);
+    startRow++;
+  }
+
+  final String newFilePath = path.join(
+    templateFile.parent.path,
+    '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_Visual.xlsx',
+  );
+
+  var onValue = excel.encode();
+  File file = File(newFilePath)
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(onValue!);
+
+  return file;
+}
+
+Future<List<VisualAssessment>> fetchVisualAssessmentsForSurvey(String surveyId) async {
+  final service = SurveyService();
+  final report = await service.fetchSurveyReport(surveyId);
+  return report.visuals;
+}
+
+Future<File> getVisualTemplateFile() async {
+  final ByteData data = await rootBundle.load('assets/Visual_template.xlsx');
+  final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+  final directory = await getApplicationDocumentsDirectory();
+  final String templatePath = path.join(directory.path, 'Visual_template.xlsx');
+  final File file = File(templatePath);
+
+  await file.writeAsBytes(bytes);
+  return file;
 }
 
 
