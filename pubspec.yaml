@@ -51,6 +51,9 @@ dependencies:
   flutter_email_sender: ^5.0.2
   permission_handler: ^8.1.6
   firebase_core: ^2.24.0
+  cloud_firestore: ^4.13.0
+  firebase_storage: ^11.2.6
+  connectivity_plus: ^4.0.2
   sqflite: ^2.0.0+3
   uuid: ^4.2.2
   share_plus: ^7.2.1
