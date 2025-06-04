@@ -40,33 +40,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/database_helper.dart';
 
 int roomCount = 0;
-TextEditingController roomNumberTextController = TextEditingController();
-TextEditingController primaryUseTextController = TextEditingController();
-TextEditingController humiditiyTextController = TextEditingController();
-TextEditingController temperatureTextController = TextEditingController();
-DropdownModel dropdownModel = DropdownModel();
-
-// Add other dropdown controllers and variables here
-TextEditingController dioxTextController = TextEditingController();
-TextEditingController monoxTextController = TextEditingController();
-TextEditingController vocsTextController = TextEditingController();
-TextEditingController pm25TextController = TextEditingController();
-TextEditingController pm10TextController = TextEditingController();
-
-TextEditingController commentTextController = TextEditingController();
-
-FocusNode temperatureFocusNode = FocusNode();
-
-File? _imageFile;
-
-bool savedPressed = false; // Initialize the button state
 List<RoomReading> roomReadings = [];
 
 class RoomReadingsFormScreen extends StatelessWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
-  const RoomReadingsFormScreen(
+  RoomReadingsFormScreen(
       {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
+
+  final GlobalKey<RoomReadingsFormState> formKey =
+      GlobalKey<RoomReadingsFormState>();
   @override
   Widget build(BuildContext context) {
     print('Carbon Dioxide Readings: ${surveyInfo.carbonDioxideReadings}');
@@ -85,22 +68,7 @@ class RoomReadingsFormScreen extends StatelessWidget {
             } else {
               roomCount--;
               debugPrint('room count decrement to = $roomCount');
-              roomNumberTextController.clear();
-              primaryUseTextController.clear();
-              humiditiyTextController.clear();
-              temperatureTextController.clear();
-              //add dropdowns
-              dioxTextController.clear();
-              monoxTextController.clear();
-              vocsTextController.clear();
-              pm25TextController.clear();
-              pm10TextController.clear();
-
-              commentTextController.clear();
-
-              _imageFile = null;
-
-              savedPressed = false;
+              formKey.currentState?.clearFields();
             }
             if (roomReadings.isNotEmpty) roomReadings.removeLast();
           },
@@ -109,7 +77,9 @@ class RoomReadingsFormScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: RoomReadingsForm(
-          surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadingsInfo),
+          key: formKey,
+          surveyInfo: surveyInfo,
+          outdoorReadingsInfo: outdoorReadingsInfo),
     );
   }
 }
@@ -117,7 +87,9 @@ class RoomReadingsFormScreen extends StatelessWidget {
 class RoomReadingsForm extends StatefulWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
-  const RoomReadingsForm(
+      body: RoomReadingsForm(
+          key: formKey,
+          surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadingsInfo),
       {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
 
   @override
@@ -162,6 +134,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   bool savedPressed = false;
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode temperatureFocusNode = FocusNode();
+  File? _imageFile;
 
   @override
   void initState() {
@@ -191,9 +164,27 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       }
     }
   }
+  void clearFields() {
+    roomNumberTextController.clear();
+    primaryUseTextController.clear();
+    humiditiyTextController.clear();
+    temperatureTextController.clear();
+    dioxTextController.clear();
+    monoxTextController.clear();
+    vocsTextController.clear();
+    pm25TextController.clear();
+    pm10TextController.clear();
+    commentTextController.clear();
+    buildingDropdownKey.currentState?.reset();
+    floorDropdownKey.currentState?.reset();
+    _imageFile = null;
+    savedPressed = false;
+  }
+
 
   void _saveForm() async {
     final form = _formKey.currentState;
+
 
     if (form!.validate()) {
       form.save();
@@ -719,25 +710,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         .contains(primaryUseTextController.text)) {
                       autofillPrimaryUse.add(primaryUseTextController.text);
                     }
-
-                    roomNumberTextController.clear();
-                    primaryUseTextController.clear();
-                    humiditiyTextController.clear();
-                    temperatureTextController.clear();
-                    //add dropdowns
-                    dioxTextController.clear();
-                    monoxTextController.clear();
-                    vocsTextController.clear();
-                    pm25TextController.clear();
-                    pm10TextController.clear();
-
-                    commentTextController.clear();
-                    buildingDropdownKey.currentState?.reset();
-                    floorDropdownKey.currentState?.reset();
-
-                    _imageFile = null;
-
-                    savedPressed = false;
+                      clearFields();
                   } else {
                     _showErrorDialog(context,
                         'Please click "Save Info" to save current room info before adding new room.');
@@ -805,6 +778,22 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       ),
     );
   }
+  @override
+  void dispose() {
+    roomNumberTextController.dispose();
+    primaryUseTextController.dispose();
+    humiditiyTextController.dispose();
+    temperatureTextController.dispose();
+    dioxTextController.dispose();
+    monoxTextController.dispose();
+    vocsTextController.dispose();
+    pm25TextController.dispose();
+    pm10TextController.dispose();
+    commentTextController.dispose();
+    temperatureFocusNode.dispose();
+    super.dispose();
+  }
+
 }
 
 
