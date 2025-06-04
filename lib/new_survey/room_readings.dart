@@ -268,7 +268,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         model.building = value;
       },
       onSaved: (value) {
-        model.floor = value;
+        model.building = value;
       },
     );
   }
