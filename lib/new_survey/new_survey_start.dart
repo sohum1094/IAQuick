@@ -75,7 +75,9 @@ class SurveyInitialInfoForm extends StatefulWidget {
 
 class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   final _initialSurveyInfoKey = GlobalKey<FormState>();
-  static SurveyInfo model = SurveyInfo();
+  final SurveyInfo model = SurveyInfo();
+  final GlobalKey<_AllCheckboxesState> _checkboxesKey =
+      GlobalKey<_AllCheckboxesState>();
 
   @override
   EasyForm build(BuildContext context) {
@@ -93,17 +95,17 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
         } else {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const LoggedScreen(),
+              builder: (context) => LoggedScreen(surveyInfo: model),
             ),
           );
         }
         model.carbonDioxideReadings =
-            _AllCheckboxesState.readingsSwitches['Carbon Dioxide']!;
+            _checkboxesKey.currentState!.readingsSwitches['Carbon Dioxide']!;
         model.carbonMonoxideReadings =
-            _AllCheckboxesState.readingsSwitches['Carbon Monoxide']!;
-        model.vocs = _AllCheckboxesState.readingsSwitches['VOCs']!;
-        model.pm25 = _AllCheckboxesState.readingsSwitches['PM2.5']!;
-        model.pm10 = _AllCheckboxesState.readingsSwitches['PM10']!;
+            _checkboxesKey.currentState!.readingsSwitches['Carbon Monoxide']!;
+        model.vocs = _checkboxesKey.currentState!.readingsSwitches['VOCs']!;
+        model.pm25 = _checkboxesKey.currentState!.readingsSwitches['PM2.5']!;
+        model.pm10 = _checkboxesKey.currentState!.readingsSwitches['PM10']!;
       },
       onSaved: (response, values, form) {
         if (values['siteName'].isNotEmpty &&
@@ -111,7 +113,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
             form.validate()) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const LoggedScreen(),
+              builder: (context) => LoggedScreen(surveyInfo: model),
             ),
           );
         }
@@ -128,9 +130,9 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
                 children: [
                   siteNameTextFormField(context, model),
                   addressTextFormField(context, model),
-                  const DateTimePicker(),
+                  DateTimePicker(model: model),
                   occupancyTypeDropdown(context, model),
-                  const AllCheckboxes(),
+                  AllCheckboxes(key: _checkboxesKey),
                   EasyFormSaveButton.text('Submit'),
                 ],
               ),
@@ -204,7 +206,8 @@ EasyTextFormField addressTextFormField(BuildContext context, SurveyInfo model) {
 }
 
 class DateTimePicker extends StatefulWidget {
-  const DateTimePicker({super.key});
+  final SurveyInfo model;
+  const DateTimePicker({required this.model, super.key});
 
   @override
   State<DateTimePicker> createState() => _DateTimePickerState();
@@ -237,7 +240,7 @@ class _DateTimePickerState extends State<DateTimePicker> {
         );
         if (pickedDate != null) {
           // Update the model
-          SurveyInitialInfoFormState.model.date = pickedDate;
+          widget.model.date = pickedDate;
           // Set the date in the controller
           dateInput.text = DateFormat('MM-dd-yyyy').format(pickedDate);
         }
@@ -251,7 +254,8 @@ class _DateTimePickerState extends State<DateTimePicker> {
 }
 
 class LoggedScreen extends StatelessWidget {
-  const LoggedScreen({super.key});
+  final SurveyInfo surveyInfo;
+  const LoggedScreen({required this.surveyInfo, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -266,14 +270,13 @@ class LoggedScreen extends StatelessWidget {
               TextButton(
                 child: const Text('Next'),
                 onPressed: () {
-                  print(SurveyInitialInfoFormState.model.toJson().toString());
+                  print(surveyInfo.toJson().toString());
                   Navigator.of(context).pop();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      
-                      builder: (context) => OutdoorReadingsScreen(
-                          surveyInfo: SurveyInitialInfoFormState.model),
+                      builder: (context) =>
+                          OutdoorReadingsScreen(surveyInfo: surveyInfo),
                     ),
                   );
                 },
@@ -331,7 +334,7 @@ class AllCheckboxes extends StatefulWidget {
 }
 
 class _AllCheckboxesState extends State<AllCheckboxes> {
-  static Map<String, bool> readingsSwitches = {
+  Map<String, bool> readingsSwitches = {
     'Carbon Dioxide': false,
     'Carbon Monoxide': false,
     'VOCs': false,
