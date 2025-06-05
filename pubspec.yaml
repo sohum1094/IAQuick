@@ -59,6 +59,7 @@ dependencies:
   share_plus: ^7.2.1
   googleapis: ^12.0.0
   googleapis_auth:  ^1.4.1
+  google_api_headers: ^4.5.1
 
 dev_dependencies:
   flutter_test:

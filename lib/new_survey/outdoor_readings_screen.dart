@@ -21,8 +21,7 @@ class OutdoorReadingsScreen extends StatelessWidget {
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: Text(
-              '${SurveyInitialInfoFormState.model.siteName} Outdoor Readings'),
+          title: Text('${surveyInfo.siteName} Outdoor Readings'),
           centerTitle: true,
           backgroundColor: Colors.blueGrey,
           leading: BackButton(

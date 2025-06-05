@@ -46,12 +46,24 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Retrieve dialog status on initialization
+    context.read<UserInfoDialogStatus>().getUserInfoDialogStatus();
+  }
+
+  @override
   Widget build(BuildContext context) {
-     final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
+    final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
 
     if (userInfoDialogStatus.shouldShowDialog) {
       _showEnterUserInfoDialog(context);
