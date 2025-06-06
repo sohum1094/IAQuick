@@ -302,14 +302,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.0"
-  flutter_google_places:
-    dependency: "direct main"
-    description:
-      name: flutter_google_places
-      sha256: e9fb23ceacdc7359aa759627550146f7fd3ae6c067d16f39f3c50d8feebf4809
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -400,6 +392,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.20-nullsafety.5"
+  google_places_flutter:
+    dependency: "direct main"
+    description:
+      name: google_places_flutter
+      sha256: 5048f8c3e97dcb8ecfbf478bc336fefd8c4f9b903bfabcd3839c4b17eb8724eb
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   googleapis:
     dependency: "direct main"
     description:
