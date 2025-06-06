@@ -283,7 +283,8 @@ Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentP
   String message = "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on ${DateFormat('MM-dd-yyyy').format(date)} created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick";
 
   try {
-    await Share.shareFiles(attachmentPaths, text: message);
+    final files = attachmentPaths.map((p) => XFile(p)).toList();
+    await Share.shareXFiles(files, text: message);
   } catch (e) {
     // Handle error or inform the user
     print('Error sharing files: $e');
