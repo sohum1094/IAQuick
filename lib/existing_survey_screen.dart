@@ -501,7 +501,7 @@ Future<File> createVisualExcelFile(
         TextCellValue(va.building));
     printSheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
-        TextCellValue(va.floorNumber));
+        TextCellValue(va.floorNumber?.toString() ?? ''));
     printSheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
         TextCellValue(va.roomNumber));
