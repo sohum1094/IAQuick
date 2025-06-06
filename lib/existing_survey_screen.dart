@@ -364,12 +364,16 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
   OutdoorReadings? outdoor = await DatabaseHelper.instance.readOutdoorReadings(surveyInfo.id);
 
   // Style to mark values that exceed thresholds
-  CellStyle exceedStyle = CellStyle(backgroundColorHex: '#FF0000');
+  CellStyle exceedStyle =
+      CellStyle(backgroundColorHex: ExcelColor.fromHexString('#FF0000'));
 
   // Modify the sheet with your data
-  sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
-  sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
-  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A1')).value =
+      TextCellValue(surveyInfo.siteName);
+  sheet.cell(CellIndex.indexByString('A2')).value =
+      DateTimeCellValue.fromDateTime(surveyInfo.date);
+  sheet.cell(CellIndex.indexByString('A3')).value =
+      TextCellValue(surveyInfo.occupancyType);
 
   int startRow = 5;
   print('entering readings loop');
@@ -377,27 +381,41 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     int rowIndex = startRow + roomReadings.indexOf(reading);
     print('Writing to file: ' + reading.toJson().toString());
     // Assign values from the RoomReading object to the cells
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), reading.building);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
+        TextCellValue(reading.building));
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
+        TextCellValue(reading.floorNumber));
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
+        TextCellValue(reading.roomNumber));
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+        TextCellValue(reading.primaryUse));
 
     // Temperature threshold 68-76 °F
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+        DoubleCellValue(reading.temperature));
     var tempCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex));
     if (reading.temperature > 76 || reading.temperature < 68) {
       tempCell.cellStyle = exceedStyle;
     }
 
     // Relative humidity threshold >65%
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex),
+        DoubleCellValue(reading.relativeHumidity));
     var rhCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex));
     if (reading.relativeHumidity > 65) {
       rhCell.cellStyle = exceedStyle;
     }
 
     // CO₂ threshold = outdoor CO₂ + 700ppm, default to 1000ppm if outdoor not found
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex),
+        reading.co2 != null ? DoubleCellValue(reading.co2!) : null);
     var co2Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex));
     double co2Threshold = (outdoor?.co2 ?? 300) + 700;
     if (reading.co2 != null && reading.co2! > co2Threshold) {
@@ -405,28 +423,36 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     }
 
     // CO threshold >10ppm
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex),
+        reading.co != null ? DoubleCellValue(reading.co!) : null);
     var coCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex));
     if (reading.co != null && reading.co! > 10) {
       coCell.cellStyle = exceedStyle;
     }
 
     // PM2.5 threshold >35 mg/m^3
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex),
+        reading.pm25 != null ? DoubleCellValue(reading.pm25!) : null);
     var pm25Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex));
     if (reading.pm25 != null && reading.pm25! > 35) {
       pm25Cell.cellStyle = exceedStyle;
     }
 
     // PM10 threshold >150 mg/m^3
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex),
+        reading.pm10 != null ? DoubleCellValue(reading.pm10!) : null);
     var pm10Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex));
     if (reading.pm10 != null && reading.pm10! > 150) {
       pm10Cell.cellStyle = exceedStyle;
     }
 
     // VOCs threshold >3 mg/m^3
-    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
+    sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex),
+        reading.vocs != null ? DoubleCellValue(reading.vocs!) : null);
     var vocsCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex));
     if (reading.vocs != null && reading.vocs! > 3) {
       vocsCell.cellStyle = exceedStyle;
@@ -455,21 +481,36 @@ Future<File> createVisualExcelFile(
   var entrySheet = excel['Entry Sheet'];
   var printSheet = excel['VA for Print'];
 
-  entrySheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.occupancyType;
-  entrySheet.cell(CellIndex.indexByString('B2')).value = surveyInfo.date;
-  entrySheet.cell(CellIndex.indexByString('D2')).value = surveyInfo.siteName;
+  entrySheet.cell(CellIndex.indexByString('A2')).value =
+      TextCellValue(surveyInfo.occupancyType);
+  entrySheet.cell(CellIndex.indexByString('B2')).value =
+      DateTimeCellValue.fromDateTime(surveyInfo.date);
+  entrySheet.cell(CellIndex.indexByString('D2')).value =
+      TextCellValue(surveyInfo.siteName);
 
-  printSheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
-  printSheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  printSheet.cell(CellIndex.indexByString('A2')).value =
+      DateTimeCellValue.fromDateTime(surveyInfo.date);
+  printSheet.cell(CellIndex.indexByString('A3')).value =
+      TextCellValue(surveyInfo.occupancyType);
 
   int startRow = 5;
   for (var va in visuals) {
     int rowIndex = startRow + visuals.indexOf(va);
-    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), va.building);
-    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), va.floorNumber);
-    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), va.roomNumber);
-    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), va.primaryRoomUse);
-    printSheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), va.notes);
+    printSheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
+        TextCellValue(va.building));
+    printSheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
+        TextCellValue(va.floorNumber));
+    printSheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
+        TextCellValue(va.roomNumber));
+    printSheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
+        TextCellValue(va.primaryRoomUse));
+    printSheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
+        TextCellValue(va.notes));
     startRow++;
   }
 
