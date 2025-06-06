@@ -38,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   easy_form_kit: ^4.1.0
   flutter_secure_storage: ^8.0.0
-  flutter_google_places: ^0.3.0
+  google_places_flutter: ^2.1.0
   intl: ^0.18.1
   shared_preferences: ^2.2.0
   csv: ^5.0.2
