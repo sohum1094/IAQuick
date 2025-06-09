@@ -27,3 +27,18 @@ Learn more at [sohum1094.github.io](url)
    - Place your iOS `GoogleService-Info.plist` file in `ios/Runner/`.
 
 After the configuration files are in place, the app can initialize Firebase using the generated options.
+
+## Offline Excel Export Example
+
+A helper script `scripts/export_to_excel.py` demonstrates how to create an IAQ Excel
+report using the bundled template. It fills the template with sample data and
+saves the result to a new `.xlsx` file.
+
+Run it with Python 3:
+
+```bash
+python3 scripts/export_to_excel.py output.xlsx
+```
+
+This will create `output.xlsx` following the same layout as the
+`assets/IAQ_template_v2.xlsx` file.
