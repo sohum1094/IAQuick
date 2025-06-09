@@ -120,7 +120,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Export\nto Email'),
                   ),
                 ),
-                
+                DataColumn(
+                  label: Expanded(
+                    child: Text('Delete'),
+                  ),
+                ),
 
               ],
               rows: _buildRecentFileRows(),
@@ -161,6 +165,14 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               elevation: 0,
             ),
             child: const Icon(Icons.email),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              _confirmDeleteSurvey(surveyInfo);
+            },
           ),
         ),
       ]);
@@ -207,7 +219,12 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     child: Text('Export\nto Email'),
                   ),
                 ),
-                
+                DataColumn(
+                  label: Expanded(
+                    child: Text('Delete'),
+                  ),
+                ),
+
               ],
               rows: _buildSearchResultRows(searchResults),
             ),
@@ -249,8 +266,45 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
             child: const Icon(Icons.email),
           ),
         ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              _confirmDeleteSurvey(surveyInfo);
+            },
+          ),
+        ),
       ]);
     }).toList();
+  }
+
+  Future<void> _confirmDeleteSurvey(SurveyInfo survey) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Survey'),
+        content:
+            Text('Are you sure you want to delete "${survey.siteName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final service = SurveyService();
+      await service.deleteSurvey(survey.id);
+      setState(() {
+        surveyList.removeWhere((s) => s.id == survey.id);
+      });
+    }
   }
 
 }

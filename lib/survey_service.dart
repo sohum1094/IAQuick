@@ -233,5 +233,29 @@ class SurveyService {
     if (!doc.exists) return null;
     return OutdoorReadings.fromMap(doc.data()!);
   }
+
+  /// Delete a survey and its subcollections from Firestore.
+  Future<void> deleteSurvey(String surveyId) async {
+    final surveyRef =
+        FirebaseFirestore.instance.collection('surveys').doc(surveyId);
+
+    final roomSnap = await surveyRef.collection('room_readings').get();
+    for (final doc in roomSnap.docs) {
+      await doc.reference.delete();
+    }
+
+    final outdoorSnap =
+        await surveyRef.collection('outdoor_readings').get();
+    for (final doc in outdoorSnap.docs) {
+      await doc.reference.delete();
+    }
+
+    final photosSnap = await surveyRef.collection('photos').get();
+    for (final doc in photosSnap.docs) {
+      await doc.reference.delete();
+    }
+
+    await surveyRef.delete();
+  }
 }
 
