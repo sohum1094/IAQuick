@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:iaqapp/new_survey/new_survey_start.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'existing_survey_screen.dart';
@@ -184,13 +185,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const UserInitialInfo();
-                    },
-                  ),
-                );
+                Future.microtask(() {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const UserInitialInfo(),
+                    ),
+                  );
+                });
               },
             ),
           ],
