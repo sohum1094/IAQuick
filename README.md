@@ -26,6 +26,12 @@ Learn more at [sohum1094.github.io](url)
    - Place your Android `google-services.json` file in `android/app/`.
    - Place your iOS `GoogleService-Info.plist` file in `ios/Runner/`.
 
+4. **Provide your own Firebase config locally**
+
+   The `google-services.json` file is excluded from version control. Copy
+   your project's `google-services.json` and `GoogleService-Info.plist`
+   to the above paths before running the app.
+
 After the configuration files are in place, the app can initialize Firebase using the generated options.
 
 ## Offline Excel Export Example
