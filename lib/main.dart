@@ -61,17 +61,23 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Retrieve dialog status on initialization
-    context.read<UserInfoDialogStatus>().getUserInfoDialogStatus();
+    context
+        .read<UserInfoDialogStatus>()
+        .getUserInfoDialogStatus()
+        .then((_) {
+      if (mounted &&
+          context.read<UserInfoDialogStatus>().shouldShowDialog) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showEnterUserInfoDialog(context);
+          }
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final userInfoDialogStatus = context.watch<UserInfoDialogStatus>();
-
-    if (userInfoDialogStatus.shouldShowDialog) {
-      _showEnterUserInfoDialog(context);
-    }
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
