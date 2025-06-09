@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'dart:math';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/models.dart' show VisualAssessment;
 import 'package:iaqapp/survey_service.dart';
@@ -463,6 +464,38 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
     // Increment the row for the next set of data
     startRow++;
   }
+
+  // Compute min and max values across room readings
+  double minTemp =
+      roomReadings.map((r) => r.temperature).reduce(min);
+  double maxTemp =
+      roomReadings.map((r) => r.temperature).reduce(max);
+  double minRh =
+      roomReadings.map((r) => r.relativeHumidity).reduce(min);
+  double maxRh =
+      roomReadings.map((r) => r.relativeHumidity).reduce(max);
+
+  List<double> co2Vals =
+      roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList();
+  double minCo2 = co2Vals.isNotEmpty ? co2Vals.reduce(min) : 0;
+  double maxCo2 = co2Vals.isNotEmpty ? co2Vals.reduce(max) : 0;
+
+  List<double> pm25Vals =
+      roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList();
+  double minPm25 = pm25Vals.isNotEmpty ? pm25Vals.reduce(min) : 0;
+  double maxPm25 = pm25Vals.isNotEmpty ? pm25Vals.reduce(max) : 0;
+
+  // Write min and max values to the Min&Max worksheet if present
+  var minMaxSheet = excel['Min&Max'];
+  minMaxSheet.updateCell(CellIndex.indexByString('B2'), DoubleCellValue(minTemp));
+  minMaxSheet.updateCell(CellIndex.indexByString('C2'), DoubleCellValue(minRh));
+  minMaxSheet.updateCell(CellIndex.indexByString('D2'), DoubleCellValue(minCo2));
+  minMaxSheet.updateCell(CellIndex.indexByString('E2'), DoubleCellValue(minPm25));
+
+  minMaxSheet.updateCell(CellIndex.indexByString('B3'), DoubleCellValue(maxTemp));
+  minMaxSheet.updateCell(CellIndex.indexByString('C3'), DoubleCellValue(maxRh));
+  minMaxSheet.updateCell(CellIndex.indexByString('D3'), DoubleCellValue(maxCo2));
+  minMaxSheet.updateCell(CellIndex.indexByString('E3'), DoubleCellValue(maxPm25));
   final String newFilePath = path.join(templateFile.parent.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
 
   // Save the modified Excel file to a new file
