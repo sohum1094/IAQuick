@@ -808,8 +808,34 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 Future<void> saveImageLocally(File imageFile, String roomNumber) async {
   final prefs = await SharedPreferences.getInstance();
   final appDir = await getApplicationDocumentsDirectory();
-  final fileNameBuilder =
-      '${prefs.getString('Site Name')!.substring(0, 3)}_${prefs.getString('Site Name')!.substring(prefs.getString('Site Name')!.indexOf(' ') + 1, prefs.getString('Site Name')!.indexOf(' ') + 4)}_IAQ_${prefs.getString('Date Time')}_${prefs.getString('First Name')?.substring(0, 1)}_${prefs.getString('Last Name')?.substring(0, 1)}';
+
+  // Retrieve values with null checks
+  final siteName = prefs.getString('Site Name') ?? '';
+  final dateTime = prefs.getString('Date Time') ?? '';
+  final firstInitial = prefs.getString('First Name')?.substring(0, 1) ?? '';
+  final lastInitial = prefs.getString('Last Name')?.substring(0, 1) ?? '';
+
+  String fileNameBuilder;
+
+  if (siteName.length >= 3 && siteName.contains(' ')) {
+    final spaceIndex = siteName.indexOf(' ');
+    if (spaceIndex != -1 && siteName.length >= spaceIndex + 4) {
+      final firstPart = siteName.substring(0, 3);
+      final secondPart = siteName.substring(spaceIndex + 1, spaceIndex + 4);
+      if (dateTime.isNotEmpty && firstInitial.isNotEmpty && lastInitial.isNotEmpty) {
+        fileNameBuilder =
+            '${firstPart}_${secondPart}_IAQ_${dateTime}_${firstInitial}_${lastInitial}';
+      } else {
+        fileNameBuilder = '${firstPart}_${secondPart}_IAQ';
+      }
+    } else {
+      fileNameBuilder =
+          dateTime.isNotEmpty ? 'IAQ_$dateTime' : 'IAQ_${DateTime.now().millisecondsSinceEpoch}';
+    }
+  } else {
+    fileNameBuilder =
+        dateTime.isNotEmpty ? 'IAQ_$dateTime' : 'IAQ_${DateTime.now().millisecondsSinceEpoch}';
+  }
 
   final localPath =
       path.join(appDir.path, 'iaQuick', 'csv_files', fileNameBuilder);
