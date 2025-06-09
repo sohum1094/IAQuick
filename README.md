@@ -48,3 +48,16 @@ python3 scripts/export_to_excel.py output.xlsx
 
 This will create `output.xlsx` following the same layout as the
 `assets/IAQ_template_v2.xlsx` file.
+
+## Exporting Survey Data from Firebase
+
+The `scripts/firebase_export.py` tool connects to Firestore using
+`firebase_admin` and exports a survey document to Excel. Provide the survey ID
+and a service account JSON file:
+
+```bash
+python3 scripts/firebase_export.py --credentials path/to/service.json <surveyId>
+```
+
+Workbooks are saved inside an output folder named after the survey site. Both
+Indoor Air Quality and Visual Assessment files will be created when applicable.
