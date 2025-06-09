@@ -42,18 +42,24 @@ import 'package:iaqapp/survey_service.dart';
 int roomCount = 0;
 List<RoomReading> roomReadings = [];
 
-class RoomReadingsFormScreen extends StatelessWidget {
+class RoomReadingsFormScreen extends StatefulWidget {
   final SurveyInfo surveyInfo;
   final OutdoorReadings outdoorReadingsInfo;
-  RoomReadingsFormScreen(
+  const RoomReadingsFormScreen(
       {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
 
+  @override
+  State<RoomReadingsFormScreen> createState() => _RoomReadingsFormScreenState();
+}
+
+class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
   final GlobalKey<RoomReadingsFormState> formKey =
       GlobalKey<RoomReadingsFormState>();
+
   @override
   Widget build(BuildContext context) {
-    print('Carbon Dioxide Readings: ${surveyInfo.carbonDioxideReadings}');
-    print('Carbon Monoxide Readings: ${surveyInfo.carbonMonoxideReadings}');
+    print('Carbon Dioxide Readings: ${widget.surveyInfo.carbonDioxideReadings}');
+    print('Carbon Monoxide Readings: ${widget.surveyInfo.carbonMonoxideReadings}');
 
 
     return Scaffold(
@@ -78,8 +84,8 @@ class RoomReadingsFormScreen extends StatelessWidget {
       ),
       body: RoomReadingsForm(
           key: formKey,
-          surveyInfo: surveyInfo,
-          outdoorReadingsInfo: outdoorReadingsInfo),
+          surveyInfo: widget.surveyInfo,
+          outdoorReadingsInfo: widget.outdoorReadingsInfo),
     );
   }
 }
