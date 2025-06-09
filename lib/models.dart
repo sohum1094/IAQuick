@@ -21,10 +21,27 @@ class SurveyHeader {
   }
 
   factory SurveyHeader.fromMap(Map<String, dynamic> map) {
-    final extra = Map<String, dynamic>.from(map)..remove('surveyDate')..remove('occupancyStatus');
+    final extra = Map<String, dynamic>.from(map)
+      ..remove('surveyDate')
+      ..remove('date')
+      ..remove('occupancyStatus')
+      ..remove('occupancyType');
+
+    final dynamic dateField = map['surveyDate'] ?? map['date'];
+    DateTime parsedDate;
+    if (dateField is Timestamp) {
+      parsedDate = dateField.toDate();
+    } else if (dateField is String) {
+      parsedDate = DateTime.tryParse(dateField) ?? DateTime.fromMillisecondsSinceEpoch(0);
+    } else {
+      parsedDate = DateTime.fromMillisecondsSinceEpoch(0);
+    }
+
+    final occupancy = map['occupancyStatus'] ?? map['occupancyType'] ?? '';
+
     return SurveyHeader(
-      surveyDate: (map['surveyDate'] as Timestamp).toDate(),
-      occupancyStatus: map['occupancyStatus'] ?? '',
+      surveyDate: parsedDate,
+      occupancyStatus: occupancy,
       extra: extra,
     );
   }
