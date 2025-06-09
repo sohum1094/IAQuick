@@ -74,14 +74,15 @@ class UserInitialInfoFormState extends State<UserInitialInfoForm> {
         }
       },
       onSaved: (response, values, form) {
-        if (response['hasError'] || values['email'].isEmpty || values['firstName'].isEmpty || values['lastName'].isEmpty || !form.validate()) {
+        if (response['hasError'] ||
+            values['email'].isEmpty ||
+            values['firstName'].isEmpty ||
+            values['lastName'].isEmpty ||
+            !form.validate()) {
           _alert(context, response['error']);
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const LoggedScreen(),
-            ),
-          );
+          Navigator.of(context, rootNavigator: true)
+              .popUntil((route) => route.isFirst);
         }
       },
       child: Center(
