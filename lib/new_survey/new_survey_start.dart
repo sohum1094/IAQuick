@@ -251,6 +251,12 @@ class _DateTimePickerState extends State<DateTimePicker> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    dateInput.dispose();
+    super.dispose();
+  }
 }
 
 class LoggedScreen extends StatelessWidget {
