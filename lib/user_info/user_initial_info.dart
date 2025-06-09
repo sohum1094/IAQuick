@@ -45,73 +45,102 @@ class UserInitialInfoForm extends StatefulWidget {
 
 class UserInitialInfoFormState extends State<UserInitialInfoForm> {
   final _initialUserFormKey = GlobalKey<FormState>();
+  final Future<SharedPreferences> _prefsFuture = SharedPreferences.getInstance();
   UserInfoModel model = UserInfoModel();
 
   @override
-  EasyForm build(BuildContext context) {
-    return EasyForm(
-      key: _initialUserFormKey,
-      onSave: (values, form) async {
-        if (values['email'].isEmpty || values['firstName'].isEmpty || values['lastName'].isEmpty || !form.validate()) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const LoggedErrorScreen(),
-            ),
-          );
-        } else {
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('email', values['email']);
-          prefs.setString('First Name', values['firstName']);
-          prefs.setString('Last Name', values['lastName']);
-          return Future.delayed(
-            const Duration(seconds: 1),
-            () {
-              return <String, dynamic>{
-                'hasError': false,
-              };
-            },
-          );
+  Widget build(BuildContext context) {
+    return FutureBuilder<SharedPreferences>(
+      future: _prefsFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
         }
-      },
-      onSaved: (response, values, form) {
-        if (response['hasError'] ||
-            values['email'].isEmpty ||
-            values['firstName'].isEmpty ||
-            values['lastName'].isEmpty ||
-            !form.validate()) {
-          _alert(context, response['error']);
-        } else {
-          Navigator.of(context, rootNavigator: true)
-              .popUntil((route) => route.isFirst);
-        }
-      },
-      child: Center(
-        child: Column(
-          children: [
-            const Spacer(
-              flex: 1,
+        final prefs = snapshot.data!;
+        final savedEmail = prefs.getString('email') ?? '';
+        final savedFirstName = prefs.getString('First Name') ?? '';
+        final savedLastName = prefs.getString('Last Name') ?? '';
+
+        return EasyForm(
+          key: _initialUserFormKey,
+          onSave: (values, form) async {
+            if (values['email'].isEmpty || values['firstName'].isEmpty || values['lastName'].isEmpty || !form.validate()) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const LoggedErrorScreen(),
+                ),
+              );
+            } else {
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString('email', values['email']);
+              prefs.setString('First Name', values['firstName']);
+              prefs.setString('Last Name', values['lastName']);
+              return Future.delayed(
+                const Duration(seconds: 1),
+                () {
+                  return <String, dynamic>{
+                    'hasError': false,
+                  };
+                },
+              );
+            }
+          },
+          onSaved: (response, values, form) {
+            if (response['hasError'] ||
+                values['email'].isEmpty ||
+                values['firstName'].isEmpty ||
+                values['lastName'].isEmpty ||
+                !form.validate()) {
+              _alert(context, response['error']);
+            } else {
+              Navigator.of(context, rootNavigator: true)
+                  .popUntil((route) => route.isFirst);
+            }
+          },
+          child: Center(
+            child: Column(
+              children: [
+                if (savedEmail.isNotEmpty ||
+                    savedFirstName.isNotEmpty ||
+                    savedLastName.isNotEmpty)
+                  Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      const Text('Current Saved Information:'),
+                      if (savedEmail.isNotEmpty) Text('Email: $savedEmail'),
+                      if (savedFirstName.isNotEmpty)
+                        Text('First Name: $savedFirstName'),
+                      if (savedLastName.isNotEmpty)
+                        Text('Last Name: $savedLastName'),
+                      const Divider(),
+                    ],
+                  ),
+                const Spacer(
+                  flex: 1,
+                ),
+                emailTextFormField(context, model, savedEmail),
+                firstNameTextFormField(context, model, savedFirstName),
+                lastNameTextFormField(context, model, savedLastName),
+                const Spacer(
+                  flex: 2,
+                ),
+                EasyFormSaveButton.text('Save Info'),
+                const Spacer(
+                  flex: 1,
+                )
+              ],
             ),
-            emailTextFormField(context, model),
-            firstNameTextFormField(context, model),
-            lastNameTextFormField(context, model),
-            const Spacer(
-              flex: 2,
-            ),
-            EasyFormSaveButton.text('Save Info'),
-            const Spacer(
-              flex: 1,
-            )
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 EasyTextFormField emailTextFormField(
-    BuildContext context, UserInfoModel model) {
+    BuildContext context, UserInfoModel model, String initialValue) {
   return EasyTextFormField(
-    initialValue: '',
+    initialValue: initialValue,
     name: 'email',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
@@ -141,9 +170,9 @@ EasyTextFormField emailTextFormField(
 }
 
 EasyTextFormField firstNameTextFormField(
-    BuildContext context, UserInfoModel model) {
+    BuildContext context, UserInfoModel model, String initialValue) {
   return EasyTextFormField(
-    initialValue: '',
+    initialValue: initialValue,
     name: 'firstName',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
@@ -168,9 +197,9 @@ EasyTextFormField firstNameTextFormField(
 }
 
 EasyTextFormField lastNameTextFormField(
-    BuildContext context, UserInfoModel model) {
+    BuildContext context, UserInfoModel model, String initialValue) {
   return EasyTextFormField(
-    initialValue: '',
+    initialValue: initialValue,
     name: 'lastName',
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
