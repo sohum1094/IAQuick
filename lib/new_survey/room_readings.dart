@@ -37,7 +37,7 @@ import 'package:iaqapp/main.dart';
 import 'package:path/path.dart' as path;
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:iaqapp/database_helper.dart';
+import 'package:iaqapp/survey_service.dart';
 
 int roomCount = 0;
 List<RoomReading> roomReadings = [];
@@ -739,8 +739,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     _saveForm();
                   }
                   if (roomNumberTextController.text.isNotEmpty) {
-                    // Call saveSurveyToFirestore with the appropriate parameters
-                    saveSurveyToLocalDatabase(
+                    // Save to Firebase using offline-capable service
+                    saveSurveyToFirestore(
                       widget.surveyInfo,
                       widget.outdoorReadingsInfo,
                       roomReadings,
@@ -864,20 +864,12 @@ class DropdownModel {
   DropdownModel({this.building = '', this.floor = ''});
 }
 
-Future<void> saveSurveyToLocalDatabase(SurveyInfo surveyInfo,
+Future<void> saveSurveyToFirestore(SurveyInfo surveyInfo,
     OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
-    final db = await DatabaseHelper.instance.database;
-
-    // Start a transaction
-    await db.transaction((txn) async {
-      await txn.insert('survey_info', surveyInfo.toJson());
-
-      outdoorReadings.surveyID = surveyInfo.id; // Correctly handle as string
-      await txn.insert('outdoor_readings', outdoorReadings.toJson());
-
-      for (var roomReading in roomReadings) {
-        roomReading.surveyID = surveyInfo.id; // Correctly handle as string
-        await txn.insert('room_readings', roomReading.toJson());
-      }
-    });
+  final service = SurveyService();
+  await service.saveSurveyToFirestore(
+    info: surveyInfo,
+    outdoor: outdoorReadings,
+    rooms: roomReadings,
+  );
 }

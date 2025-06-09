@@ -9,6 +9,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
+import 'models/survey_info.dart';
 
 class SurveyService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -174,6 +175,60 @@ class SurveyService {
       visuals: visuals,
       photos: photos,
     );
+  }
+
+  /// Save a survey composed of [SurveyInfo], [OutdoorReadings] and [RoomReading]
+  /// objects to Firestore. Collections are created for outdoor and room
+  /// readings so that the app can operate offline using Firestore's built in
+  /// persistence.
+  Future<void> saveSurveyToFirestore({
+    required SurveyInfo info,
+    required OutdoorReadings outdoor,
+    required List<RoomReading> rooms,
+  }) async {
+    final surveyRef =
+        FirebaseFirestore.instance.collection('surveys').doc(info.id);
+
+    await surveyRef.set(info.toJson());
+    await surveyRef
+        .collection('outdoor_readings')
+        .doc('data')
+        .set(outdoor.toJson());
+
+    for (final room in rooms) {
+      await surveyRef.collection('room_readings').add(room.toJson());
+    }
+  }
+
+  /// Fetch all survey headers stored in Firestore ordered by date.
+  Future<List<SurveyInfo>> fetchAllSurveys() async {
+    final snap = await FirebaseFirestore.instance
+        .collection('surveys')
+        .orderBy('date', descending: true)
+        .get();
+    return snap.docs.map((d) => SurveyInfo.fromMap(d.data())).toList();
+  }
+
+  /// Retrieve room readings for a given [surveyId] from Firestore.
+  Future<List<RoomReading>> fetchRoomReadings(String surveyId) async {
+    final snap = await FirebaseFirestore.instance
+        .collection('surveys')
+        .doc(surveyId)
+        .collection('room_readings')
+        .get();
+    return snap.docs.map((d) => RoomReading.fromMap(d.data())).toList();
+  }
+
+  /// Retrieve outdoor readings for a survey from Firestore.
+  Future<OutdoorReadings?> fetchOutdoorReadings(String surveyId) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('surveys')
+        .doc(surveyId)
+        .collection('outdoor_readings')
+        .doc('data')
+        .get();
+    if (!doc.exists) return null;
+    return OutdoorReadings.fromMap(doc.data()!);
   }
 }
 

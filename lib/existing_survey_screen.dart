@@ -7,7 +7,6 @@ import 'package:excel/excel.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:iaqapp/models/survey_info.dart';
-import 'package:iaqapp/database_helper.dart';
 import 'package:iaqapp/models.dart' show VisualAssessment;
 import 'package:iaqapp/survey_service.dart';
 import 'package:share_plus/share_plus.dart';
@@ -30,7 +29,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   }
 
   Future<void> _loadSurveyData() async {
-    surveyList = await DatabaseHelper.instance.readAllSurveys();
+    final service = SurveyService();
+    surveyList = await service.fetchAllSurveys();
     setState(() {});
   }
 
@@ -361,7 +361,8 @@ Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomRea
   var sheet = excel['Data for Print']; // Replace with your actual sheet name
 
   // Outdoor readings are used for CO₂ threshold calculations
-  OutdoorReadings? outdoor = await DatabaseHelper.instance.readOutdoorReadings(surveyInfo.id);
+  final service = SurveyService();
+  OutdoorReadings? outdoor = await service.fetchOutdoorReadings(surveyInfo.id);
 
   // Style to mark values that exceed thresholds
   CellStyle exceedStyle =
@@ -548,11 +549,13 @@ Future<File> getVisualTemplateFile() async {
 
 
 Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
-  return await DatabaseHelper.instance.readRoomReadings(surveyId);
+  final service = SurveyService();
+  return await service.fetchRoomReadings(surveyId);
 }
 
 Future<OutdoorReadings?> fetchOutdoorReadingsForSurvey(String surveyId) async {
-  return await DatabaseHelper.instance.readOutdoorReadings(surveyId);
+  final service = SurveyService();
+  return await service.fetchOutdoorReadings(surveyId);
 }
 
 Future<File> getIAQTemplateFile() async {
