@@ -479,16 +479,10 @@ Future<File> createVisualExcelFile(
   File templateFile = await getVisualTemplateFile();
   var excel = Excel.decodeBytes(templateFile.readAsBytesSync());
 
-  var entrySheet = excel['Entry Sheet'];
   var printSheet = excel['VA for Print'];
 
-  entrySheet.cell(CellIndex.indexByString('A2')).value =
-      TextCellValue(surveyInfo.occupancyType);
-  entrySheet.cell(CellIndex.indexByString('B2')).value =
-      DateTimeCellValue.fromDateTime(surveyInfo.date);
-  entrySheet.cell(CellIndex.indexByString('D2')).value =
-      TextCellValue(surveyInfo.siteName);
-
+  printSheet.cell(CellIndex.indexByString('A1')).value =
+      TextCellValue('${surveyInfo.siteName} Visual Assessment');
   printSheet.cell(CellIndex.indexByString('A2')).value =
       DateTimeCellValue.fromDateTime(surveyInfo.date);
   printSheet.cell(CellIndex.indexByString('A3')).value =
