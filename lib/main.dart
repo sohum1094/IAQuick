@@ -1,17 +1,16 @@
-import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'package:iaqapp/new_survey/new_survey_start.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'existing_survey_screen.dart';
-import 'user_info/user_initial_info.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'auth/sign_in_screen.dart';
+import 'auth_service.dart';
+import 'existing_survey_screen.dart';
+import 'new_survey/new_survey_start.dart';
 import 'firebase_options.dart';
 import 'survey_service.dart';
 
 final SurveyService surveyService = SurveyService();
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +20,8 @@ void main() async {
   await SurveyService.configureFirestoreCache();
   surveyService.startConnectivityListener();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserInfoDialogStatus(),
+    Provider<AuthService>(
+      create: (_) => AuthService(),
       child: const MyApp(),
     ),
   );
@@ -44,54 +43,42 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: HomeScreen(),
+    final authService = Provider.of<AuthService>(context, listen: false);
+    return MaterialApp(
+      home: StreamBuilder<User?>(
+        stream: authService.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.active) {
+            final user = snapshot.data;
+            if (user == null) {
+              return const SignInScreen();
+            } else {
+              return const HomeScreen();
+            }
+          }
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Retrieve dialog status on initialization
-    context
-        .read<UserInfoDialogStatus>()
-        .getUserInfoDialogStatus()
-        .then((_) {
-      if (mounted &&
-          context.read<UserInfoDialogStatus>().shouldShowDialog) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _showEnterUserInfoDialog(context);
-          }
-        });
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.person),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) {
-                return const UserInitialInfo();
-              },
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => authService.signOut(),
           ),
-        ),
+        ],
         title: const Text('IAQuick', textScaleFactor: 1.1),
         backgroundColor: Colors.blueGrey,
         centerTitle: true,
@@ -140,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
           width: MediaQuery.of(context).size.width * .7,
           child: const Center(
             child: Text(
-              "Open Previous Survey",
+              'Open Previous Survey',
               textScaleFactor: 1.5,
             ),
           ),
@@ -169,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
           width: MediaQuery.of(context).size.width * .7,
           child: const Center(
             child: Text(
-              "Create New Survey",
+              'Create New Survey',
               textScaleFactor: 1.5,
             ),
           ),
@@ -177,48 +164,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  void _showEnterUserInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Welcome to IAQuick!'),
-          content: const Text('Please enter user information.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Future.microtask(() {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const UserInitialInfo(),
-                    ),
-                  );
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
-
-class UserInfoDialogStatus extends ChangeNotifier {
-  bool _shouldShowDialog = false;
-
-  bool get shouldShowDialog => _shouldShowDialog;
-
-  Future<void> getUserInfoDialogStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    _shouldShowDialog = (prefs.getString('First Name') == null ||
-        prefs.getString('First Name') == '');
-
-    notifyListeners();
-  }
-}
-
-

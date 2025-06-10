@@ -34,6 +34,18 @@ Learn more at [sohum1094.github.io](url)
 
 After the configuration files are in place, the app can initialize Firebase using the generated options.
 
+### Enable Authentication
+
+To authenticate users, enable Email/Password sign-in in the Firebase console:
+
+1. Open the **Authentication** section of your Firebase project.
+2. On the **Sign-in method** tab, enable **Email/Password**.
+3. Optionally create user accounts in the **Users** tab so they can log in.
+
+The application uses the Firebase user's `displayName` to derive your initials
+when naming saved files. You can set this value when creating the account or
+later in the Firebase console.
+
 ## Offline Excel Export Example
 
 A helper script `scripts/export_to_excel.py` demonstrates how to create an IAQ Excel
