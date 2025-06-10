@@ -251,7 +251,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   DropdownButtonFormField buildingDropdownTemplate(
       BuildContext context, DropdownModel model) {
-    List<String> options = ['Main', 'Annex', 'Other'];
+    List<String> options = ['Main', 'Annex', 'Modular 1', 'Modular 2', 'Other'];
 
     return DropdownButtonFormField(
       key: buildingDropdownKey,
