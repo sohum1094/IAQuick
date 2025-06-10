@@ -97,7 +97,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
-              headingRowColor: MaterialStateColor.resolveWith(
+              headingRowColor: WidgetStateColor.resolveWith(
                   (states) => Colors.indigoAccent),
               headingRowHeight: MediaQuery.of(context).size.height * 0.06,
               border: TableBorder.symmetric(
@@ -197,7 +197,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
-              headingRowColor: MaterialStateColor.resolveWith(
+              headingRowColor: WidgetStateColor.resolveWith(
                   (states) => Colors.indigoAccent),
               headingRowHeight: MediaQuery.of(context).size.height * 0.06,
               border: TableBorder.symmetric(
@@ -338,7 +338,7 @@ Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentP
 
   try {
     final files = attachmentPaths.map((p) => XFile(p)).toList();
-    await Share.shareXFiles(files, text: message);
+    await SharePlus.instance.share(ShareParams(files: files, text: message));
   } catch (e) {
     // Handle error or inform the user
     print('Error sharing files: $e');
