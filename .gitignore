@@ -20,3 +20,4 @@ flutter_frontend/assets/google_credentials.json
 lib/firebase_options.dart
 lib/google_credentials.dart
 lib/api_keys.dart
+pubspec.lock
