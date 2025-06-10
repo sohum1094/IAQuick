@@ -115,5 +115,3 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
   assets:
       - assets/
-      - assets/IAQ_template_v2.xlsx
-      - assets/Visual_template.xlsx

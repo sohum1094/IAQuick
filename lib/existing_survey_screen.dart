@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
@@ -347,265 +346,163 @@ Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentP
 }
 
 
-// Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
-//   // Get the path to the document directory
-//   final directory = await getApplicationDocumentsDirectory();
-//
-//   // Load the Excel template from assets
-//   final ByteData data = await rootBundle.load('assets/IAQ_template_v2.xlsx');
-//   final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-//
-//   // Decode the bytes to get Excel object
-//   var excel = Excel.decodeBytes(bytes);
-//
-//   var sheet = excel['Data for Print']; // Replace with your actual sheet name
-//
-//
-//
-//   // Modify the sheet with your data
-//   // Assume 'sheet' is not null
-//   // Example: Fill in the site name and date
-//   sheet.cell(CellIndex.indexByString('A1')).value = surveyInfo.siteName;
-//   sheet.cell(CellIndex.indexByString('A2')).value = surveyInfo.date;
-//   sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
-//
-//   int startRow = 5;
-//
-//   for (var reading in roomReadings) {
-//     int rowIndex = startRow + roomReadings.indexOf(reading);
-//
-//     // Assign values from the RoomReading object to the cells
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex), reading.building);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex), reading.floorNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex), reading.roomNumber);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex), reading.primaryUse);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex), reading.temperature);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex), reading.relativeHumidity);
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex), reading.co2 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex), reading.co ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex), reading.pm25 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex), reading.pm10 ?? '');
-//     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex), reading.vocs ?? '');
-//     // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
-//
-//     // Increment the row for the next set of data
-//     startRow++;
-//   }
-//
-//   // Path for the new Excel file
-//   final newFilePath = path.join(directory.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
-//
-//
-//   // Save the modified Excel file to the document directory
-//   var onValue = excel.encode();
-//   File file = File(newFilePath)
-//     ..createSync(recursive: true)
-//     ..writeAsBytesSync(onValue!);
-//
-//   return file;
-// }
 
-Future<File> createIAQExcelFile(SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
-  // Get the template file
-  File templateFile = await getIAQTemplateFile();
+Future<File> createIAQExcelFile(
+    SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
+  final directory = await getApplicationDocumentsDirectory();
+  final wb = Excel.createExcel();
+  final sheet = wb['IAQ'];
 
-  // Open the Excel file
-  var excel = Excel.decodeBytes(templateFile.readAsBytesSync());
-
-  // Get specific sheet from Excel
-  var sheet = excel['Data for Print']; // Replace with your actual sheet name
-
-  // Outdoor readings are used for CO₂ threshold calculations
-  final service = SurveyService();
-  OutdoorReadings? outdoor = await service.fetchOutdoorReadings(surveyInfo.id);
-
-  // Style to mark values that exceed thresholds
-  CellStyle exceedStyle =
-      CellStyle(backgroundColorHex: ExcelColor.fromHexString('#FF0000'));
-
-  // Modify the sheet with your data
+  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('H1'));
   sheet.cell(CellIndex.indexByString('A1')).value =
-      TextCellValue(surveyInfo.siteName);
+      '${surveyInfo.siteName} Indoor Air Quality Measurements';
+  sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
+
+  sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('H2'));
   sheet.cell(CellIndex.indexByString('A2')).value =
-      DateTimeCellValue.fromDateTime(surveyInfo.date);
-  sheet.cell(CellIndex.indexByString('A3')).value =
-      TextCellValue(surveyInfo.occupancyType);
+      DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date);
+  sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
-  int startRow = 5;
-  print('entering readings loop');
-  for (var reading in roomReadings) {
-    int rowIndex = startRow + roomReadings.indexOf(reading);
-    print('Writing to file: ' + reading.toJson().toString());
-    // Assign values from the RoomReading object to the cells
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
-        TextCellValue(reading.building));
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
-        TextCellValue(reading.floorNumber));
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
-        TextCellValue(reading.roomNumber));
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
-        TextCellValue(reading.primaryUse));
+  sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('H3'));
+  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
 
-    // Temperature threshold 68-76 °F
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
-        DoubleCellValue(reading.temperature));
-    var tempCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex));
-    if (reading.temperature > 76 || reading.temperature < 68) {
-      tempCell.cellStyle = exceedStyle;
-    }
-
-    // Relative humidity threshold >65%
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex),
-        DoubleCellValue(reading.relativeHumidity));
-    var rhCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex));
-    if (reading.relativeHumidity > 65) {
-      rhCell.cellStyle = exceedStyle;
-    }
-
-    // CO₂ threshold = outdoor CO₂ + 700ppm, default to 1000ppm if outdoor not found
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex),
-        reading.co2 != null ? DoubleCellValue(reading.co2!) : null);
-    var co2Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex));
-    double co2Threshold = (outdoor?.co2 ?? 300) + 700;
-    if (reading.co2 != null && reading.co2! > co2Threshold) {
-      co2Cell.cellStyle = exceedStyle;
-    }
-
-    // CO threshold >10ppm
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex),
-        reading.co != null ? DoubleCellValue(reading.co!) : null);
-    var coCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIndex));
-    if (reading.co != null && reading.co! > 10) {
-      coCell.cellStyle = exceedStyle;
-    }
-
-    // PM2.5 threshold >35 mg/m^3
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex),
-        reading.pm25 != null ? DoubleCellValue(reading.pm25!) : null);
-    var pm25Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 8, rowIndex: rowIndex));
-    if (reading.pm25 != null && reading.pm25! > 35) {
-      pm25Cell.cellStyle = exceedStyle;
-    }
-
-    // PM10 threshold >150 mg/m^3
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex),
-        reading.pm10 != null ? DoubleCellValue(reading.pm10!) : null);
-    var pm10Cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 9, rowIndex: rowIndex));
-    if (reading.pm10 != null && reading.pm10! > 150) {
-      pm10Cell.cellStyle = exceedStyle;
-    }
-
-    // VOCs threshold >3 mg/m^3
-    sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex),
-        reading.vocs != null ? DoubleCellValue(reading.vocs!) : null);
-    var vocsCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 10, rowIndex: rowIndex));
-    if (reading.vocs != null && reading.vocs! > 3) {
-      vocsCell.cellStyle = exceedStyle;
-    }
-    // sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: rowIndex), reading.comments ?? '');
-
-    // Increment the row for the next set of data
-    startRow++;
+  final headers = [
+    'Building',
+    'Floor Number',
+    'Room Number',
+    'Primary Room Use',
+    'Temperature (°F)',
+    'Relative Humidity (%)',
+    'Carbon Dioxide (ppm)',
+    'PM2.5 (mg/m³)'
+  ];
+  for (var i = 0; i < headers.length; i++) {
+    final cell =
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
+    cell.value = headers[i];
+    cell.cellStyle = columnHeaderStyle();
   }
 
-  // Compute min and max values across room readings
-  double minTemp =
-      roomReadings.map((r) => r.temperature).reduce(min);
-  double maxTemp =
-      roomReadings.map((r) => r.temperature).reduce(max);
-  double minRh =
-      roomReadings.map((r) => r.relativeHumidity).reduce(min);
-  double maxRh =
-      roomReadings.map((r) => r.relativeHumidity).reduce(max);
+  for (var i = 0; i < roomReadings.length; i++) {
+    final r = roomReadings[i];
+    final row = 4 + i;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
+        .value = r.building;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
+        .value = r.floorNumber;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
+        .value = r.roomNumber;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
+        .value = r.primaryUse;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
+        .value = r.temperature;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: row))
+        .value = r.relativeHumidity;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: row))
+        .value = r.co2;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: row))
+        .value = r.pm25;
+  }
 
-  List<double> co2Vals =
-      roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList();
-  double minCo2 = co2Vals.isNotEmpty ? co2Vals.reduce(min) : 0;
-  double maxCo2 = co2Vals.isNotEmpty ? co2Vals.reduce(max) : 0;
-
-  List<double> pm25Vals =
+  final temps = roomReadings.map((r) => r.temperature).toList();
+  final hums = roomReadings.map((r) => r.relativeHumidity).toList();
+  final co2 = roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList();
+  final pm25 =
       roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList();
-  double minPm25 = pm25Vals.isNotEmpty ? pm25Vals.reduce(min) : 0;
-  double maxPm25 = pm25Vals.isNotEmpty ? pm25Vals.reduce(max) : 0;
 
-  // Write min and max values to the Min&Max worksheet if present
-  var minMaxSheet = excel['Min&Max'];
-  minMaxSheet.updateCell(CellIndex.indexByString('B2'), DoubleCellValue(minTemp));
-  minMaxSheet.updateCell(CellIndex.indexByString('C2'), DoubleCellValue(minRh));
-  minMaxSheet.updateCell(CellIndex.indexByString('D2'), DoubleCellValue(minCo2));
-  minMaxSheet.updateCell(CellIndex.indexByString('E2'), DoubleCellValue(minPm25));
+  final summary = wb['Summary'];
+  summary.cell(CellIndex.indexByString('A1')).value = 'Minimum';
+  summary.cell(CellIndex.indexByString('B1')).value = temps.reduce(min);
+  summary.cell(CellIndex.indexByString('C1')).value = hums.reduce(min);
+  summary.cell(CellIndex.indexByString('D1')).value =
+      co2.isNotEmpty ? co2.reduce(min) : null;
+  summary.cell(CellIndex.indexByString('E1')).value =
+      pm25.isNotEmpty ? pm25.reduce(min) : null;
 
-  minMaxSheet.updateCell(CellIndex.indexByString('B3'), DoubleCellValue(maxTemp));
-  minMaxSheet.updateCell(CellIndex.indexByString('C3'), DoubleCellValue(maxRh));
-  minMaxSheet.updateCell(CellIndex.indexByString('D3'), DoubleCellValue(maxCo2));
-  minMaxSheet.updateCell(CellIndex.indexByString('E3'), DoubleCellValue(maxPm25));
-  final String newFilePath = path.join(templateFile.parent.path, '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_IAQ.xlsx');
+  summary.cell(CellIndex.indexByString('A2')).value = 'Maximum';
+  summary.cell(CellIndex.indexByString('B2')).value = temps.reduce(max);
+  summary.cell(CellIndex.indexByString('C2')).value = hums.reduce(max);
+  summary.cell(CellIndex.indexByString('D2')).value =
+      co2.isNotEmpty ? co2.reduce(max) : null;
+  summary.cell(CellIndex.indexByString('E2')).value =
+      pm25.isNotEmpty ? pm25.reduce(max) : null;
 
-  // Save the modified Excel file to a new file
-    var onValue = excel.encode();
-    File file = File(newFilePath)
-      ..createSync(recursive: true)
-      ..writeAsBytesSync(onValue!);
-
-    return file;
+  final bytes = wb.encode();
+  final filePath = path.join(
+      directory.path,
+      '${surveyInfo.siteName.replaceAll(' ', '_')}-IAQ-${formatDate(surveyInfo.date)}.xlsx');
+  final file = File(filePath)..writeAsBytesSync(bytes!);
+  return file;
 }
 
 Future<File> createVisualExcelFile(
     SurveyInfo surveyInfo, List<VisualAssessment> visuals) async {
-  File templateFile = await getVisualTemplateFile();
-  var excel = Excel.decodeBytes(templateFile.readAsBytesSync());
+  final directory = await getApplicationDocumentsDirectory();
+  final wb = Excel.createExcel();
+  final sheet = wb['Visual'];
 
-  var printSheet = excel['VA for Print'];
+  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E1'));
+  sheet.cell(CellIndex.indexByString('A1')).value =
+      '${surveyInfo.siteName} Visual Assessment';
+  sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
 
-  printSheet.cell(CellIndex.indexByString('A1')).value =
-      TextCellValue('${surveyInfo.siteName} Visual Assessment');
-  printSheet.cell(CellIndex.indexByString('A2')).value =
-      DateTimeCellValue.fromDateTime(surveyInfo.date);
-  printSheet.cell(CellIndex.indexByString('A3')).value =
-      TextCellValue(surveyInfo.occupancyType);
+  sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('E2'));
+  sheet.cell(CellIndex.indexByString('A2')).value =
+      DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date);
+  sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
-  int startRow = 5;
-  for (var va in visuals) {
-    int rowIndex = startRow + visuals.indexOf(va);
-    printSheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex),
-        TextCellValue(va.building));
-    printSheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex),
-        TextCellValue(va.floorNumber?.toString() ?? ''));
-    printSheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
-        TextCellValue(va.roomNumber));
-    printSheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
-        TextCellValue(va.primaryRoomUse));
-    printSheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex),
-        TextCellValue(va.notes));
-    startRow++;
+  sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('E3'));
+  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
+
+  final headers = [
+    'Building',
+    'Floor Number',
+    'Room Number',
+    'Primary Room Use',
+    'Visual Assessment Notes'
+  ];
+  for (var i = 0; i < headers.length; i++) {
+    final cell =
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
+    cell.value = headers[i];
+    cell.cellStyle = columnHeaderStyle();
   }
 
-  final String newFilePath = path.join(
-    templateFile.parent.path,
-    '${surveyInfo.siteName.replaceAll(' ', '_')}_${DateFormat('MMddyyyy').format(surveyInfo.date)}_Visual.xlsx',
-  );
+  for (var i = 0; i < visuals.length; i++) {
+    final v = visuals[i];
+    final row = 4 + i;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
+        .value = v.building;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
+        .value = v.floorNumber;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
+        .value = v.roomNumber;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
+        .value = v.primaryRoomUse;
+    sheet
+        .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
+        .value = v.notes;
+  }
 
-  var onValue = excel.encode();
-  File file = File(newFilePath)
-    ..createSync(recursive: true)
-    ..writeAsBytesSync(onValue!);
-
+  final bytes = wb.encode();
+  final filePath = path.join(
+      directory.path,
+      '${surveyInfo.siteName.replaceAll(' ', '_')}-Visual-${formatDate(surveyInfo.date)}.xlsx');
+  final file = File(filePath)..writeAsBytesSync(bytes!);
   return file;
 }
 
@@ -614,20 +511,6 @@ Future<List<VisualAssessment>> fetchVisualAssessmentsForSurvey(String surveyId) 
   final report = await service.fetchSurveyReport(surveyId);
   return report.visuals;
 }
-
-Future<File> getVisualTemplateFile() async {
-  final ByteData data = await rootBundle.load('assets/Visual_template.xlsx');
-  final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-  final directory = await getApplicationDocumentsDirectory();
-  final String templatePath = path.join(directory.path, 'Visual_template.xlsx');
-  final File file = File(templatePath);
-
-  await file.writeAsBytes(bytes);
-  return file;
-}
-
-
 
 Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
   final service = SurveyService();
@@ -639,17 +522,23 @@ Future<OutdoorReadings?> fetchOutdoorReadingsForSurvey(String surveyId) async {
   return await service.fetchOutdoorReadings(surveyId);
 }
 
-Future<File> getIAQTemplateFile() async {
-  final ByteData data = await rootBundle.load('assets/IAQ_template_v2.xlsx');
-  final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+CellStyle headerStyle() => CellStyle(
+      backgroundColorHex: '#4472C4',
+      fontFamily: getFontFamily(FontFamily.Calibri),
+      bold: true,
+      fontSize: 16,
+      fontColorHex: '#FFFFFF',
+      horizontalAlign: HorizontalAlign.Center,
+    );
 
-  final directory = await getApplicationDocumentsDirectory();
-  final String templatePath = path.join(directory.path, 'IAQ_template_v2.xlsx');
-  final File file = File(templatePath);
+CellStyle subHeaderStyle() => headerStyle().copyWith(fontSize: 12);
 
-  await file.writeAsBytes(bytes);
-  return file;
-}
+CellStyle columnHeaderStyle() => CellStyle(
+      bold: true,
+      backgroundColorHex: '#D9E1F2',
+      horizontalAlign: HorizontalAlign.Center,
+    );
 
+String formatDate(DateTime date) => DateFormat('yyyyMMdd_HHmm').format(date);
 
 
