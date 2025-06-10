@@ -38,6 +38,7 @@ import 'package:path/path.dart' as path;
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 int roomCount = 0;
 List<RoomReading> roomReadings = [];
@@ -812,8 +813,19 @@ Future<void> saveImageLocally(File imageFile, String roomNumber) async {
   // Retrieve values with null checks
   final siteName = prefs.getString('Site Name') ?? '';
   final dateTime = prefs.getString('Date Time') ?? '';
-  final firstInitial = prefs.getString('First Name')?.substring(0, 1) ?? '';
-  final lastInitial = prefs.getString('Last Name')?.substring(0, 1) ?? '';
+  final user = FirebaseAuth.instance.currentUser;
+  final displayName = user?.displayName ?? '';
+  String firstInitial = '';
+  String lastInitial = '';
+  if (displayName.isNotEmpty) {
+    final parts = displayName.split(' ');
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      firstInitial = parts[0][0];
+    }
+    if (parts.length > 1 && parts[1].isNotEmpty) {
+      lastInitial = parts[1][0];
+    }
+  }
 
   String fileNameBuilder;
 

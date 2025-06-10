@@ -8,41 +8,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:iaqapp/main.dart';
+import 'package:iaqapp/auth_service.dart';
+import 'package:iaqapp/auth/sign_in_screen.dart';
 
 void main() {
-  testWidgets('HomeScreen shows Create New Survey button',
-      (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-
+  testWidgets('SignInScreen shows sign in button', (WidgetTester tester) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => UserInfoDialogStatus(),
-        child: const MaterialApp(home: HomeScreen()),
+      Provider<AuthService>(
+        create: (_) => AuthService(),
+        child: const MaterialApp(home: SignInScreen()),
       ),
     );
 
     await tester.pumpAndSettle();
 
-    // Verify that the Create New Survey button is present.
-    expect(find.text('Create New Survey'), findsOneWidget);
-  });
-
-  testWidgets('Alert dialog shown when First Name is missing',
-      (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-
-    await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => UserInfoDialogStatus(),
-        child: const MaterialApp(home: HomeScreen()),
-      ),
-    );
-
-    await tester.pumpAndSettle();
-
-    expect(find.text('Please enter user information.'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
   });
 }
