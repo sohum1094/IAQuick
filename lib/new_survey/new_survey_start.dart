@@ -31,6 +31,8 @@ import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:iaqapp/api_keys.dart';
 
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
@@ -78,6 +80,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   final SurveyInfo model = SurveyInfo();
   final GlobalKey<_AllCheckboxesState> _checkboxesKey =
       GlobalKey<_AllCheckboxesState>();
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   EasyForm build(BuildContext context) {
@@ -129,7 +132,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
               child: Column(
                 children: [
                   siteNameTextFormField(context, model),
-                  addressTextFormField(context, model),
+                  addressTextFormField(context, model, _addressController),
                   DateTimePicker(model: model),
                   occupancyTypeDropdown(context, model),
                   AllCheckboxes(key: _checkboxesKey),
@@ -141,6 +144,12 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
   }
 
   AlertDialog errorDialog(BuildContext context) {
@@ -182,25 +191,47 @@ EasyTextFormField siteNameTextFormField(
   );
 }
 
-EasyTextFormField addressTextFormField(BuildContext context, SurveyInfo model) {
-  return EasyTextFormField(
-    initialValue: '',
+EasyTextFormField addressTextFormField(
+    BuildContext context, SurveyInfo model, TextEditingController controller) {
+  return EasyTextFormField.builder(
     name: 'siteAddress',
+    controller: controller,
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
-      if (value == null) {
-        return "Enter Correct Site Address";
-      } else {
-        return null;
+      if (value == null || value.isEmpty) {
+        return 'Enter Correct Site Address';
       }
+      return null;
     },
-    decoration: const InputDecoration(
-      labelText: 'Street Address*',
-    ),
     onSaved: (tempAddress) {
       if (tempAddress != null) {
         model.address = tempAddress;
       }
+    },
+    builder: (state, onChanged) {
+      return GooglePlaceAutoCompleteTextField(
+        textEditingController: state.controller as TextEditingController,
+        googleAPIKey: googleApiKey,
+        debounceTime: 800,
+        isLatLngRequired: false,
+        inputDecoration: const InputDecoration(
+          labelText: 'Street Address*',
+        ),
+        itmClick: (prediction) {
+          final description = prediction.description ?? '';
+          state.controller!.text = description;
+          state.controller!.selection = TextSelection.fromPosition(
+            TextPosition(offset: description.length),
+          );
+          onChanged(description);
+        },
+        validator: (text, _) {
+          if (text == null || text.isEmpty) {
+            return 'Enter Correct Site Address';
+          }
+          return null;
+        },
+      );
     },
   );
 }
