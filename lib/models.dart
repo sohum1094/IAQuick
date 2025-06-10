@@ -95,14 +95,14 @@ class Measurement {
 
 class VisualAssessment {
   final String building;
-  final int? floorNumber;
+  final String floorNumber;
   final String roomNumber;
   final String primaryRoomUse;
   final String notes;
 
   VisualAssessment({
     required this.building,
-    this.floorNumber,
+    required this.floorNumber,
     required this.roomNumber,
     required this.primaryRoomUse,
     required this.notes,

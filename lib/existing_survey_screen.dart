@@ -497,7 +497,7 @@ Future<File> createVisualExcelFile(
       } else {
         rows.add(VisualAssessment(
           building: r.building,
-          floorNumber: int.tryParse(r.floorNumber),
+          floorNumber: r.floorNumber,
           roomNumber: r.roomNumber,
           primaryRoomUse: r.primaryUse,
           notes: r.comments.isEmpty ? 'No issues observed.' : r.comments,
@@ -516,8 +516,7 @@ Future<File> createVisualExcelFile(
         .value = TextCellValue(v.building);
     final floorCell =
         sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row));
-    floorCell.value =
-        v.floorNumber != null ? IntCellValue(v.floorNumber!) : null;
+    floorCell.value = TextCellValue(v.floorNumber);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
         .value = TextCellValue(v.roomNumber);
