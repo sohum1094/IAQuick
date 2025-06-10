@@ -153,7 +153,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               List<VisualAssessment> visuals =
                   await fetchVisualAssessmentsForSurvey(surveyInfo.id);
               File visualExcel =
-                  await createVisualExcelFile(surveyInfo, visuals);
+                  await createVisualExcelFile(
+                      surveyInfo, visuals, roomReadings);
 
               List<String> attachments = [iaqExcel.path, visualExcel.path];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
@@ -253,7 +254,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
               List<VisualAssessment> visuals =
                   await fetchVisualAssessmentsForSurvey(surveyInfo.id);
               File visualExcel =
-                  await createVisualExcelFile(surveyInfo, visuals);
+                  await createVisualExcelFile(
+                      surveyInfo, visuals, roomReadings);
 
               List<String> attachments = [iaqExcel.path, visualExcel.path];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
@@ -351,6 +353,7 @@ Future<File> createIAQExcelFile(
     SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
+  wb.delete('Sheet1');
   final sheet = wb['IAQ'];
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('H1'));
@@ -447,9 +450,11 @@ Future<File> createIAQExcelFile(
 }
 
 Future<File> createVisualExcelFile(
-    SurveyInfo surveyInfo, List<VisualAssessment> visuals) async {
+    SurveyInfo surveyInfo, List<VisualAssessment> visuals,
+    [List<RoomReading>? roomReadings]) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
+  wb.delete('Sheet1');
   final sheet = wb['Visual'];
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E1'));
@@ -478,8 +483,33 @@ Future<File> createVisualExcelFile(
     cell.cellStyle = columnHeaderStyle();
   }
 
-  for (var i = 0; i < visuals.length; i++) {
-    final v = visuals[i];
+  final Map<String, VisualAssessment> visualMap = {
+    for (final v in visuals)
+      '${v.building}|${v.floorNumber}|${v.roomNumber}': v
+  };
+  final List<VisualAssessment> rows = [];
+
+  if (roomReadings != null) {
+    for (final r in roomReadings) {
+      final key = '${r.building}|${r.floorNumber}|${r.roomNumber}';
+      if (visualMap.containsKey(key)) {
+        rows.add(visualMap.remove(key)!);
+      } else {
+        rows.add(VisualAssessment(
+          building: r.building,
+          floorNumber: int.tryParse(r.floorNumber),
+          roomNumber: r.roomNumber,
+          primaryRoomUse: r.primaryUse,
+          notes: r.comments.isEmpty ? 'No issues observed.' : r.comments,
+        ));
+      }
+    }
+  }
+
+  rows.addAll(visualMap.values);
+
+  for (var i = 0; i < rows.length; i++) {
+    final v = rows[i];
     final row = 4 + i;
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
@@ -540,6 +570,14 @@ CellStyle columnHeaderStyle() => CellStyle(
       horizontalAlign: HorizontalAlign.Center,
     );
 
-String formatDate(DateTime date) => DateFormat('yyyyMMdd_HHmm').format(date);
+String formatDate(DateTime date) {
+  // If the stored survey date lacks a time component, use the current
+  // time so that exported filenames remain unique.
+  if (date.hour == 0 && date.minute == 0 && date.second == 0) {
+    final now = DateTime.now();
+    date = DateTime(date.year, date.month, date.day, now.hour, now.minute);
+  }
+  return DateFormat('yyyyMMdd_HHmm').format(date);
+}
 
 
