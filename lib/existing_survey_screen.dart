@@ -389,28 +389,30 @@ Future<File> createIAQExcelFile(
     final row = 4 + i;
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-        .value = r.building;
+        .value = TextCellValue(r.building);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-        .value = r.floorNumber;
+        .value = TextCellValue(r.floorNumber);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-        .value = r.roomNumber;
+        .value = TextCellValue(r.roomNumber);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
-        .value = r.primaryUse;
+        .value = TextCellValue(r.primaryUse);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
-        .value = r.temperature;
+        .value = DoubleCellValue(r.temperature);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: row))
-        .value = r.relativeHumidity;
+        .value = DoubleCellValue(r.relativeHumidity);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: row))
-        .value = r.co2;
+        .value =
+            r.co2 != null ? DoubleCellValue(r.co2!) : null;
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: row))
-        .value = r.pm25;
+        .value =
+            r.pm25 != null ? DoubleCellValue(r.pm25!) : null;
   }
 
   final temps = roomReadings.map((r) => r.temperature).toList();
@@ -483,19 +485,20 @@ Future<File> createVisualExcelFile(
     final row = 4 + i;
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-        .value = v.building;
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-        .value = v.floorNumber;
+        .value = TextCellValue(v.building);
+    final floorCell =
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row));
+    floorCell.value =
+        v.floorNumber != null ? IntCellValue(v.floorNumber!) : null;
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-        .value = v.roomNumber;
+        .value = TextCellValue(v.roomNumber);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
-        .value = v.primaryRoomUse;
+        .value = TextCellValue(v.primaryRoomUse);
     sheet
         .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
-        .value = v.notes;
+        .value = TextCellValue(v.notes);
   }
 
   final bytes = wb.encode();
