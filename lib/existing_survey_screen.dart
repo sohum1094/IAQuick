@@ -355,16 +355,16 @@ Future<File> createIAQExcelFile(
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('H1'));
   sheet.cell(CellIndex.indexByString('A1')).value =
-      '${surveyInfo.siteName} Indoor Air Quality Measurements';
+      TextCellValue('${surveyInfo.siteName} Indoor Air Quality Measurements');
   sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
 
   sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('H2'));
   sheet.cell(CellIndex.indexByString('A2')).value =
-      DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date);
+      TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
   sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
   sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('H3'));
-  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(surveyInfo.occupancyType);
   sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
 
   final headers = [
@@ -380,7 +380,7 @@ Future<File> createIAQExcelFile(
   for (var i = 0; i < headers.length; i++) {
     final cell =
         sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
-    cell.value = headers[i];
+    cell.value = TextCellValue(headers[i]);
     cell.cellStyle = columnHeaderStyle();
   }
 
@@ -422,21 +422,21 @@ Future<File> createIAQExcelFile(
       roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList();
 
   final summary = wb['Summary'];
-  summary.cell(CellIndex.indexByString('A1')).value = 'Minimum';
-  summary.cell(CellIndex.indexByString('B1')).value = temps.reduce(min);
-  summary.cell(CellIndex.indexByString('C1')).value = hums.reduce(min);
+  summary.cell(CellIndex.indexByString('A1')).value = TextCellValue('Minimum');
+  summary.cell(CellIndex.indexByString('B1')).value = DoubleCellValue(temps.reduce(min));
+  summary.cell(CellIndex.indexByString('C1')).value = DoubleCellValue(hums.reduce(min));
   summary.cell(CellIndex.indexByString('D1')).value =
-      co2.isNotEmpty ? co2.reduce(min) : null;
+      DoubleCellValue(co2.isNotEmpty ? co2.reduce(min) : -1.0);
   summary.cell(CellIndex.indexByString('E1')).value =
-      pm25.isNotEmpty ? pm25.reduce(min) : null;
+      DoubleCellValue(pm25.isNotEmpty ? pm25.reduce(min) : -1.0);
 
-  summary.cell(CellIndex.indexByString('A2')).value = 'Maximum';
-  summary.cell(CellIndex.indexByString('B2')).value = temps.reduce(max);
-  summary.cell(CellIndex.indexByString('C2')).value = hums.reduce(max);
+  summary.cell(CellIndex.indexByString('A2')).value = TextCellValue('Maximum');
+  summary.cell(CellIndex.indexByString('B2')).value = DoubleCellValue(temps.reduce(max));
+  summary.cell(CellIndex.indexByString('C2')).value = DoubleCellValue(hums.reduce(max));
   summary.cell(CellIndex.indexByString('D2')).value =
-      co2.isNotEmpty ? co2.reduce(max) : null;
+      DoubleCellValue(co2.isNotEmpty ? co2.reduce(max) : -1.0);
   summary.cell(CellIndex.indexByString('E2')).value =
-      pm25.isNotEmpty ? pm25.reduce(max) : null;
+      DoubleCellValue(pm25.isNotEmpty ? pm25.reduce(max) : -1.0);
 
   final bytes = wb.encode();
   final filePath = path.join(
@@ -453,17 +453,15 @@ Future<File> createVisualExcelFile(
   final sheet = wb['Visual'];
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E1'));
-  sheet.cell(CellIndex.indexByString('A1')).value =
-      '${surveyInfo.siteName} Visual Assessment';
+  sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('${surveyInfo.siteName} Visual Assessment');
   sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
 
   sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('E2'));
-  sheet.cell(CellIndex.indexByString('A2')).value =
-      DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date);
+  sheet.cell(CellIndex.indexByString('A2')).value = TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
   sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
   sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('E3'));
-  sheet.cell(CellIndex.indexByString('A3')).value = surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(surveyInfo.occupancyType);
   sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
 
   final headers = [
@@ -476,7 +474,7 @@ Future<File> createVisualExcelFile(
   for (var i = 0; i < headers.length; i++) {
     final cell =
         sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
-    cell.value = headers[i];
+    cell.value = TextCellValue(headers[i]);
     cell.cellStyle = columnHeaderStyle();
   }
 
