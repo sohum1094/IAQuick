@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../auth_service.dart';
-import 'sign_up_screen.dart';
 
-class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key});
+import '../auth_service.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _displayNameController = TextEditingController();
   bool _isLoading = false;
   String? _error;
 
@@ -21,11 +22,15 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In')),
+      appBar: AppBar(title: const Text('Create Account')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            TextField(
+              controller: _displayNameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
@@ -46,10 +51,12 @@ class _SignInScreenState extends State<SignInScreen> {
                         _error = null;
                       });
                       try {
-                        await authService.signIn(
+                        await authService.signUp(
                           _emailController.text.trim(),
                           _passwordController.text.trim(),
+                          displayName: _displayNameController.text.trim(),
                         );
+                        if (mounted) Navigator.pop(context);
                       } on FirebaseAuthException catch (e) {
                         setState(() {
                           _error = e.message;
@@ -64,30 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     },
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : const Text('Sign In'),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                );
-              },
-              child: const Text('Create Account'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await authService.signInWithGoogle();
-                } on FirebaseAuthException catch (e) {
-                  setState(() {
-                    _error = e.message;
-                  });
-                }
-              },
-              child: const Text('Sign In with Google'),
+                  : const Text('Create Account'),
             ),
           ],
         ),

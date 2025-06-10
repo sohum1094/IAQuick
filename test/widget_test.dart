@@ -13,7 +13,7 @@ import 'package:iaqapp/auth_service.dart';
 import 'package:iaqapp/auth/sign_in_screen.dart';
 
 void main() {
-  testWidgets('SignInScreen shows sign in button', (WidgetTester tester) async {
+  testWidgets('SignInScreen shows sign in and sign up buttons', (WidgetTester tester) async {
     await tester.pumpWidget(
       Provider<AuthService>(
         create: (_) => AuthService(),
@@ -24,5 +24,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Create Account'), findsOneWidget);
+    expect(find.text('Sign In with Google'), findsOneWidget);
   });
 }

@@ -46,6 +46,19 @@ The application uses the Firebase user's `displayName` to derive your initials
 when naming saved files. You can set this value when creating the account or
 later in the Firebase console.
 
+#### Google Sign‑In
+
+1. On the **Sign‑in method** tab also enable **Google**.
+2. Add your Android and iOS package names and SHA‑1 keys in the Firebase console.
+
+#### Resolving "Requests to this API ... SignInWithPassword are blocked"
+
+If you see an error similar to `Requests to this API identitytoolkit method
+google.cloud.identitytoolkit.v1.AuthenticationService.SignInWithPassword are
+blocked`, verify that the **Identity Toolkit API** (also called "Identity
+Platform") is enabled for your Google Cloud project. This API is required for
+email/password authentication.
+
 ## Offline Excel Export Example
 
 A helper script `scripts/export_to_excel.py` demonstrates how to create an IAQ Excel
