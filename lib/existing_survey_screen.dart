@@ -523,19 +523,19 @@ Future<OutdoorReadings?> fetchOutdoorReadingsForSurvey(String surveyId) async {
 }
 
 CellStyle headerStyle() => CellStyle(
-      backgroundColorHex: '#4472C4',
+      backgroundColorHex: ExcelColor.fromHexString('#4472C4'),
       fontFamily: getFontFamily(FontFamily.Calibri),
       bold: true,
       fontSize: 16,
-      fontColorHex: '#FFFFFF',
+      fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
       horizontalAlign: HorizontalAlign.Center,
     );
 
-CellStyle subHeaderStyle() => headerStyle().copyWith(fontSize: 12);
+CellStyle subHeaderStyle() => headerStyle().copyWith(fontSizeVal: 12);
 
 CellStyle columnHeaderStyle() => CellStyle(
       bold: true,
-      backgroundColorHex: '#D9E1F2',
+      backgroundColorHex: ExcelColor.fromHexString('#D9E1F2'),
       horizontalAlign: HorizontalAlign.Center,
     );
 
