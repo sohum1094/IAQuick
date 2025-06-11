@@ -7,12 +7,23 @@ import 'package:iaqapp/models/survey_info.dart';
 
 final GlobalKey<EasyDataFormState> formKey = GlobalKey<EasyDataFormState>();
 
-class OutdoorReadingsScreen extends StatelessWidget {
-  final SurveyInfo surveyInfo; 
+class OutdoorReadingsScreen extends StatefulWidget {
+  final SurveyInfo surveyInfo;
 
   const OutdoorReadingsScreen({required this.surveyInfo, super.key});
-  
 
+  @override
+  State<OutdoorReadingsScreen> createState() => _OutdoorReadingsScreenState();
+}
+
+class _OutdoorReadingsScreenState extends State<OutdoorReadingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showCalibrationDialog(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +31,7 @@ class OutdoorReadingsScreen extends StatelessWidget {
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: Text('${surveyInfo.siteName} Outdoor Readings'),
+          title: Text('${widget.surveyInfo.siteName} Outdoor Readings'),
           centerTitle: true,
           backgroundColor: Colors.blueGrey,
           leading: BackButton(
@@ -34,7 +45,7 @@ class OutdoorReadingsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 1,
-                  child: outdoorReadingsInfoForm(context, surveyInfo),
+                  child: outdoorReadingsInfoForm(context, widget.surveyInfo),
                 ),
               ],
             ),
@@ -147,6 +158,26 @@ void _showErrorDialog(BuildContext context, String message) {
             child: const Text('OK'),
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showCalibrationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: const Text('Have you zero-calibrated your IAQ meter?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop();
             },
           ),
         ],
