@@ -7,9 +7,13 @@ import 'package:path/path.dart' as path;
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:math';
 import 'package:iaqapp/models/survey_info.dart';
-import 'package:iaqapp/models.dart' show VisualAssessment;
+import 'package:iaqapp/models.dart' show VisualAssessment, PhotoMetadata;
 import 'package:iaqapp/survey_service.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -156,7 +160,16 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   await createVisualExcelFile(
                       surveyInfo, visuals, roomReadings);
 
-              List<String> attachments = [iaqExcel.path, visualExcel.path];
+              final report =
+                  await SurveyService().fetchSurveyReport(surveyInfo.id);
+              File photoPdf =
+                  await createPhotoPdf(surveyInfo, report.photos);
+
+              List<String> attachments = [
+                iaqExcel.path,
+                visualExcel.path,
+                photoPdf.path,
+              ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
 
             },
@@ -257,7 +270,16 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   await createVisualExcelFile(
                       surveyInfo, visuals, roomReadings);
 
-              List<String> attachments = [iaqExcel.path, visualExcel.path];
+              final report =
+                  await SurveyService().fetchSurveyReport(surveyInfo.id);
+              File photoPdf =
+                  await createPhotoPdf(surveyInfo, report.photos);
+
+              List<String> attachments = [
+                iaqExcel.path,
+                visualExcel.path,
+                photoPdf.path,
+              ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
             },
             style: ElevatedButton.styleFrom(
@@ -313,20 +335,14 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
 
 
-Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPaths) async {
-  // Extract the necessary data from the selected row
-  // final visualPath = recentFile[4];
-  String iaqFilePath = attachmentPaths[0];
-  // String visualFilePath = attachmentPaths[1];
-  // Create the email
+Future<void> sendEmail(
+    String siteName, DateTime date, List<String> attachmentPaths) async {
   final Email email = Email(
     body:
-        "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
-    subject: 'IAQ and Visual Assessment Excel Files for $siteName',
+        "Hello,\n\nHere are the IAQ, Visual Assessment, and Photo files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
+    subject: 'IAQ, Visual Assessment, and Photo Files for $siteName',
     recipients: [], // Add the recipient's email address here
-    attachmentPaths: [iaqFilePath
-    // ,visualFilePath
-    ],
+    attachmentPaths: attachmentPaths,
     isHTML: false,
   );
 
@@ -335,8 +351,10 @@ Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPa
 }
 
 
-Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentPaths) async {
-  String message = "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on ${DateFormat('MM-dd-yyyy').format(date)} created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick";
+Future<void> shareFiles(
+    String siteName, DateTime date, List<String> attachmentPaths) async {
+  String message =
+      "Hello,\n\nHere are the IAQ, Visual Assessment, and Photo files for $siteName recorded on ${DateFormat('MM-dd-yyyy').format(date)} created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick";
 
   try {
     final files = attachmentPaths.map((p) => XFile(p)).toList();
@@ -446,6 +464,52 @@ Future<File> createIAQExcelFile(
       directory.path,
       '${surveyInfo.siteName.replaceAll(' ', '_')}-IAQ-${formatDate(surveyInfo.date)}.xlsx');
   final file = File(filePath)..writeAsBytesSync(bytes!);
+  return file;
+}
+
+Future<File> createPhotoPdf(
+    SurveyInfo info, List<PhotoMetadata> photos) async {
+  final pdf = pw.Document();
+  final inspector = FirebaseAuth.instance.currentUser?.displayName ?? '';
+
+  for (var i = 0; i < photos.length; i++) {
+    final photo = photos[i];
+    final image = await networkImage(photo.downloadUrl);
+    final dateTaken = photo.timestamp != null
+        ? DateFormat('MM-dd-yyyy HH:mm').format(photo.timestamp!)
+        : 'Unknown';
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Image ${i + 1} of ${photos.length}',
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              pw.Image(image, width: double.infinity, fit: pw.BoxFit.contain),
+              pw.SizedBox(height: 10),
+              pw.Text('Building Name: ${info.siteName}'),
+              pw.Text('Address: ${info.address}'),
+              pw.Text('Date Image Taken: $dateTaken'),
+              if (inspector.isNotEmpty) pw.Text('Inspector Name: $inspector'),
+              pw.Text('Floor Number: N/A'),
+              pw.Text('Room Number: ${photo.roomNumber}'),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  final directory = await getApplicationDocumentsDirectory();
+  final filePath = path.join(
+      directory.path,
+      '${info.siteName.replaceAll(' ', '_')}-Photos-${formatDate(info.date)}.pdf');
+  final file = File(filePath);
+  await file.writeAsBytes(await pdf.save());
   return file;
 }
 
