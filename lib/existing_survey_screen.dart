@@ -358,7 +358,13 @@ Future<void> shareFiles(
 
   try {
     final files = attachmentPaths.map((p) => XFile(p)).toList();
-    await SharePlus.instance.share(ShareParams(files: files, text: message));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        text: message,
+        subject: '[IAQuick] Report for $siteName is ready',
+      ),
+    );
   } catch (e) {
     // Handle error or inform the user
     print('Error sharing files: $e');
