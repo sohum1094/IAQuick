@@ -80,25 +80,48 @@ class SurveyService {
     }
   }
 
-  /// Save an image for a room locally using the new naming scheme.
-  Future<String> saveRoomImageOffline({
-    required File image,
-    required String surveyId,
-    required String building,
-    required String floor,
-    required String roomNumber,
-  }) async {
+/// Save a room image offline with robust naming and offline storage.
+/// The file will be stored under
+/// `<temp>/surveyPending/<surveyId>` so that it can be uploaded later by
+/// [uploadPendingImages].
+///
+/// Returns the generated file name, or throws if something goes wrong.
+Future<String> saveRoomImageOffline({
+  required String surveyId,
+  required File image,
+  required String building,
+  required String floor,
+  required String roomNumber,
+}) async {
+  try {
     final tempDir = await getTemporaryDirectory();
-    final surveyDir = Directory(p.join(tempDir.path, 'surveyPending', surveyId));
+    final surveyDir = Directory(
+      p.join(tempDir.path, 'surveyPending', surveyId),
+    );
     await surveyDir.create(recursive: true);
 
-    String sanitize(String value) => value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    String sanitize(String value) =>
+        value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final fileName = '${surveyId}_${sanitize(building)}_${sanitize(floor)}_${sanitize(roomNumber)}_${timestamp}.jpg';
+    final fileName = [
+      surveyId,
+      sanitize(building),
+      sanitize(floor),
+      sanitize(roomNumber),
+      timestamp.toString()
+    ].join('_') + '.jpg';
+
     final destPath = p.join(surveyDir.path, fileName);
     await image.copy(destPath);
+
     await addPendingSurvey(surveyId);
     return fileName;
+  } catch (e) {
+    print('Error saving room image offline: $e');
+    rethrow;
+  }
+} main
   }
 
   /// Upload pending images from the temporary folder to Firebase Storage.

@@ -30,6 +30,7 @@
 /// - The image is saved locally.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -151,9 +152,22 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   Future<void> _getImage() async {
+    final status = await Permission.camera.request();
     final imagePicker = ImagePicker();
-    final pickedImage =
-        await imagePicker.pickImage(source: ImageSource.gallery);
+    XFile? pickedImage;
+
+    if (status.isGranted) {
+      pickedImage = await imagePicker.pickImage(source: ImageSource.camera);
+    } else if (status.isDenied) {
+      pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera permission denied')),
+        );
+      }
+      return;
+    }
 
     if (pickedImage != null) {
       setState(() {
@@ -232,9 +246,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       // Add the roomReading to the list of room readings
       roomReadings.add(roomReading);
 
-      // Save the image locally if one is selected
+      // Save the image for offline upload if one is selected
       if (_imageFile != null) {
-        await saveImageLocally(_imageFile!, roomNumberTextController.text);
+        final service = SurveyService();
+        await service.saveRoomImageOffline(
+          surveyId: widget.surveyInfo.id,
+          image: _imageFile!,
+          roomNumber: roomNumberTextController.text,
+        );
       }
     }
   }
