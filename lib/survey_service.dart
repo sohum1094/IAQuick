@@ -80,6 +80,26 @@ class SurveyService {
     }
   }
 
+  /// Save a single room image offline. The file will be stored under
+  /// `<temp>/surveyPending/<surveyId>` so that it can be uploaded later by
+  /// [uploadPendingImages].
+  Future<void> saveRoomImageOffline({
+    required String surveyId,
+    required File image,
+    required String roomNumber,
+  }) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final surveyDir = Directory(p.join(tempDir.path, 'surveyPending', surveyId));
+      await surveyDir.create(recursive: true);
+      final destPath = p.join(surveyDir.path, 'room_$roomNumber.jpg');
+      await image.copy(destPath);
+      await addPendingSurvey(surveyId);
+    } catch (e) {
+      print('Error saving room image offline: $e');
+    }
+  }
+
   /// Upload pending images from the temporary folder to Firebase Storage.
   Future<void> uploadPendingImages() async {
     final tempDir = await getTemporaryDirectory();

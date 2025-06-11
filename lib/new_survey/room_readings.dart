@@ -232,9 +232,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       // Add the roomReading to the list of room readings
       roomReadings.add(roomReading);
 
-      // Save the image locally if one is selected
+      // Save the image for offline upload if one is selected
       if (_imageFile != null) {
-        await saveImageLocally(_imageFile!, roomNumberTextController.text);
+        final service = SurveyService();
+        await service.saveRoomImageOffline(
+          surveyId: widget.surveyInfo.id,
+          image: _imageFile!,
+          roomNumber: roomNumberTextController.text,
+        );
       }
     }
   }
