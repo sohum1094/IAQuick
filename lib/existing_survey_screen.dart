@@ -322,7 +322,7 @@ Future<void> sendEmail(String siteName, DateTime date, List<String> attachmentPa
   final Email email = Email(
     body:
         "Hello,\n\nHere are the IAQ and Visual Assessment Files for $siteName recorded on $date created using IAQuick.\n\nPlease review the files before submitting them.\n\nThank you,\nIAQuick",
-    subject: 'IAQ and Visual Assessment Excel Files for $siteName',
+    subject: '[IAQuick] Report for $siteName is ready',
     recipients: [], // Add the recipient's email address here
     attachmentPaths: [iaqFilePath
     // ,visualFilePath
@@ -340,7 +340,13 @@ Future<void> shareFiles(String siteName, DateTime date, List<String> attachmentP
 
   try {
     final files = attachmentPaths.map((p) => XFile(p)).toList();
-    await SharePlus.instance.share(ShareParams(files: files, text: message));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        text: message,
+        subject: '[IAQuick] Report for $siteName is ready',
+      ),
+    );
   } catch (e) {
     // Handle error or inform the user
     print('Error sharing files: $e');
