@@ -80,24 +80,48 @@ class SurveyService {
     }
   }
 
-  /// Save a single room image offline. The file will be stored under
-  /// `<temp>/surveyPending/<surveyId>` so that it can be uploaded later by
-  /// [uploadPendingImages].
-  Future<void> saveRoomImageOffline({
-    required String surveyId,
-    required File image,
-    required String roomNumber,
-  }) async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final surveyDir = Directory(p.join(tempDir.path, 'surveyPending', surveyId));
-      await surveyDir.create(recursive: true);
-      final destPath = p.join(surveyDir.path, 'room_$roomNumber.jpg');
-      await image.copy(destPath);
-      await addPendingSurvey(surveyId);
-    } catch (e) {
-      print('Error saving room image offline: $e');
-    }
+/// Save a room image offline with robust naming and offline storage.
+/// The file will be stored under
+/// `<temp>/surveyPending/<surveyId>` so that it can be uploaded later by
+/// [uploadPendingImages].
+///
+/// Returns the generated file name, or throws if something goes wrong.
+Future<String> saveRoomImageOffline({
+  required String surveyId,
+  required File image,
+  required String building,
+  required String floor,
+  required String roomNumber,
+}) async {
+  try {
+    final tempDir = await getTemporaryDirectory();
+    final surveyDir = Directory(
+      p.join(tempDir.path, 'surveyPending', surveyId),
+    );
+    await surveyDir.create(recursive: true);
+
+    String sanitize(String value) =>
+        value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final fileName = [
+      surveyId,
+      sanitize(building),
+      sanitize(floor),
+      sanitize(roomNumber),
+      timestamp.toString()
+    ].join('_') + '.jpg';
+
+    final destPath = p.join(surveyDir.path, fileName);
+    await image.copy(destPath);
+
+    await addPendingSurvey(surveyId);
+    return fileName;
+  } catch (e) {
+    print('Error saving room image offline: $e');
+    rethrow;
+  }
+} main
   }
 
   /// Upload pending images from the temporary folder to Firebase Storage.
@@ -114,8 +138,17 @@ class SurveyService {
 
       for (final file in files) {
         final fileName = p.basename(file.path);
-        final match = RegExp(r'room_(.+)\.jpg').firstMatch(fileName);
-        final roomNumber = match != null ? match.group(1) ?? '' : '';
+        final parts = fileName.split('_');
+        String roomNumber = '';
+        DateTime? timestamp;
+        if (parts.length >= 5) {
+          roomNumber = parts[3];
+          final tsStr = parts[4].split('.').first;
+          final tsInt = int.tryParse(tsStr);
+          if (tsInt != null) {
+            timestamp = DateTime.fromMillisecondsSinceEpoch(tsInt);
+          }
+        }
         final storagePath = 'surveyImages/$surveyId/$fileName';
         try {
           final snapshot = await FirebaseStorage.instance.ref(storagePath).putFile(file);
@@ -124,7 +157,7 @@ class SurveyService {
             'roomNumber': roomNumber,
             'downloadUrl': downloadUrl,
             'fileName': fileName,
-            'timestamp': FieldValue.serverTimestamp(),
+            'timestamp': timestamp,
           });
           await file.delete();
         } catch (e) {
