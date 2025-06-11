@@ -171,7 +171,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
     if (pickedImage != null) {
       setState(() {
-        _imageFile = File(pickedImage.path);
+        _imageFile = File(pickedImage!.path);
       });
     }
   }
@@ -250,6 +250,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       if (_imageFile != null) {
         final service = SurveyService();
         await service.saveRoomImageOffline(
+          building: dropdownModel.building,
+          floor: dropdownModel.floor,
           surveyId: widget.surveyInfo.id,
           image: _imageFile!,
           roomNumber: roomNumberTextController.text,
