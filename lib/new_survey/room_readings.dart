@@ -30,6 +30,7 @@
 /// - The image is saved locally.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -151,9 +152,22 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   Future<void> _getImage() async {
+    final status = await Permission.camera.request();
     final imagePicker = ImagePicker();
-    final pickedImage =
-        await imagePicker.pickImage(source: ImageSource.gallery);
+    XFile? pickedImage;
+
+    if (status.isGranted) {
+      pickedImage = await imagePicker.pickImage(source: ImageSource.camera);
+    } else if (status.isDenied) {
+      pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera permission denied')),
+        );
+      }
+      return;
+    }
 
     if (pickedImage != null) {
       setState(() {
