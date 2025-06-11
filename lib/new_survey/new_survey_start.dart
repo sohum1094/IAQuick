@@ -33,6 +33,7 @@ import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:iaqapp/api_keys.dart';
+import 'dart:io' show Platform;
 
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
@@ -192,7 +193,10 @@ EasyTextFormField siteNameTextFormField(
 }
 
 EasyTextFormField addressTextFormField(
-    BuildContext context, SurveyInfo model, TextEditingController controller) {
+  BuildContext context,
+  SurveyInfo model,
+  TextEditingController controller,
+) {
   return EasyTextFormField.builder(
     name: 'siteAddress',
     controller: controller,
@@ -204,33 +208,30 @@ EasyTextFormField addressTextFormField(
       return null;
     },
     onSaved: (tempAddress) {
-      if (tempAddress != null) {
-        model.address = tempAddress;
-      }
+      if (tempAddress != null) model.address = tempAddress;
     },
     builder: (state, onChanged) {
+      // pick your platform-specific key
+      final apiKey = Platform.isIOS
+          ? ios_google_api_key
+          : android_google_api_key;
+
       return GooglePlaceAutoCompleteTextField(
-        textEditingController: state.controller as TextEditingController,
-        googleAPIKey: googleApiKey,
+        textEditingController: controller,
+        googleAPIKey: apiKey,
         debounceTime: 800,
         isLatLngRequired: false,
-        inputDecoration: const InputDecoration(
-          labelText: 'Street Address*',
-        ),
-        itmClick: (prediction) {
+        itemClick: (prediction) {
           final description = prediction.description ?? '';
-          state.controller!.text = description;
-          state.controller!.selection = TextSelection.fromPosition(
+          controller.text = description;
+          controller.selection = TextSelection.fromPosition(
             TextPosition(offset: description.length),
           );
           onChanged(description);
         },
-        validator: (text, _) {
-          if (text == null || text.isEmpty) {
-            return 'Enter Correct Site Address';
-          }
-          return null;
-        },
+        inputDecoration: const InputDecoration(
+          labelText: 'Street Address*',
+        ),
       );
     },
   );
