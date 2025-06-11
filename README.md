@@ -59,6 +59,12 @@ blocked`, verify that the **Identity Toolkit API** (also called "Identity
 Platform") is enabled for your Google Cloud project. This API is required for
 email/password authentication.
 
+## Camera Permission
+
+The app captures photos as part of room readings. Grant camera access when
+prompted. On iOS add an `NSCameraUsageDescription` entry in `Info.plist`, and on
+Android declare `android.permission.CAMERA` in `AndroidManifest.xml`.
+
 ## Offline Excel Export Example
 
 A helper script `scripts/export_to_excel.py` demonstrates how to create an IAQ Excel

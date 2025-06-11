@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.iaqapp">
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <application
+        android:label="iaqapp"
+        android:icon="@mipmap/ic_launcher">
+    </application>
+</manifest>
