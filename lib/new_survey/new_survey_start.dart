@@ -29,6 +29,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
+import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
@@ -307,16 +308,26 @@ class LoggedScreen extends StatelessWidget {
               const SizedBox(height: 24),
               TextButton(
                 child: const Text('Next'),
-                onPressed: () {
-                  print(surveyInfo.toJson().toString());
+                onPressed: () async {
                   Navigator.of(context).pop();
-                  Navigator.push(
+                  final reading = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
                           OutdoorReadingsScreen(surveyInfo: surveyInfo),
                     ),
                   );
+                  if (reading is RoomReading) {
+                    roomReadings.add(reading);
+                  }
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              RoomReadingsFormScreen(surveyInfo: surveyInfo)),
+                    );
+                  }
                 },
               ),
             ],

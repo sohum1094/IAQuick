@@ -233,23 +233,17 @@ Future<String> saveRoomImageOffline({
     );
   }
 
-  /// Save a survey composed of [SurveyInfo], [OutdoorReadings] and [RoomReading]
-  /// objects to Firestore. Collections are created for outdoor and room
-  /// readings so that the app can operate offline using Firestore's built in
-  /// persistence.
+  /// Save a survey composed of [SurveyInfo] and [RoomReading] objects to
+  /// Firestore. Outdoor readings are stored in the same collection as room
+  /// readings using the `isOutdoor` flag.
   Future<void> saveSurveyToFirestore({
     required SurveyInfo info,
-    required OutdoorReadings outdoor,
     required List<RoomReading> rooms,
   }) async {
     final surveyRef =
         FirebaseFirestore.instance.collection('surveys').doc(info.id);
 
     await surveyRef.set(info.toJson());
-    await surveyRef
-        .collection('outdoor_readings')
-        .doc('data')
-        .set(outdoor.toJson());
 
     for (final room in rooms) {
       await surveyRef.collection('room_readings').add(room.toJson());
@@ -275,17 +269,6 @@ Future<String> saveRoomImageOffline({
     return snap.docs.map((d) => RoomReading.fromMap(d.data())).toList();
   }
 
-  /// Retrieve outdoor readings for a survey from Firestore.
-  Future<OutdoorReadings?> fetchOutdoorReadings(String surveyId) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('surveys')
-        .doc(surveyId)
-        .collection('outdoor_readings')
-        .doc('data')
-        .get();
-    if (!doc.exists) return null;
-    return OutdoorReadings.fromMap(doc.data()!);
-  }
 
   /// Delete a survey and its subcollections from Firestore.
   Future<void> deleteSurvey(String surveyId) async {
@@ -294,12 +277,6 @@ Future<String> saveRoomImageOffline({
 
     final roomSnap = await surveyRef.collection('room_readings').get();
     for (final doc in roomSnap.docs) {
-      await doc.reference.delete();
-    }
-
-    final outdoorSnap =
-        await surveyRef.collection('outdoor_readings').get();
-    for (final doc in outdoorSnap.docs) {
       await doc.reference.delete();
     }
 

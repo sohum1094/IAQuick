@@ -132,6 +132,8 @@ class RoomReading {
   double? pm10; // nullable
   double? vocs; // nullable
   String comments;
+  bool isOutdoor;
+  DateTime timestamp;
 
   RoomReading({
     this.id, // Optional id
@@ -148,7 +150,10 @@ class RoomReading {
     this.pm10,
     this.vocs,
     this.comments = "No issues were observed.",
-  }): surveyID = surveyID ?? const Uuid().v4(); // Assign a new UUID if id is not provided
+    this.isOutdoor = false,
+    DateTime? timestamp,
+  })  : surveyID = surveyID ?? const Uuid().v4(), // Assign a new UUID if id is not provided
+        timestamp = timestamp ?? DateTime.now();
 
   RoomReading.fromMap(Map<String, dynamic> map)
       : id = map['id'] ?? -1, // Use existing id or generate a new one
@@ -164,7 +169,11 @@ class RoomReading {
         pm25 = map['pm25']?.toDouble(),
         pm10 = map['pm10']?.toDouble(),
         vocs = map['vocs']?.toDouble(),
-        comments = map['comments'] ?? "No issues were observed.";
+        comments = map['comments'] ?? "No issues were observed.",
+        isOutdoor = map['isOutdoor'] == 1 || map['isOutdoor'] == true,
+        timestamp = map['timestamp'] != null
+            ? DateTime.tryParse(map['timestamp']) ?? DateTime.now()
+            : DateTime.now();
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
@@ -181,6 +190,8 @@ class RoomReading {
       'pm10': pm10,
       'vocs': vocs,
       'comments': comments,
+      'isOutdoor': isOutdoor ? 1 : 0,
+      'timestamp': timestamp.toIso8601String(),
     };
     if (id != null) {
       data['id'] = id;

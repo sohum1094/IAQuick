@@ -411,6 +411,13 @@ Future<File> createIAQExcelFile(
     cell.cellStyle = columnHeaderStyle();
   }
 
+  roomReadings.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+  final firstOutdoor = roomReadings.indexWhere((r) => r.isOutdoor);
+  if (firstOutdoor > 0) {
+    final r = roomReadings.removeAt(firstOutdoor);
+    roomReadings.insert(0, r);
+  }
+
   for (var i = 0; i < roomReadings.length; i++) {
     final r = roomReadings[i];
     final row = 4 + i;
@@ -617,10 +624,6 @@ Future<List<RoomReading>> fetchRoomReadingsForSurvey(String surveyId) async {
   return await service.fetchRoomReadings(surveyId);
 }
 
-Future<OutdoorReadings?> fetchOutdoorReadingsForSurvey(String surveyId) async {
-  final service = SurveyService();
-  return await service.fetchOutdoorReadings(surveyId);
-}
 
 CellStyle headerStyle() => CellStyle(
       backgroundColorHex: ExcelColor.fromHexString('#4472C4'),
