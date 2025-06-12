@@ -18,7 +18,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -38,21 +43,6 @@ class DatabaseHelper {
   ''');
 
     await db.execute('''
-    CREATE TABLE outdoor_readings (
-      ID INTEGER PRIMARY KEY AUTOINCREMENT,
-      surveyID TEXT,
-      temperature REAL,
-      relativeHumidity REAL,
-      co2 REAL,
-      co REAL,
-      pm25 REAL,
-      pm10 REAL,
-      vocs REAL,
-      FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
-    )
-  ''');
-
-    await db.execute('''
     CREATE TABLE room_readings (
       ID INTEGER PRIMARY KEY AUTOINCREMENT,
       surveyID TEXT,
@@ -68,9 +58,20 @@ class DatabaseHelper {
       pm10 REAL,
       vocs REAL,
       comments TEXT,
+      isOutdoor INTEGER,
+      timestamp TEXT,
       FOREIGN KEY (surveyID) REFERENCES survey_info(ID)
     )
   ''');
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+          "ALTER TABLE room_readings ADD COLUMN isOutdoor INTEGER DEFAULT 0");
+      await db.execute(
+          "ALTER TABLE room_readings ADD COLUMN timestamp TEXT");
+    }
   }
 
 
@@ -128,47 +129,9 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> createOutdoorReadings(OutdoorReadings outdoorReadings) async {
+  Future<int> createRoomReading(RoomReading roomReading) async {
     final db = await instance.database;
-    final json = outdoorReadings.toJson(); // Convert to JSON map
-    // Assuming outdoorReadings.toJson() includes 'surveyID'
-    return db.insert('outdoor_readings', json);
-  }
-
-
-  Future<OutdoorReadings?> readOutdoorReadings(String surveyID) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'outdoor_readings',
-      columns: [
-        'id',
-        'surveyID',
-        'temperature',
-        'relativeHumidity',
-        'co2',
-        'co',
-        'pm25',
-        'pm10',
-        'vocs'
-        // Add other columns as needed based on your OutdoorReadings class
-      ],
-      where: 'surveyID = ?',
-      whereArgs: [surveyID],
-    );
-
-    if (maps.isNotEmpty) {
-      return OutdoorReadings.fromMap(maps.first);
-    } else {
-      return null;
-    }
-  }
-
-
-  Future<int> createRoomReading(RoomReading roomReading, String surveyID) async {
-    final db = await instance.database;
-    final json = roomReading.toJson();  // Convert to JSON map
-    json['surveyID'] = surveyID;
-    return db.insert('room_readings', json);
+    return db.insert('room_readings', roomReading.toJson());
   }
 
   Future<List<RoomReading>> readRoomReadings(String surveyID) async {
@@ -177,6 +140,7 @@ class DatabaseHelper {
       'room_readings',
       where: 'surveyID = ?',
       whereArgs: [surveyID],
+      orderBy: 'timestamp ASC',
     );
 
     return result.isNotEmpty

@@ -1,6 +1,5 @@
 import 'package:easy_form_kit/easy_form_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/models/survey_info.dart';
 
@@ -90,18 +89,23 @@ Widget outdoorReadingsInfoForm(BuildContext context, SurveyInfo surveyInfo) {
                 onPressed: () {
                   if (formKey.currentState!.validate()) {
                     formKey.currentState!.save();
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) {
-                          print('Outdoor readings: ');
-                          print(surveyInfo.toJson().toString());
-                          print(outdoorReadings.toJson().toString());
-                          return RoomReadingsFormScreen(surveyInfo: surveyInfo, outdoorReadingsInfo: outdoorReadings);
-                        },
-                      ),
+                    final reading = RoomReading(
+                      surveyID: surveyInfo.id,
+                      building: 'Outdoor',
+                      floorNumber: '-',
+                      roomNumber: '-',
+                      primaryUse: 'Outdoor',
+                      temperature: outdoorReadings.temperature,
+                      relativeHumidity: outdoorReadings.relativeHumidity,
+                      co2: outdoorReadings.co2,
+                      co: outdoorReadings.co,
+                      pm25: outdoorReadings.pm25,
+                      pm10: outdoorReadings.pm10,
+                      vocs: outdoorReadings.vocs,
+                      isOutdoor: true,
+                      timestamp: DateTime.now(),
                     );
+                    Navigator.pop(context, reading);
                   } else {
                     _showErrorDialog(context,
                         'Please enter information correctly before saving.');

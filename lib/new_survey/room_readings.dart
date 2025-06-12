@@ -40,15 +40,14 @@ import 'package:iaqapp/models/survey_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 
 int roomCount = 0;
 List<RoomReading> roomReadings = [];
 
 class RoomReadingsFormScreen extends StatefulWidget {
   final SurveyInfo surveyInfo;
-  final OutdoorReadings outdoorReadingsInfo;
-  const RoomReadingsFormScreen(
-      {required this.surveyInfo, required this.outdoorReadingsInfo, super.key});
+  const RoomReadingsFormScreen({required this.surveyInfo, super.key});
 
   @override
   State<RoomReadingsFormScreen> createState() => _RoomReadingsFormScreenState();
@@ -85,20 +84,18 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
         centerTitle: true,
       ),
       body: RoomReadingsForm(
-          key: formKey,
-          surveyInfo: widget.surveyInfo,
-          outdoorReadingsInfo: widget.outdoorReadingsInfo),
+        key: formKey,
+        surveyInfo: widget.surveyInfo,
+      ),
     );
   }
 }
 
 class RoomReadingsForm extends StatefulWidget {
   final SurveyInfo surveyInfo;
-  final OutdoorReadings outdoorReadingsInfo;
 
   const RoomReadingsForm({
     required this.surveyInfo,
-    required this.outdoorReadingsInfo,
     super.key,
   });
 
@@ -241,6 +238,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         comments: commentTextController.text.isEmpty
             ? "No issues were observed."
             : commentTextController.text,
+        timestamp: DateTime.now(),
       );
 
       // Add the roomReading to the list of room readings
@@ -525,9 +523,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       onChanged: (value) {
                         bool seen = false;
 
-                        if (!seen &&
-                            double.parse(value) >
-                                widget.outdoorReadingsInfo.co2! + 700) {
+                        if (!seen && double.parse(value) > 1100) {
                           seen = true;
                           _showConfirmValueDialog(context, 'Carbon Dioxide');
                         }
@@ -731,6 +727,25 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                onPressed: () async {
+                  final reading = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            OutdoorReadingsScreen(surveyInfo: widget.surveyInfo)),
+                  );
+                  if (reading is RoomReading) {
+                    roomReadings.add(reading);
+                  }
+                },
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * .33,
+                  height: MediaQuery.of(context).size.height * .07,
+                  child: const Center(child: Text('Add Outdoor Reading')),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),
@@ -740,12 +755,12 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         .contains(primaryUseTextController.text)) {
                       autofillPrimaryUse.add(primaryUseTextController.text);
                     }
-                      clearFields();
+                    clearFields();
                   } else {
                     _showErrorDialog(context,
                         'Please click "Save Info" to save current room info before adding new room.');
                   }
-                  
+
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * .33,
@@ -770,7 +785,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     // Save to Firebase using offline-capable service
                     saveSurveyToFirestore(
                       widget.surveyInfo,
-                      widget.outdoorReadingsInfo,
                       roomReadings,
                     );
 
@@ -929,12 +943,11 @@ class DropdownModel {
   DropdownModel({this.building = '', this.floor = ''});
 }
 
-Future<void> saveSurveyToFirestore(SurveyInfo surveyInfo,
-    OutdoorReadings outdoorReadings, List<RoomReading> roomReadings) async {
+Future<void> saveSurveyToFirestore(
+    SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   final service = SurveyService();
   await service.saveSurveyToFirestore(
     info: surveyInfo,
-    outdoor: outdoorReadings,
     rooms: roomReadings,
   );
 }
