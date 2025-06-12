@@ -21,3 +21,4 @@ lib/firebase_options.dart
 lib/google_credentials.dart
 lib/api_keys.dart
 pubspec.lock
+android-old/
