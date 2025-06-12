@@ -265,6 +265,7 @@ Future<String> saveRoomImageOffline({
         .collection('surveys')
         .doc(surveyId)
         .collection('room_readings')
+        .orderBy('timestamp')
         .get();
     return snap.docs.map((d) => RoomReading.fromMap(d.data())).toList();
   }

@@ -77,6 +77,7 @@ class OutdoorReadings {
   double? pm25; // nullable
   double? pm10; // nullable
   double? vocs; // nullable
+  DateTime timestamp;
 
   OutdoorReadings({
     String? surveyID,
@@ -87,7 +88,9 @@ class OutdoorReadings {
     this.pm25,
     this.pm10,
     this.vocs,
-  }): surveyID = surveyID ?? const Uuid().v4();
+    DateTime? timestamp,
+  })  : surveyID = surveyID ?? const Uuid().v4(),
+        timestamp = timestamp ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     return {
@@ -99,6 +102,7 @@ class OutdoorReadings {
       'pm25': pm25,
       'pm10': pm10,
       'vocs': vocs,
+      'timestamp': timestamp.toIso8601String(),
     };
   }
 
@@ -112,6 +116,9 @@ class OutdoorReadings {
       pm25: map['pm25']?.toDouble(),
       pm10: map['pm10']?.toDouble(),
       vocs: map['vocs']?.toDouble(),
+      timestamp: map['timestamp'] != null
+          ? DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }
@@ -171,9 +178,7 @@ class RoomReading {
         vocs = map['vocs']?.toDouble(),
         comments = map['comments'] ?? "No issues were observed.",
         isOutdoor = map['isOutdoor'] == 1 || map['isOutdoor'] == true,
-        timestamp = map['timestamp'] != null
-            ? DateTime.tryParse(map['timestamp']) ?? DateTime.now()
-            : DateTime.now();
+        timestamp = DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {

@@ -238,6 +238,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         comments: commentTextController.text.isEmpty
             ? "No issues were observed."
             : commentTextController.text,
+        timestamp: DateTime.now(),
       );
 
       // Add the roomReading to the list of room readings
