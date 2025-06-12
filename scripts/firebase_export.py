@@ -82,6 +82,11 @@ def export_iaq(header, rooms, output_dir, template_path='assets/IAQ_template_v2.
         ws.delete_rows(5, ws.max_row - 4)
 
     template_idx = 5
+    rooms = sorted(rooms, key=lambda r: parse_date(r.get('timestamp', '')))
+    first_outdoor = next((r for r in rooms if r.get('isOutdoor')), None)
+    if first_outdoor:
+        rooms.remove(first_outdoor)
+        rooms.insert(0, first_outdoor)
     stats = {'temp': [], 'rh': [], 'co2': [], 'pm25': []}
     for i, r in enumerate(rooms, start=0):
         row_idx = template_idx + i
