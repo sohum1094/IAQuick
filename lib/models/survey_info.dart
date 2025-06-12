@@ -178,9 +178,7 @@ class RoomReading {
         vocs = map['vocs']?.toDouble(),
         comments = map['comments'] ?? "No issues were observed.",
         isOutdoor = map['isOutdoor'] == 1 || map['isOutdoor'] == true,
-        timestamp = map['timestamp'] != null
-            ? DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now()
-            : DateTime.now();
+        timestamp = DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
