@@ -237,15 +237,6 @@ EasyTextFormField addressTextFormField(
         },
         inputDecoration: const InputDecoration(
           labelText: 'Street Address*',
-          border: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-          ),
         ),
       );
     },
