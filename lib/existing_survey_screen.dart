@@ -380,33 +380,66 @@ Future<File> createIAQExcelFile(
   wb.delete('Sheet1');
   final sheet = wb['IAQ'];
 
-  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('H1'));
-  sheet.cell(CellIndex.indexByString('A1')).value =
-      TextCellValue('${surveyInfo.siteName} Indoor Air Quality Measurements');
-  sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
-
-  sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('H2'));
-  sheet.cell(CellIndex.indexByString('A2')).value =
-      TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
-  sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
-
-  sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('H3'));
-  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(surveyInfo.occupancyType);
-  sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
-
-  final headers = [
+  final baseHeaders = [
     'Building',
     'Floor Number',
     'Room Number',
     'Primary Room Use',
     'Temperature (°F)',
     'Relative Humidity (%)',
-    'Carbon Dioxide (ppm)',
-    'PM2.5 (mg/m³)'
   ];
+  final optionalHeaders = <String>[];
+  if (surveyInfo.carbonDioxideReadings) {
+    optionalHeaders.add('Carbon Dioxide (ppm)');
+  }
+  if (surveyInfo.carbonMonoxideReadings) {
+    optionalHeaders.add('Carbon Monoxide (ppm)');
+  }
+  if (surveyInfo.vocs) {
+    optionalHeaders.add('VOCs (mg/m³)');
+  }
+  if (surveyInfo.pm25) {
+    optionalHeaders.add('PM2.5 (mg/m³)');
+  }
+  if (surveyInfo.pm10) {
+    optionalHeaders.add('PM10 (mg/m³)');
+  }
+  final headers = [...baseHeaders, ...optionalHeaders];
+
+  String columnLetter(int index) {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var i = index + 1;
+    var result = '';
+    while (i > 0) {
+      i--;
+      result = letters[i % 26] + result;
+      i ~/= 26;
+    }
+    return result;
+  }
+
+  final lastCol = columnLetter(headers.length - 1);
+  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('$lastCol1'));
+  sheet.cell(CellIndex.indexByString('A1')).value =
+      TextCellValue('${surveyInfo.siteName} Indoor Air Quality Measurements');
+  sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
+
+  sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('${lastCol}2'));
+  sheet.cell(CellIndex.indexByString('A2')).value =
+      TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
+  sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
+
+  sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('${lastCol}3'));
+  final occupancy = surveyInfo.occupancyType == 'Full'
+      ? 'Full Occupancy'
+      : surveyInfo.occupancyType == 'Partial'
+          ? 'Partial Occupancy'
+          : surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(occupancy);
+  sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
+
   for (var i = 0; i < headers.length; i++) {
-    final cell =
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
+    final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 3));
     cell.value = TextCellValue(headers[i]);
     cell.cellStyle = columnHeaderStyle();
   }
@@ -418,59 +451,84 @@ Future<File> createIAQExcelFile(
     roomReadings.insert(0, r);
   }
 
+  final valueAccessors = [
+    (RoomReading r) => r.building,
+    (RoomReading r) => r.floorNumber,
+    (RoomReading r) => r.roomNumber,
+    (RoomReading r) => r.primaryUse,
+    (RoomReading r) => r.temperature,
+    (RoomReading r) => r.relativeHumidity,
+  ];
+  if (surveyInfo.carbonDioxideReadings) {
+    valueAccessors.add((RoomReading r) => r.co2);
+  }
+  if (surveyInfo.carbonMonoxideReadings) {
+    valueAccessors.add((RoomReading r) => r.co);
+  }
+  if (surveyInfo.vocs) {
+    valueAccessors.add((RoomReading r) => r.vocs);
+  }
+  if (surveyInfo.pm25) {
+    valueAccessors.add((RoomReading r) => r.pm25);
+  }
+  if (surveyInfo.pm10) {
+    valueAccessors.add((RoomReading r) => r.pm10);
+  }
+
   for (var i = 0; i < roomReadings.length; i++) {
     final r = roomReadings[i];
     final row = 4 + i;
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: row))
-        .value = TextCellValue(r.building);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-        .value = TextCellValue(r.floorNumber);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: row))
-        .value = TextCellValue(r.roomNumber);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: row))
-        .value = TextCellValue(r.primaryUse);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
-        .value = DoubleCellValue(r.temperature);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: row))
-        .value = DoubleCellValue(r.relativeHumidity);
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: row))
-        .value =
-            r.co2 != null ? DoubleCellValue(r.co2!) : null;
-    sheet
-        .cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: row))
-        .value =
-            r.pm25 != null ? DoubleCellValue(r.pm25!) : null;
+    for (var c = 0; c < valueAccessors.length; c++) {
+      final val = valueAccessors[c](r);
+      final cell =
+          sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: row));
+      if (val == null) {
+        cell.value = null;
+      } else if (val is num) {
+        cell.value = DoubleCellValue(val.toDouble());
+      } else {
+        cell.value = TextCellValue(val.toString());
+      }
+    }
   }
 
-  final temps = roomReadings.map((r) => r.temperature).toList();
-  final hums = roomReadings.map((r) => r.relativeHumidity).toList();
-  final co2 = roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList();
-  final pm25 =
-      roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList();
+  final summaryLists = <List<double>>[
+    roomReadings.map((r) => r.temperature).toList(),
+    roomReadings.map((r) => r.relativeHumidity).toList(),
+  ];
+  if (surveyInfo.carbonDioxideReadings) {
+    summaryLists.add(
+        roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList());
+  }
+  if (surveyInfo.carbonMonoxideReadings) {
+    summaryLists.add(
+        roomReadings.where((r) => r.co != null).map((r) => r.co!).toList());
+  }
+  if (surveyInfo.vocs) {
+    summaryLists.add(
+        roomReadings.where((r) => r.vocs != null).map((r) => r.vocs!).toList());
+  }
+  if (surveyInfo.pm25) {
+    summaryLists.add(
+        roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList());
+  }
+  if (surveyInfo.pm10) {
+    summaryLists.add(
+        roomReadings.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
+  }
 
   final summary = wb['Summary'];
   summary.cell(CellIndex.indexByString('A1')).value = TextCellValue('Minimum');
-  summary.cell(CellIndex.indexByString('B1')).value = DoubleCellValue(temps.reduce(min));
-  summary.cell(CellIndex.indexByString('C1')).value = DoubleCellValue(hums.reduce(min));
-  summary.cell(CellIndex.indexByString('D1')).value =
-      DoubleCellValue(co2.isNotEmpty ? co2.reduce(min) : -1.0);
-  summary.cell(CellIndex.indexByString('E1')).value =
-      DoubleCellValue(pm25.isNotEmpty ? pm25.reduce(min) : -1.0);
-
   summary.cell(CellIndex.indexByString('A2')).value = TextCellValue('Maximum');
-  summary.cell(CellIndex.indexByString('B2')).value = DoubleCellValue(temps.reduce(max));
-  summary.cell(CellIndex.indexByString('C2')).value = DoubleCellValue(hums.reduce(max));
-  summary.cell(CellIndex.indexByString('D2')).value =
-      DoubleCellValue(co2.isNotEmpty ? co2.reduce(max) : -1.0);
-  summary.cell(CellIndex.indexByString('E2')).value =
-      DoubleCellValue(pm25.isNotEmpty ? pm25.reduce(max) : -1.0);
+
+  for (var i = 0; i < summaryLists.length; i++) {
+    final letter = columnLetter(i + 1);
+    final values = summaryLists[i];
+    summary.cell(CellIndex.indexByString('$letter1')).value =
+        DoubleCellValue(values.reduce(min));
+    summary.cell(CellIndex.indexByString('$letter2')).value =
+        DoubleCellValue(values.reduce(max));
+  }
 
   final bytes = wb.encode();
   final filePath = path.join(
@@ -543,7 +601,12 @@ Future<File> createVisualExcelFile(
   sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
   sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('E3'));
-  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(surveyInfo.occupancyType);
+  final visOcc = surveyInfo.occupancyType == 'Full'
+      ? 'Full Occupancy'
+      : surveyInfo.occupancyType == 'Partial'
+          ? 'Partial Occupancy'
+          : surveyInfo.occupancyType;
+  sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue(visOcc);
   sheet.cell(CellIndex.indexByString('A3')).cellStyle = subHeaderStyle();
 
   final headers = [
