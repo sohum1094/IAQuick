@@ -323,7 +323,6 @@ class LoggedScreen extends StatelessWidget {
               TextButton(
                 child: const Text('Next'),
                 onPressed: () async {
-                  Navigator.of(context).pop();
                   final reading = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -335,7 +334,7 @@ class LoggedScreen extends StatelessWidget {
                     roomReadings.add(reading);
                   }
                   if (context.mounted) {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
