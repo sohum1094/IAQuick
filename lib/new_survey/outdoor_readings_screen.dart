@@ -26,28 +26,26 @@ class _OutdoorReadingsScreenState extends State<OutdoorReadingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: Text('${widget.surveyInfo.siteName} Outdoor Readings'),
-          centerTitle: true,
-          backgroundColor: Colors.blueGrey,
-          leading: BackButton(
-            onPressed: () => Navigator.pop(context),
-          ),
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: Text('${widget.surveyInfo.siteName} Outdoor Readings'),
+        centerTitle: true,
+        backgroundColor: Colors.blueGrey,
+        leading: BackButton(
+          onPressed: () => Navigator.pop(context),
         ),
-        body: Center(
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width * .9,
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: outdoorReadingsInfoForm(context, widget.surveyInfo),
-                ),
-              ],
-            ),
+      ),
+      body: Center(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * .9,
+          child: Column(
+            children: [
+              Expanded(
+                flex: 1,
+                child: outdoorReadingsInfoForm(context, widget.surveyInfo),
+              ),
+            ],
           ),
         ),
       ),
