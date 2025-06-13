@@ -271,15 +271,25 @@ class _DateTimePickerState extends State<DateTimePicker> {
         DateTime? pickedDate = await showDatePicker(
           context: context,
           initialDate: DateTime.now(),
-          firstDate: DateTime(
-              2000), //DateTime.now() - not to allow to choose before today.
+          firstDate: DateTime(2000),
           lastDate: DateTime(2101),
         );
         if (pickedDate != null) {
-          // Update the model
-          widget.model.date = pickedDate;
-          // Set the date in the controller
-          dateInput.text = DateFormat('MM-dd-yyyy').format(pickedDate);
+          // Preserve the time component from the existing value
+          final now = DateTime.now();
+          widget.model.date = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            now.hour,
+            now.minute,
+            now.second,
+            now.millisecond,
+            now.microsecond,
+          );
+          // Display only the date portion in the field
+          dateInput.text =
+              DateFormat('MM-dd-yyyy').format(widget.model.date);
         }
       },
       decoration: const InputDecoration(
