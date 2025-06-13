@@ -28,7 +28,6 @@
 /// - The user is navigated to the LoggedScreen widget.
 import 'package:flutter/material.dart';
 import 'package:easy_form_kit/easy_form_kit.dart';
-import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
@@ -313,25 +312,14 @@ class LoggedScreen extends StatelessWidget {
               const SizedBox(height: 24),
               TextButton(
                 child: const Text('Next'),
-                onPressed: () async {
-                  final reading = await Navigator.push(
+                onPressed: () {
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          OutdoorReadingsScreen(surveyInfo: surveyInfo),
+                          RoomReadingsFormScreen(surveyInfo: surveyInfo),
                     ),
                   );
-                  if (reading is RoomReading) {
-                    roomReadings.add(reading);
-                  }
-                  if (context.mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              RoomReadingsFormScreen(surveyInfo: surveyInfo)),
-                    );
-                  }
                 },
               ),
             ],
