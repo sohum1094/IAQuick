@@ -471,11 +471,15 @@ Future<File> createIAQExcelFile(
   for (var i = 0; i < summaryLists.length; i++) {
     final letter = columnLetter(i + 1); // B, C, D, ...
     final values = summaryLists[i];
-    
-    summary.cell(CellIndex.indexByString('${letter}1')).value =
-        DoubleCellValue(values.reduce(min));
-    summary.cell(CellIndex.indexByString('${letter}2')).value =
-        DoubleCellValue(values.reduce(max));
+    if (values.isNotEmpty) {
+      summary.cell(CellIndex.indexByString('${letter}1')).value =
+          DoubleCellValue(values.reduce(min));
+      summary.cell(CellIndex.indexByString('${letter}2')).value =
+          DoubleCellValue(values.reduce(max));
+    } else {
+      summary.cell(CellIndex.indexByString('${letter}1')).value = null;
+      summary.cell(CellIndex.indexByString('${letter}2')).value = null;
+    }
   }
 
   final bytes = wb.encode();
