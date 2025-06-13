@@ -83,6 +83,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   final GlobalKey<_AllCheckboxesState> _checkboxesKey =
       GlobalKey<_AllCheckboxesState>();
   final TextEditingController _addressController = TextEditingController();
+  final FocusNode _addressFocusNode = FocusNode();
 
   @override
   EasyForm build(BuildContext context) {
@@ -134,10 +135,11 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
               child: Column(
                 children: [
                   siteNameTextFormField(context, model),
-                  addressTextFormField(context, model, _addressController),
+                  addressTextFormField(
+                      context, model, _addressController, _addressFocusNode),
                   DateTimePicker(model: model),
                   occupancyTypeDropdown(context, model),
-                  AllCheckboxes(key: _checkboxesKey),
+                  AllCheckboxes(key: _checkboxesKey, flex: 2),
                   EasyFormSaveButton.text('Submit'),
                 ],
               ),
@@ -151,6 +153,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   @override
   void dispose() {
     _addressController.dispose();
+    _addressFocusNode.dispose();
     super.dispose();
   }
 
@@ -197,6 +200,7 @@ EasyTextFormField addressTextFormField(
   BuildContext context,
   SurveyInfo model,
   TextEditingController controller,
+  FocusNode focusNode,
 ) {
   return EasyTextFormField.builder(
     name: 'siteAddress',
@@ -219,6 +223,7 @@ EasyTextFormField addressTextFormField(
 
       return GooglePlaceAutoCompleteTextField(
         textEditingController: controller,
+        focusNode: focusNode,
         googleAPIKey: apiKey,
         debounceTime: 800,
         isLatLngRequired: false,
@@ -232,6 +237,15 @@ EasyTextFormField addressTextFormField(
         },
         inputDecoration: const InputDecoration(
           labelText: 'Street Address*',
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.transparent),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.transparent),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.transparent),
+          ),
         ),
       );
     },
@@ -376,7 +390,8 @@ DropdownButtonFormField occupancyTypeDropdown(
 
 
 class AllCheckboxes extends StatefulWidget {
-  const AllCheckboxes({super.key});
+  final int flex;
+  const AllCheckboxes({super.key, this.flex = 1});
 
   @override
   State<AllCheckboxes> createState() => _AllCheckboxesState();
@@ -393,30 +408,26 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        height: MediaQuery.of(context).size.height * .35,
+    return Flexible(
+        flex: widget.flex,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-            SizedBox(
-              child: Text(
-                'Readings to be taken: ',
-                style: DefaultTextStyle.of(context)
-                    .style
-                    .apply(fontSizeFactor: 1.1),
-              ),
+            Text(
+              'Readings to be taken: ',
+              style:
+                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.1),
             ),
             const SizedBox(height: 5),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.blue, width: 1.1),
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.transparent, width: 1.1),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: ListView(
                   children: [
                     checkboxTemplate(context, 'Carbon Dioxide'),
                     checkboxTemplate(context, 'Carbon Monoxide'),
