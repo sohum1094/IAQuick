@@ -13,6 +13,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -364,7 +365,8 @@ Future<File> createIAQExcelFile(
   }
 
   final lastCol = columnLetter(headers.length - 1);
-  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('$lastCol1'));
+
+  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('${lastCol}1'));
   sheet.cell(CellIndex.indexByString('A1')).value =
       TextCellValue('${surveyInfo.siteName} Indoor Air Quality Measurements');
   sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
@@ -405,19 +407,19 @@ Future<File> createIAQExcelFile(
     (RoomReading r) => r.relativeHumidity,
   ];
   if (surveyInfo.carbonDioxideReadings) {
-    valueAccessors.add((RoomReading r) => r.co2);
+    valueAccessors.add((RoomReading r) => r.co2!);
   }
   if (surveyInfo.carbonMonoxideReadings) {
-    valueAccessors.add((RoomReading r) => r.co);
+    valueAccessors.add((RoomReading r) => r.co!);
   }
   if (surveyInfo.vocs) {
-    valueAccessors.add((RoomReading r) => r.vocs);
+    valueAccessors.add((RoomReading r) => r.vocs!);
   }
   if (surveyInfo.pm25) {
-    valueAccessors.add((RoomReading r) => r.pm25);
+    valueAccessors.add((RoomReading r) => r.pm25!);
   }
   if (surveyInfo.pm10) {
-    valueAccessors.add((RoomReading r) => r.pm10);
+    valueAccessors.add((RoomReading r) => r.pm10!);
   }
 
   for (var i = 0; i < roomReadings.length; i++) {
@@ -467,11 +469,12 @@ Future<File> createIAQExcelFile(
   summary.cell(CellIndex.indexByString('A2')).value = TextCellValue('Maximum');
 
   for (var i = 0; i < summaryLists.length; i++) {
-    final letter = columnLetter(i + 1);
+    final letter = columnLetter(i + 1); // B, C, D, ...
     final values = summaryLists[i];
-    summary.cell(CellIndex.indexByString('$letter1')).value =
+    
+    summary.cell(CellIndex.indexByString('${letter}1')).value =
         DoubleCellValue(values.reduce(min));
-    summary.cell(CellIndex.indexByString('$letter2')).value =
+    summary.cell(CellIndex.indexByString('${letter}2')).value =
         DoubleCellValue(values.reduce(max));
   }
 
