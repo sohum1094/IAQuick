@@ -157,13 +157,15 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
               final report =
                   await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File photoPdf =
-                  await createPhotoPdf(surveyInfo, report.photos);
+              File? photoPdf;
+              if (report.photos.isNotEmpty) {
+                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+              }
 
               List<String> attachments = [
                 iaqExcel.path,
                 visualExcel.path,
-                photoPdf.path,
+                if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
 
@@ -255,13 +257,15 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
               final report =
                   await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File photoPdf =
-                  await createPhotoPdf(surveyInfo, report.photos);
+              File? photoPdf;
+              if (report.photos.isNotEmpty) {
+                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+              }
 
               List<String> attachments = [
                 iaqExcel.path,
                 visualExcel.path,
-                photoPdf.path,
+                if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
             },
@@ -406,20 +410,26 @@ Future<File> createIAQExcelFile(
     (RoomReading r) => r.temperature,
     (RoomReading r) => r.relativeHumidity,
   ];
+  final decimals = <int?>[null, null, null, null, 1, 1];
   if (surveyInfo.carbonDioxideReadings) {
     valueAccessors.add((RoomReading r) => r.co2!);
+    decimals.add(0);
   }
   if (surveyInfo.carbonMonoxideReadings) {
     valueAccessors.add((RoomReading r) => r.co!);
+    decimals.add(0);
   }
   if (surveyInfo.vocs) {
     valueAccessors.add((RoomReading r) => r.vocs!);
+    decimals.add(3);
   }
   if (surveyInfo.pm25) {
     valueAccessors.add((RoomReading r) => r.pm25!);
+    decimals.add(3);
   }
   if (surveyInfo.pm10) {
     valueAccessors.add((RoomReading r) => r.pm10!);
+    decimals.add(3);
   }
 
   for (var i = 0; i < roomReadings.length; i++) {
@@ -432,36 +442,40 @@ Future<File> createIAQExcelFile(
       if (val == null) {
         cell.value = null;
       } else if (val is num) {
-        cell.value = DoubleCellValue(val.toDouble());
+        final d = decimals[c];
+        cell.value = d == null
+            ? DoubleCellValue(val.toDouble())
+            : DoubleCellValue(double.parse(val.toStringAsFixed(d)));
       } else {
         cell.value = TextCellValue(val.toString());
       }
     }
   }
 
+  final indoor = roomReadings.where((r) => !r.isOutdoor).toList();
   final summaryLists = <List<double>>[
-    roomReadings.map((r) => r.temperature).toList(),
-    roomReadings.map((r) => r.relativeHumidity).toList(),
+    indoor.map((r) => r.temperature).toList(),
+    indoor.map((r) => r.relativeHumidity).toList(),
   ];
   if (surveyInfo.carbonDioxideReadings) {
-    summaryLists.add(
-        roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.co2 != null).map((r) => r.co2!).toList());
   }
   if (surveyInfo.carbonMonoxideReadings) {
-    summaryLists.add(
-        roomReadings.where((r) => r.co != null).map((r) => r.co!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.co != null).map((r) => r.co!).toList());
   }
   if (surveyInfo.vocs) {
-    summaryLists.add(
-        roomReadings.where((r) => r.vocs != null).map((r) => r.vocs!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.vocs != null).map((r) => r.vocs!).toList());
   }
   if (surveyInfo.pm25) {
-    summaryLists.add(
-        roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.pm25 != null).map((r) => r.pm25!).toList());
   }
   if (surveyInfo.pm10) {
-    summaryLists.add(
-        roomReadings.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
   }
 
   final summary = wb['Summary'];
