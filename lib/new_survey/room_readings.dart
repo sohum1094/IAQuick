@@ -386,15 +386,15 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                 children: <Widget>[
                   // Static text and dropdown fields that are always shown
                   //Room desc title
-                  SizedBox(
-                    height: 20,
-                    width: MediaQuery.of(context).size.width * .4,
-                    child: const Center(
-                      child: Text(
-                        'Room description',
-                      ),
-                    ),
-                  ),
+                  // SizedBox(
+                  //   height: 20,
+                  //   width: MediaQuery.of(context).size.width * .4,
+                  //   child: const Center(
+                  //     child: Text(
+                  //       'Room description',
+                  //     ),
+                  //   ),
+                  // ),
                   CheckboxListTile(
                     title: const Text('Outdoor Reading'),
                     value: isOutdoorReading,
@@ -429,7 +429,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                       //Room number
                       Expanded(
-                        flex: 6,
+                        flex: 5,
                         child: TextFormField(
                           controller: roomNumberTextController,
                           autovalidateMode: AutovalidateMode.always,
