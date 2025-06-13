@@ -57,6 +57,14 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
       GlobalKey<RoomReadingsFormState>();
 
   @override
+  void initState() {
+    super.initState();
+    // When starting a new survey clear any previous readings
+    roomReadings.clear();
+    roomCount = 0;
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     return Scaffold(
@@ -143,6 +151,18 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   @override
   void initState() {
     super.initState();
+    // Default the first room to an outdoor reading and
+    // prompt the user to confirm zero calibration
+    if (roomReadings.isEmpty) {
+      isOutdoorReading = true;
+      dropdownModel.building = 'Outdoor';
+      dropdownModel.floor = '-';
+      roomNumberTextController.text = '-';
+      primaryUseTextController.text = '-';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showCalibrationDialog(context);
+      });
+    }
   }
 
   Future<void> _getImage() async {
@@ -950,6 +970,28 @@ void _showConfirmValueDialog(BuildContext context, String message) {
             child: const Text('OK'),
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showCalibrationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Calibration Check'),
+        content: const Text(
+            'Have you zero-calibrated the IAQ machine before taking readings?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Yes'),
+            onPressed: () {
+              Navigator.of(context).pop();
             },
           ),
         ],
