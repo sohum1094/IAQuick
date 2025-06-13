@@ -58,9 +58,6 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('Carbon Dioxide Readings: ${widget.surveyInfo.carbonDioxideReadings}');
-    print('Carbon Monoxide Readings: ${widget.surveyInfo.carbonMonoxideReadings}');
-
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -283,7 +280,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       'Outdoor'
     ];
 
-    return DropdownButtonFormField(
+    return DropdownButtonFormField<String>(
       key: buildingDropdownKey,
       decoration: const InputDecoration(
         labelText: 'Building',
@@ -300,12 +297,11 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       onChanged: isOutdoorReading
           ? null
           : (value) {
-              model.building = value;
+              model.building = value!;
             },
       disabledHint: Text(model.building.isEmpty ? 'Outdoor' : model.building),
-      enabled: !isOutdoorReading,
       onSaved: (value) {
-        model.building = value;
+        model.building = value!;
       },
     );
   }
@@ -329,7 +325,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       'Other'
     ];
 
-    return DropdownButtonFormField(
+    return DropdownButtonFormField<String>(
       key: floorDropdownKey,
       decoration: const InputDecoration(
         labelText: 'Floor #',
@@ -346,20 +342,17 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       onChanged: isOutdoorReading
           ? null
           : (value) {
-              model.floor = value;
+              model.floor = value!;
             },
       disabledHint: Text(model.floor.isEmpty ? '-' : model.floor),
-      enabled: !isOutdoorReading,
       onSaved: (value) {
-        model.floor = value;
+        model.floor = value!;
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Carbon Monoxide Readings: ${widget.surveyInfo.carbonMonoxideReadings}');
-
     
     return Form(
       key: _formKey,
@@ -392,8 +385,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (isOutdoorReading) {
                           dropdownModel.building = 'Outdoor';
                           dropdownModel.floor = '-';
-                          roomNumberTextController.text = 'Outdoor';
-                          primaryUseTextController.text = 'Outdoor';
+                          roomNumberTextController.text = '-';
+                          primaryUseTextController.text = '-';
                         }
                       });
                     },
@@ -763,7 +756,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       },
                       child: const Text(
                         'Save Info',
-                        textScaleFactor: 1.2,
                       ),
                     ),
                   ),
@@ -800,7 +792,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   child: const Center(
                     child: Text(
                       "Add Room",
-                      textScaleFactor: 1.2,
                     ),
                   ),
                 ),
@@ -843,7 +834,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   child: const Center(
                     child: Text(
                       "Finish Survey",
-                      textScaleFactor: 1.2,
                     ),
                   ),
                 ),
@@ -903,7 +893,7 @@ Future<void> saveImageLocally(File imageFile, String roomNumber) async {
       final secondPart = siteName.substring(spaceIndex + 1, spaceIndex + 4);
       if (dateTime.isNotEmpty && firstInitial.isNotEmpty && lastInitial.isNotEmpty) {
         fileNameBuilder =
-            '${firstPart}_${secondPart}_IAQ_${dateTime}_${firstInitial}_${lastInitial}';
+            '${firstPart}_${secondPart}_IAQ_${dateTime}_${firstInitial}_$lastInitial';
       } else {
         fileNameBuilder = '${firstPart}_${secondPart}_IAQ';
       }
