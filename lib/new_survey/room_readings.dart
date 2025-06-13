@@ -398,18 +398,20 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   CheckboxListTile(
                     title: const Text('Outdoor Reading'),
                     value: isOutdoorReading,
-                    onChanged: (value) {
-                      setState(() {
-                        isOutdoorReading = value ?? false;
-                        clearFields();
-                        if (isOutdoorReading) {
-                          dropdownModel.building = 'Outdoor';
-                          dropdownModel.floor = '-';
-                          roomNumberTextController.text = '-';
-                          primaryUseTextController.text = '-';
-                        }
-                      });
-                    },
+                    onChanged: roomReadings.isEmpty
+                        ? null
+                        : (value) {
+                            setState(() {
+                              isOutdoorReading = value ?? false;
+                              clearFields();
+                              if (isOutdoorReading) {
+                                dropdownModel.building = 'Outdoor';
+                                dropdownModel.floor = '-';
+                                roomNumberTextController.text = '-';
+                                primaryUseTextController.text = '-';
+                              }
+                            });
+                          },
                   ),
                   Row(
                     children: [
