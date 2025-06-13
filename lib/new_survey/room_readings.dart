@@ -40,7 +40,6 @@ import 'package:iaqapp/models/survey_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:iaqapp/new_survey/outdoor_readings_screen.dart';
 
 int roomCount = 0;
 List<RoomReading> roomReadings = [];
@@ -142,6 +141,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode temperatureFocusNode = FocusNode();
   File? _imageFile;
+  bool isOutdoorReading = false;
 
   @override
   void initState() {
@@ -214,10 +214,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       // Instantiate RoomReading with the collected data
       RoomReading roomReading = RoomReading(
         surveyID: widget.surveyInfo.id,
-        building: dropdownModel.building,
-        floorNumber: dropdownModel.floor,
-        roomNumber: roomNumberTextController.text,
-        primaryUse: primaryUseTextController.text,
+        building:
+            isOutdoorReading ? 'Outdoor' : dropdownModel.building,
+        floorNumber: isOutdoorReading ? '-' : dropdownModel.floor,
+        roomNumber:
+            isOutdoorReading ? 'Outdoor' : roomNumberTextController.text,
+        primaryUse:
+            isOutdoorReading ? 'Outdoor' : primaryUseTextController.text,
         temperature: double.parse(temperatureTextController.text),
         relativeHumidity: double.parse(humiditiyTextController.text),
         co2: widget.surveyInfo.carbonDioxideReadings
@@ -238,6 +241,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         comments: commentTextController.text.isEmpty
             ? "No issues were observed."
             : commentTextController.text,
+        isOutdoor: isOutdoorReading,
         timestamp: DateTime.now(),
       );
 
@@ -270,7 +274,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
   DropdownButtonFormField buildingDropdownTemplate(
       BuildContext context, DropdownModel model) {
-    List<String> options = ['Main', 'Annex', 'Modular 1', 'Modular 2', 'Other'];
+    List<String> options = [
+      'Main',
+      'Annex',
+      'Modular 1',
+      'Modular 2',
+      'Other',
+      'Outdoor'
+    ];
 
     return DropdownButtonFormField(
       key: buildingDropdownKey,
@@ -283,17 +294,26 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
           child: Text(value),
         );
       }).toList(),
-      onChanged: (value) {
-        model.building = value;
-      },
+      value: isOutdoorReading
+          ? 'Outdoor'
+          : (model.building.isEmpty ? null : model.building),
+      onChanged: isOutdoorReading
+          ? null
+          : (value) {
+              model.building = value;
+            },
+      disabledHint: Text(model.building.isEmpty ? 'Outdoor' : model.building),
+      enabled: !isOutdoorReading,
       onSaved: (value) {
         model.building = value;
       },
     );
   }
 
-  DropdownButtonFormField floorDropdownTemplate(BuildContext context, DropdownModel model) {
+  DropdownButtonFormField floorDropdownTemplate(
+      BuildContext context, DropdownModel model) {
     List<String> options = [
+      '-',
       'B',
       'G',
       '1',
@@ -320,9 +340,16 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
           child: Text(value),
         );
       }).toList(),
-      onChanged: (value) {
-        model.floor = value;
-      },
+      value: isOutdoorReading
+          ? '-'
+          : (model.floor.isEmpty ? null : model.floor),
+      onChanged: isOutdoorReading
+          ? null
+          : (value) {
+              model.floor = value;
+            },
+      disabledHint: Text(model.floor.isEmpty ? '-' : model.floor),
+      enabled: !isOutdoorReading,
       onSaved: (value) {
         model.floor = value;
       },
@@ -355,6 +382,22 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                     ),
                   ),
+                  CheckboxListTile(
+                    title: const Text('Outdoor Reading'),
+                    value: isOutdoorReading,
+                    onChanged: (value) {
+                      setState(() {
+                        isOutdoorReading = value ?? false;
+                        clearFields();
+                        if (isOutdoorReading) {
+                          dropdownModel.building = 'Outdoor';
+                          dropdownModel.floor = '-';
+                          roomNumberTextController.text = 'Outdoor';
+                          primaryUseTextController.text = 'Outdoor';
+                        }
+                      });
+                    },
+                  ),
                   Row(
                     children: [
                       Expanded(
@@ -377,6 +420,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         child: TextFormField(
                           controller: roomNumberTextController,
                           autovalidateMode: AutovalidateMode.always,
+                          enabled: !isOutdoorReading,
                           validator: (value) {
                             if (value == null) {
                               return null;
@@ -400,6 +444,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     controller: primaryUseTextController,
                     autovalidateMode: AutovalidateMode.always,
                     keyboardType: TextInputType.text,
+                    enabled: !isOutdoorReading,
                     validator: (value) {
                       if (value == null) {
                         return null;
@@ -661,6 +706,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     ),
                   TextFormField(
                     controller: commentTextController,
+                    enabled: !isOutdoorReading,
                     decoration: const InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         labelText: "Comments",
@@ -673,7 +719,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     height: 20,
                   ),
                   ElevatedButton(
-                    onPressed: _getImage,
+                    onPressed: isOutdoorReading ? null : _getImage,
                     child: const Text('Pick an Image'),
                   ),
                   const SizedBox(
@@ -681,11 +727,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     child: Text("Click image to delete."),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _imageFile = null; // Remove the selected image
-                      });
-                    },
+                    onTap: isOutdoorReading
+                        ? null
+                        : () {
+                            setState(() {
+                              _imageFile = null; // Remove the selected image
+                            });
+                          },
                     child: _imageFile != null
                         ? Image.file(
                             _imageFile!,
@@ -727,25 +775,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: () async {
-                  final reading = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            OutdoorReadingsScreen(surveyInfo: widget.surveyInfo)),
-                  );
-                  if (reading is RoomReading) {
-                    roomReadings.add(reading);
-                  }
-                },
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * .33,
-                  height: MediaQuery.of(context).size.height * .07,
-                  child: const Center(child: Text('Add Outdoor Reading')),
-                ),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),
@@ -756,6 +785,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autofillPrimaryUse.add(primaryUseTextController.text);
                     }
                     clearFields();
+                    setState(() {
+                      isOutdoorReading = false;
+                    });
                   } else {
                     _showErrorDialog(context,
                         'Please click "Save Info" to save current room info before adding new room.');
