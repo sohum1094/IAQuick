@@ -10,39 +10,41 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: any
-  easy_form_kit: any
-  flutter_secure_storage_x: any
-  google_places_flutter: any
-  intl: any
-  shared_preferences: any
+  cupertino_icons: ^1.0.6
+  easy_form_kit: ^5.0.0+1
+  flutter_secure_storage_x: ^11.0.0
+  google_places_flutter: ^2.1.0
+  intl: ^0.20.2
+  shared_preferences: ^2.2.2
   shared_preferences_android: ^2.2.2
 
-  csv: any
-  path_provider: any
+  csv: ^6.0.0
+  path_provider: ^2.1.1
   path_provider_android: ^2.2.1
 
-  open_file: any
-  image_picker: any
-  path: any
-  provider: any
-  excel: any
-  flutter_email_sender: any
-  permission_handler: any
-  firebase_core: any
-  cloud_firestore: any
-  firebase_storage: any
-  firebase_auth: any
-  google_sign_in: any
-  connectivity_plus: any
-  sqflite: any
-  uuid: any
-  share_plus: any
-  pdf: any
-  printing: any
-  googleapis: any
-  googleapis_auth: any
-  google_api_headers: any
+  open_file: ^3.3.2
+  image_picker: ^1.1.2
+  path: ^1.8.3
+  provider: ^6.1.2
+  excel: ^4.0.6
+  flutter_email_sender: ^7.0.0
+  permission_handler: ^12.0.0+1
+
+  firebase_core: ^3.13.1
+  cloud_firestore: ^5.6.8
+  firebase_storage: ^12.4.6
+  firebase_auth: ^5.5.4
+
+  google_sign_in: ^6.2.1
+  connectivity_plus: ^6.1.4
+  sqflite: ^2.3.2
+  uuid: ^4.2.2
+  share_plus: ^11.0.0
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
+  google_api_headers: ^4.5.1
 
 
 dev_dependencies:
