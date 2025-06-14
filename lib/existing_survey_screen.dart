@@ -157,13 +157,15 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
               final report =
                   await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File photoPdf =
-                  await createPhotoPdf(surveyInfo, report.photos);
+              File? photoPdf;
+              if (report.photos.isNotEmpty) {
+                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+              }
 
               List<String> attachments = [
                 iaqExcel.path,
                 visualExcel.path,
-                photoPdf.path,
+                if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
 
@@ -255,13 +257,15 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
 
               final report =
                   await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File photoPdf =
-                  await createPhotoPdf(surveyInfo, report.photos);
+              File? photoPdf;
+              if (report.photos.isNotEmpty) {
+                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+              }
 
               List<String> attachments = [
                 iaqExcel.path,
                 visualExcel.path,
-                photoPdf.path,
+                if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
             },
@@ -406,21 +410,43 @@ Future<File> createIAQExcelFile(
     (RoomReading r) => r.temperature,
     (RoomReading r) => r.relativeHumidity,
   ];
+  final decimals = <int?>[null, null, null, null, 1, 1];
+  final numberFormats = <NumFormat?>[
+    null,
+    null,
+    null,
+    null,
+    CustomNumericNumFormat('0.0'),
+    CustomNumericNumFormat('0.0'),
+  ];
   if (surveyInfo.carbonDioxideReadings) {
     valueAccessors.add((RoomReading r) => r.co2!);
+    decimals.add(0);
+    numberFormats.add(NumFormat.standard_0);
   }
   if (surveyInfo.carbonMonoxideReadings) {
     valueAccessors.add((RoomReading r) => r.co!);
+    decimals.add(0);
+    numberFormats.add(NumFormat.standard_0);
   }
   if (surveyInfo.vocs) {
     valueAccessors.add((RoomReading r) => r.vocs!);
+    decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
   if (surveyInfo.pm25) {
     valueAccessors.add((RoomReading r) => r.pm25!);
+    decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
   if (surveyInfo.pm10) {
     valueAccessors.add((RoomReading r) => r.pm10!);
+    decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
+
+  final numericDecimals = decimals.sublist(4);
+  final numericFormats = numberFormats.sublist(4);
 
   for (var i = 0; i < roomReadings.length; i++) {
     final r = roomReadings[i];
@@ -432,36 +458,44 @@ Future<File> createIAQExcelFile(
       if (val == null) {
         cell.value = null;
       } else if (val is num) {
-        cell.value = DoubleCellValue(val.toDouble());
+        final d = decimals[c];
+        cell.value = d == null
+            ? DoubleCellValue(val.toDouble())
+            : DoubleCellValue(double.parse(val.toStringAsFixed(d)));
+        final fmt = numberFormats[c];
+        if (fmt != null) {
+          cell.cellStyle = CellStyle(numberFormat: fmt);
+        }
       } else {
         cell.value = TextCellValue(val.toString());
       }
     }
   }
 
+  final indoor = roomReadings.where((r) => !r.isOutdoor).toList();
   final summaryLists = <List<double>>[
-    roomReadings.map((r) => r.temperature).toList(),
-    roomReadings.map((r) => r.relativeHumidity).toList(),
+    indoor.map((r) => r.temperature).toList(),
+    indoor.map((r) => r.relativeHumidity).toList(),
   ];
   if (surveyInfo.carbonDioxideReadings) {
-    summaryLists.add(
-        roomReadings.where((r) => r.co2 != null).map((r) => r.co2!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.co2 != null).map((r) => r.co2!).toList());
   }
   if (surveyInfo.carbonMonoxideReadings) {
-    summaryLists.add(
-        roomReadings.where((r) => r.co != null).map((r) => r.co!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.co != null).map((r) => r.co!).toList());
   }
   if (surveyInfo.vocs) {
-    summaryLists.add(
-        roomReadings.where((r) => r.vocs != null).map((r) => r.vocs!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.vocs != null).map((r) => r.vocs!).toList());
   }
   if (surveyInfo.pm25) {
-    summaryLists.add(
-        roomReadings.where((r) => r.pm25 != null).map((r) => r.pm25!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.pm25 != null).map((r) => r.pm25!).toList());
   }
   if (surveyInfo.pm10) {
-    summaryLists.add(
-        roomReadings.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
+    summaryLists
+        .add(indoor.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
   }
 
   final summary = wb['Summary'];
@@ -472,10 +506,20 @@ Future<File> createIAQExcelFile(
     final letter = columnLetter(i + 1); // B, C, D, ...
     final values = summaryLists[i];
     if (values.isNotEmpty) {
-      summary.cell(CellIndex.indexByString('${letter}1')).value =
-          DoubleCellValue(values.reduce(min));
-      summary.cell(CellIndex.indexByString('${letter}2')).value =
-          DoubleCellValue(values.reduce(max));
+      final minCell = summary.cell(CellIndex.indexByString('${letter}1'));
+      final maxCell = summary.cell(CellIndex.indexByString('${letter}2'));
+      final d = numericDecimals[i];
+      final fmt = numericFormats[i];
+      minCell.value = d == null
+          ? DoubleCellValue(values.reduce(min))
+          : DoubleCellValue(double.parse(values.reduce(min).toStringAsFixed(d)));
+      maxCell.value = d == null
+          ? DoubleCellValue(values.reduce(max))
+          : DoubleCellValue(double.parse(values.reduce(max).toStringAsFixed(d)));
+      if (fmt != null) {
+        minCell.cellStyle = CellStyle(numberFormat: fmt);
+        maxCell.cellStyle = CellStyle(numberFormat: fmt);
+      }
     } else {
       summary.cell(CellIndex.indexByString('${letter}1')).value = null;
       summary.cell(CellIndex.indexByString('${letter}2')).value = null;
