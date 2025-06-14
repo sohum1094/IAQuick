@@ -282,7 +282,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   String? validateRelativeHumidity(String? value) {
     if (value == null) {
       return null;
-    } else if (value.isNotEmpty && !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+    } else if (value.isNotEmpty &&
+        !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
       return "Enter Correct Relative Humidity Value";
     } else {
       return null;
@@ -539,7 +540,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                             if (value == null) {
                               return null;
                             } else if (value.isNotEmpty &&
-                                !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                                !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                               return "Enter Correct Temperature Value";
                             } else {
                               return null;
@@ -574,7 +575,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                           return "Enter Correct Carbon Dioxide Value";
                         } else {
                           return null;
@@ -604,7 +605,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                           return "Enter Correct Carbon Monoxide Value";
                         } else {
                           return null;
@@ -636,7 +637,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                           return "Enter Correct VOCs Value";
                         } else {
                           return null;
@@ -667,7 +668,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                           return "Enter Correct PM 2.5 Value";
                         } else {
                           return null;
@@ -698,7 +699,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (value == null) {
                           return null;
                         } else if (value.isNotEmpty &&
-                            !RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                            !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                           return "Enter Correct PM10 Value";
                         } else {
                           return null;
