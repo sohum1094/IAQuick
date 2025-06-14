@@ -823,16 +823,17 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                 width: 10,
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate() && !savedPressed) {
                     _saveForm();
                   }
                   if (roomNumberTextController.text.isNotEmpty) {
                     // Save to Firebase using offline-capable service
-                    saveSurveyToFirestore(
+                    await saveSurveyToFirestore(
                       widget.surveyInfo,
                       roomReadings,
                     );
+                    await SurveyService().uploadPendingImages();
 
                     // Navigate to HomeScreen or another appropriate screen
                     Navigator.pop(context);
