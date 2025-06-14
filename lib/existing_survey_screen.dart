@@ -416,8 +416,8 @@ Future<File> createIAQExcelFile(
     null,
     null,
     null,
-    CustomNumericNumFormat('0.0'),
-    CustomNumericNumFormat('0.0'),
+    CustomNumericNumFormat(formatCode: '0.0'),
+    CustomNumericNumFormat(formatCode: '0.0'),
   ];
   if (surveyInfo.carbonDioxideReadings) {
     valueAccessors.add((RoomReading r) => r.co2!);
@@ -432,17 +432,17 @@ Future<File> createIAQExcelFile(
   if (surveyInfo.vocs) {
     valueAccessors.add((RoomReading r) => r.vocs!);
     decimals.add(3);
-    numberFormats.add(CustomNumericNumFormat('0.000'));
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.000'));
   }
   if (surveyInfo.pm25) {
     valueAccessors.add((RoomReading r) => r.pm25!);
     decimals.add(3);
-    numberFormats.add(CustomNumericNumFormat('0.000'));
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.000'));
   }
   if (surveyInfo.pm10) {
     valueAccessors.add((RoomReading r) => r.pm10!);
     decimals.add(3);
-    numberFormats.add(CustomNumericNumFormat('0.000'));
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.000'));
   }
 
   final numericDecimals = decimals.sublist(4);
