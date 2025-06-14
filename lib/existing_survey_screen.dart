@@ -411,26 +411,42 @@ Future<File> createIAQExcelFile(
     (RoomReading r) => r.relativeHumidity,
   ];
   final decimals = <int?>[null, null, null, null, 1, 1];
+  final numberFormats = <NumFormat?>[
+    null,
+    null,
+    null,
+    null,
+    CustomNumericNumFormat('0.0'),
+    CustomNumericNumFormat('0.0'),
+  ];
   if (surveyInfo.carbonDioxideReadings) {
     valueAccessors.add((RoomReading r) => r.co2!);
     decimals.add(0);
+    numberFormats.add(NumFormat.standard_0);
   }
   if (surveyInfo.carbonMonoxideReadings) {
     valueAccessors.add((RoomReading r) => r.co!);
     decimals.add(0);
+    numberFormats.add(NumFormat.standard_0);
   }
   if (surveyInfo.vocs) {
     valueAccessors.add((RoomReading r) => r.vocs!);
     decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
   if (surveyInfo.pm25) {
     valueAccessors.add((RoomReading r) => r.pm25!);
     decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
   if (surveyInfo.pm10) {
     valueAccessors.add((RoomReading r) => r.pm10!);
     decimals.add(3);
+    numberFormats.add(CustomNumericNumFormat('0.000'));
   }
+
+  final numericDecimals = decimals.sublist(4);
+  final numericFormats = numberFormats.sublist(4);
 
   for (var i = 0; i < roomReadings.length; i++) {
     final r = roomReadings[i];
@@ -446,6 +462,10 @@ Future<File> createIAQExcelFile(
         cell.value = d == null
             ? DoubleCellValue(val.toDouble())
             : DoubleCellValue(double.parse(val.toStringAsFixed(d)));
+        final fmt = numberFormats[c];
+        if (fmt != null) {
+          cell.cellStyle = CellStyle(numberFormat: fmt);
+        }
       } else {
         cell.value = TextCellValue(val.toString());
       }
@@ -486,10 +506,20 @@ Future<File> createIAQExcelFile(
     final letter = columnLetter(i + 1); // B, C, D, ...
     final values = summaryLists[i];
     if (values.isNotEmpty) {
-      summary.cell(CellIndex.indexByString('${letter}1')).value =
-          DoubleCellValue(values.reduce(min));
-      summary.cell(CellIndex.indexByString('${letter}2')).value =
-          DoubleCellValue(values.reduce(max));
+      final minCell = summary.cell(CellIndex.indexByString('${letter}1'));
+      final maxCell = summary.cell(CellIndex.indexByString('${letter}2'));
+      final d = numericDecimals[i];
+      final fmt = numericFormats[i];
+      minCell.value = d == null
+          ? DoubleCellValue(values.reduce(min))
+          : DoubleCellValue(double.parse(values.reduce(min).toStringAsFixed(d)));
+      maxCell.value = d == null
+          ? DoubleCellValue(values.reduce(max))
+          : DoubleCellValue(double.parse(values.reduce(max).toStringAsFixed(d)));
+      if (fmt != null) {
+        minCell.cellStyle = CellStyle(numberFormat: fmt);
+        maxCell.cellStyle = CellStyle(numberFormat: fmt);
+      }
     } else {
       summary.cell(CellIndex.indexByString('${letter}1')).value = null;
       summary.cell(CellIndex.indexByString('${letter}2')).value = null;
