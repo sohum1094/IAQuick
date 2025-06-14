@@ -235,9 +235,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
             isOutdoorReading ? 'Outdoor' : dropdownModel.building,
         floorNumber: isOutdoorReading ? '-' : dropdownModel.floor,
         roomNumber:
-            isOutdoorReading ? 'Outdoor' : roomNumberTextController.text,
+            isOutdoorReading ? '-' : roomNumberTextController.text,
         primaryUse:
-            isOutdoorReading ? 'Outdoor' : primaryUseTextController.text,
+            isOutdoorReading ? '-' : primaryUseTextController.text,
         temperature: double.parse(temperatureTextController.text),
         relativeHumidity: double.parse(humiditiyTextController.text),
         co2: widget.surveyInfo.carbonDioxideReadings
