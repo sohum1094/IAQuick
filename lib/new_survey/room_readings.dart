@@ -828,7 +828,11 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     _saveForm();
                   }
                   if (roomNumberTextController.text.isNotEmpty) {
-                    // Save to Firebase using offline-capable service
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                    );
                     await saveSurveyToFirestore(
                       widget.surveyInfo,
                       roomReadings,
@@ -836,6 +840,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     await SurveyService().uploadPendingImages();
 
                     // Navigate to HomeScreen or another appropriate screen
+                    Navigator.of(context).pop();
                     Navigator.pop(context);
                     Navigator.pop(context);
                     Navigator.push(
