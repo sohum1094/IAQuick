@@ -18,7 +18,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await SurveyService.configureFirestoreCache();
-  surveyService.startConnectivityListener();
+  await surveyService.startConnectivityListener();
   runApp(
     Provider<AuthService>(
       create: (_) => AuthService(),

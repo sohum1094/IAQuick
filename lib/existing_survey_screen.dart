@@ -14,6 +14,8 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -144,6 +146,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              );
               List<RoomReading> roomReadings =
                   await fetchRoomReadingsForSurvey(surveyInfo.id);
               File iaqExcel =
@@ -168,6 +175,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
+              Navigator.of(context).pop();
 
             },
             style: ElevatedButton.styleFrom(
@@ -244,6 +252,11 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         DataCell(
           ElevatedButton(
             onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              );
               List<RoomReading> roomReadings =
                   await fetchRoomReadingsForSurvey(surveyInfo.id);
               File iaqExcel =
@@ -268,6 +281,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 if (photoPdf != null) photoPdf.path,
               ];
               shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
+              Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -537,14 +551,50 @@ Future<File> createIAQExcelFile(
 Future<File> createPhotoPdf(
     SurveyInfo info, List<PhotoMetadata> photos) async {
   final pdf = pw.Document();
-  final inspector = FirebaseAuth.instance.currentUser?.displayName ?? '';
+  final user = FirebaseAuth.instance.currentUser;
+  String inspector = '';
+  if (user != null) {
+    final name = user.displayName ?? '';
+    if (name.trim().isNotEmpty) {
+      final parts = name.trim().split(RegExp(r'\s+'));
+      final first = parts.isNotEmpty && parts[0].isNotEmpty
+          ? parts[0][0].toUpperCase()
+          : '';
+      final last = parts.length > 1 && parts[1].isNotEmpty
+          ? parts[1][0].toUpperCase()
+          : '';
+      inspector = '$first$last';
+    }
+    inspector = inspector.isNotEmpty ? inspector : (user.email ?? '');
+  }
 
-  for (var i = 0; i < photos.length; i++) {
-    final photo = photos[i];
-    final image = await networkImage(photo.downloadUrl);
+  // Group photos by building and room number so that we can number them
+  final Map<String, List<PhotoMetadata>> byRoom = {};
+  for (final p in photos) {
+    final key = '${p.building}|${p.roomNumber}';
+    byRoom.putIfAbsent(key, () => []).add(p);
+  }
+
+  for (final photo in photos) {
+    final key = '${photo.building}|${photo.roomNumber}';
+    final list = byRoom[key]!;
+    final index = list.indexOf(photo) + 1;
+    final total = list.length;
+
+    final imageBytes = await _downloadImageBytes(photo.downloadUrl);
+    final image = pw.MemoryImage(imageBytes);
     final dateTaken = photo.timestamp != null
         ? DateFormat('MM-dd-yyyy HH:mm').format(photo.timestamp!)
         : 'Unknown';
+
+    final initials = inspector.isNotEmpty
+        ? inspector
+            .trim()
+            .split(RegExp(r'\s+'))
+            .map((e) => e.isNotEmpty ? e[0] : '')
+            .join()
+            .toUpperCase()
+        : '';
 
     pdf.addPage(
       pw.Page(
@@ -553,17 +603,18 @@ Future<File> createPhotoPdf(
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Image ${i + 1} of ${photos.length}',
+              pw.Text(info.siteName,
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 5),
+              pw.Text('Building: ${photo.building}'),
+              if (photo.floor.isNotEmpty) pw.Text('Floor: ${photo.floor}'),
+              pw.Text('Room: ${photo.roomNumber}'),
+              pw.Text('Image $index of $total'),
               pw.SizedBox(height: 10),
               pw.Image(image, width: double.infinity, fit: pw.BoxFit.contain),
               pw.SizedBox(height: 10),
-              pw.Text('Building Name: ${info.siteName}'),
-              pw.Text('Address: ${info.address}'),
-              pw.Text('Date Image Taken: $dateTaken'),
-              if (inspector.isNotEmpty) pw.Text('Inspector Name: $inspector'),
-              pw.Text('Floor Number: N/A'),
-              pw.Text('Room Number: ${photo.roomNumber}'),
+              if (initials.isNotEmpty) pw.Text('Inspector: $initials'),
+              pw.Text('Taken: $dateTaken'),
             ],
           );
         },
@@ -709,6 +760,21 @@ String formatDate(DateTime date) {
     date = DateTime(date.year, date.month, date.day, now.hour, now.minute);
   }
   return DateFormat('yyyyMMdd_HHmm').format(date);
+}
+
+Future<Uint8List> _downloadImageBytes(String url) async {
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(Uri.parse(url));
+    final response = await request.close();
+    if (response.statusCode != HttpStatus.ok) {
+      throw HttpException('Failed to load image: ${response.statusCode}');
+    }
+    final bytes = await consolidateHttpClientResponseBytes(response);
+    return bytes;
+  } finally {
+    client.close();
+  }
 }
 
 
