@@ -341,8 +341,9 @@ Future<File> createIAQExcelFile(
     SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
-  wb.delete('Sheet1');
   final sheet = wb['IAQ'];
+  wb.delete('Sheet1');
+
 
   final baseHeaders = [
     'Building',
@@ -581,8 +582,23 @@ Future<File> createPhotoPdf(
     final index = list.indexOf(photo) + 1;
     final total = list.length;
 
+
+  // Group photos by building and room number so that we can number them
+  final Map<String, List<PhotoMetadata>> byRoom = {};
+  for (final p in photos) {
+    final key = '${p.building}|${p.roomNumber}';
+    byRoom.putIfAbsent(key, () => []).add(p);
+  }
+
+  for (final photo in photos) {
+    final key = '${photo.building}|${photo.roomNumber}';
+    final list = byRoom[key]!;
+    final index = list.indexOf(photo) + 1;
+    final total = list.length;
+
     final imageBytes = await _downloadImageBytes(photo.downloadUrl);
     final image = pw.MemoryImage(imageBytes);
+
     final dateTaken = photo.timestamp != null
         ? DateFormat('MM-dd-yyyy HH:mm').format(photo.timestamp!)
         : 'Unknown';
@@ -636,8 +652,8 @@ Future<File> createVisualExcelFile(
     [List<RoomReading>? roomReadings]) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
-  wb.delete('Sheet1');
   final sheet = wb['Visual'];
+  wb.delete('Sheet1');
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E1'));
   sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('${surveyInfo.siteName} Visual Assessment');
