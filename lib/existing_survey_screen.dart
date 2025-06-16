@@ -327,8 +327,9 @@ Future<File> createIAQExcelFile(
     SurveyInfo surveyInfo, List<RoomReading> roomReadings) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
-  wb.delete('Sheet1');
   final sheet = wb['IAQ'];
+  wb.delete('Sheet1');
+
 
   final baseHeaders = [
     'Building',
@@ -585,8 +586,8 @@ Future<File> createVisualExcelFile(
     [List<RoomReading>? roomReadings]) async {
   final directory = await getApplicationDocumentsDirectory();
   final wb = Excel.createExcel();
-  wb.delete('Sheet1');
   final sheet = wb['Visual'];
+  wb.delete('Sheet1');
 
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E1'));
   sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('${surveyInfo.siteName} Visual Assessment');
