@@ -129,23 +129,41 @@ class VisualAssessment {
 
 class PhotoMetadata {
   final String roomNumber;
+  final String building;
+  final String floor;
   final String downloadUrl;
   final String fileName;
   final DateTime? timestamp;
 
   PhotoMetadata({
     required this.roomNumber,
+    required this.building,
+    required this.floor,
     required this.downloadUrl,
     required this.fileName,
     this.timestamp,
   });
 
-  factory PhotoMetadata.fromMap(Map<String, dynamic> map) => PhotoMetadata(
-        roomNumber: map['roomNumber'] ?? '',
-        downloadUrl: map['downloadUrl'] ?? '',
-        fileName: map['fileName'] ?? '',
-        timestamp: (map['timestamp'] as Timestamp?)?.toDate(),
-      );
+  factory PhotoMetadata.fromMap(Map<String, dynamic> map) {
+    String building = map['building'] ?? '';
+    String floor = map['floor'] ?? '';
+    final fileName = map['fileName'] ?? '';
+    if (building.isEmpty || floor.isEmpty) {
+      final parts = fileName.split('_');
+      if (parts.length >= 5) {
+        building = parts[1];
+        floor = parts[2];
+      }
+    }
+    return PhotoMetadata(
+      roomNumber: map['roomNumber'] ?? '',
+      building: building,
+      floor: floor,
+      downloadUrl: map['downloadUrl'] ?? '',
+      fileName: fileName,
+      timestamp: (map['timestamp'] as Timestamp?)?.toDate(),
+    );
+  }
 }
 
 class SurveyReport {

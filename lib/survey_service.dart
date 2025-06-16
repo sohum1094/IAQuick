@@ -23,9 +23,20 @@ class SurveyService {
   }
 
   /// Start listening for connectivity changes.
-  void startConnectivityListener() {
-    _connectivitySub =
-        Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) async {
+  ///
+  /// When initialized, also check the current connectivity state so that
+  /// any pending images can be uploaded immediately if the device is already
+  /// online. This prevents a scenario where images remain pending until the
+  /// connection changes.
+  Future<void> startConnectivityListener() async {
+    final connectivity = Connectivity();
+    final current = await connectivity.checkConnectivity();
+    if (current != ConnectivityResult.none) {
+      await uploadPendingImages();
+    }
+
+    _connectivitySub = connectivity.onConnectivityChanged
+        .listen((List<ConnectivityResult> result) async {
       if (!result.contains(ConnectivityResult.none)) {
         await uploadPendingImages();
       }
@@ -139,9 +150,13 @@ Future<String> saveRoomImageOffline({
       for (final file in files) {
         final fileName = p.basename(file.path);
         final parts = fileName.split('_');
+        String building = '';
+        String floor = '';
         String roomNumber = '';
         DateTime? timestamp;
         if (parts.length >= 5) {
+          building = parts[1];
+          floor = parts[2];
           roomNumber = parts[3];
           final tsStr = parts[4].split('.').first;
           final tsInt = int.tryParse(tsStr);
@@ -155,6 +170,8 @@ Future<String> saveRoomImageOffline({
           final downloadUrl = await snapshot.ref.getDownloadURL();
           await surveyRef.collection('photos').add({
             'roomNumber': roomNumber,
+            'building': building,
+            'floor': floor,
             'downloadUrl': downloadUrl,
             'fileName': fileName,
             'timestamp': timestamp,
