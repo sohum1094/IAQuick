@@ -11,11 +11,11 @@ import 'package:iaqapp/survey_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
-import 'dart:io';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart'; // Needed for consolidateHttpClientResponseBytes
+import 'package:flutter/services.dart' show rootBundle;
+
 
 class ExistingSurveyScreen extends StatefulWidget {
   const ExistingSurveyScreen({Key? key}) : super(key: key);
@@ -550,31 +550,35 @@ Future<File> createIAQExcelFile(
 }
 
 Future<File> createPhotoPdf(
-    SurveyInfo info, List<PhotoMetadata> photos) async {
+  SurveyInfo info,
+  List<PhotoMetadata> photos,
+) async {
   final pdf = pw.Document();
+
+  // ✅ Use a robust inspector initials fallback:
   final user = FirebaseAuth.instance.currentUser;
   String inspector = '';
   if (user != null) {
-    final name = user.displayName ?? '';
-    if (name.trim().isNotEmpty) {
-      final parts = name.trim().split(RegExp(r'\s+'));
-      final first = parts.isNotEmpty && parts[0].isNotEmpty
-          ? parts[0][0].toUpperCase()
-          : '';
-      final last = parts.length > 1 && parts[1].isNotEmpty
-          ? parts[1][0].toUpperCase()
-          : '';
-      inspector = '$first$last';
+    final name = (user.displayName ?? '').trim();
+    if (name.isNotEmpty) {
+      final parts = name.split(RegExp(r'\s+'));
+      final first = parts.isNotEmpty && parts[0].isNotEmpty ? parts[0][0] : '';
+      final last = parts.length > 1 && parts[1].isNotEmpty ? parts[1][0] : '';
+      inspector = '$first$last'.toUpperCase();
     }
-    inspector = inspector.isNotEmpty ? inspector : (user.email ?? '');
+    if (inspector.isEmpty) inspector = (user.email ?? '');
   }
 
-  // Group photos by building and room number so that we can number them
+  // ✅ Group photos by room/building for numbering:
   final Map<String, List<PhotoMetadata>> byRoom = {};
   for (final p in photos) {
     final key = '${p.building}|${p.roomNumber}';
     byRoom.putIfAbsent(key, () => []).add(p);
   }
+
+  // ✅ Load a robust Unicode font:
+  final ttf = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+  final font = pw.Font.ttf(ttf);
 
   for (final photo in photos) {
     final key = '${photo.building}|${photo.roomNumber}';
@@ -582,35 +586,18 @@ Future<File> createPhotoPdf(
     final index = list.indexOf(photo) + 1;
     final total = list.length;
 
-
-  // Group photos by building and room number so that we can number them
-  final Map<String, List<PhotoMetadata>> byRoom = {};
-  for (final p in photos) {
-    final key = '${p.building}|${p.roomNumber}';
-    byRoom.putIfAbsent(key, () => []).add(p);
-  }
-
-  for (final photo in photos) {
-    final key = '${photo.building}|${photo.roomNumber}';
-    final list = byRoom[key]!;
-    final index = list.indexOf(photo) + 1;
-    final total = list.length;
-
+    // ✅ Download image bytes:
     final imageBytes = await _downloadImageBytes(photo.downloadUrl);
+
+    // ✅ Skip page if imageBytes are empty:
+    if (imageBytes.isEmpty) continue;
+
     final image = pw.MemoryImage(imageBytes);
 
+    // ✅ Use robust timestamp:
     final dateTaken = photo.timestamp != null
         ? DateFormat('MM-dd-yyyy HH:mm').format(photo.timestamp!)
         : 'Unknown';
-
-    final initials = inspector.isNotEmpty
-        ? inspector
-            .trim()
-            .split(RegExp(r'\s+'))
-            .map((e) => e.isNotEmpty ? e[0] : '')
-            .join()
-            .toUpperCase()
-        : '';
 
     pdf.addPage(
       pw.Page(
@@ -619,18 +606,26 @@ Future<File> createPhotoPdf(
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(info.siteName,
-                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                info.siteName,
+                style: pw.TextStyle(
+                  font: font,
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
               pw.SizedBox(height: 5),
-              pw.Text('Building: ${photo.building}'),
-              if (photo.floor.isNotEmpty) pw.Text('Floor: ${photo.floor}'),
-              pw.Text('Room: ${photo.roomNumber}'),
-              pw.Text('Image $index of $total'),
+              pw.Text('Building: ${photo.building}', style: pw.TextStyle(font: font)),
+              if (photo.floor.isNotEmpty)
+                pw.Text('Floor: ${photo.floor}', style: pw.TextStyle(font: font)),
+              pw.Text('Room: ${photo.roomNumber}', style: pw.TextStyle(font: font)),
+              pw.Text('Image $index of $total', style: pw.TextStyle(font: font)),
               pw.SizedBox(height: 10),
               pw.Image(image, width: double.infinity, fit: pw.BoxFit.contain),
               pw.SizedBox(height: 10),
-              if (initials.isNotEmpty) pw.Text('Inspector: $initials'),
-              pw.Text('Taken: $dateTaken'),
+              if (inspector.isNotEmpty)
+                pw.Text('Inspector: $inspector', style: pw.TextStyle(font: font)),
+              pw.Text('Taken: $dateTaken', style: pw.TextStyle(font: font)),
             ],
           );
         },
@@ -638,10 +633,12 @@ Future<File> createPhotoPdf(
     );
   }
 
+  // ✅ Safe path:
   final directory = await getApplicationDocumentsDirectory();
   final filePath = path.join(
-      directory.path,
-      '${info.siteName.replaceAll(' ', '_')}-Photos-${formatDate(info.date)}.pdf');
+    directory.path,
+    '${info.siteName.replaceAll(' ', '_')}-Photos-${formatDate(info.date)}.pdf',
+  );
   final file = File(filePath);
   await file.writeAsBytes(await pdf.save());
   return file;
@@ -786,8 +783,7 @@ Future<Uint8List> _downloadImageBytes(String url) async {
     if (response.statusCode != HttpStatus.ok) {
       throw HttpException('Failed to load image: ${response.statusCode}');
     }
-    final bytes = await consolidateHttpClientResponseBytes(response);
-    return bytes;
+    return await consolidateHttpClientResponseBytes(response);
   } finally {
     client.close();
   }

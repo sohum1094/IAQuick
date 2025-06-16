@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 import 'auth/sign_in_screen.dart';
 import 'auth_service.dart';
@@ -19,6 +20,12 @@ void main() async {
   );
   await SurveyService.configureFirestoreCache();
   await surveyService.startConnectivityListener();
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.playIntegrity,
+    appleProvider: AppleProvider.appAttest, // Or .deviceCheck
+    webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
+  );
+
   runApp(
     Provider<AuthService>(
       create: (_) => AuthService(),
