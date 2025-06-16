@@ -12,8 +12,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:math';
-import 'package:flutter/foundation.dart'; // Needed for consolidateHttpClientResponseBytes
 import 'package:flutter/services.dart' show rootBundle;
 
 
@@ -776,16 +776,13 @@ String formatDate(DateTime date) {
 }
 
 Future<Uint8List> _downloadImageBytes(String url) async {
-  final client = HttpClient();
   try {
-    final request = await client.getUrl(Uri.parse(url));
-    final response = await request.close();
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('Failed to load image: ${response.statusCode}');
-    }
-    return await consolidateHttpClientResponseBytes(response);
-  } finally {
-    client.close();
+    final ref = FirebaseStorage.instance.refFromURL(url);
+    final data = await ref.getData();
+    return data ?? Uint8List(0);
+  } catch (e) {
+    print('Error downloading image $url: $e');
+    return Uint8List(0);
   }
 }
 
