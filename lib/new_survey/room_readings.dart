@@ -142,7 +142,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     'Principal\'s Office',
     'Breakroom'
   ];
-  bool savedPressed = false;
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode temperatureFocusNode = FocusNode();
   File? _imageFile;
@@ -215,7 +214,20 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     buildingDropdownKey.currentState?.reset();
     floorDropdownKey.currentState?.reset();
     _imageFile = null;
-    savedPressed = false;
+  }
+
+  bool _formHasInput() {
+    return roomNumberTextController.text.isNotEmpty ||
+        primaryUseTextController.text.isNotEmpty ||
+        humiditiyTextController.text.isNotEmpty ||
+        temperatureTextController.text.isNotEmpty ||
+        dioxTextController.text.isNotEmpty ||
+        monoxTextController.text.isNotEmpty ||
+        vocsTextController.text.isNotEmpty ||
+        pm25TextController.text.isNotEmpty ||
+        pm10TextController.text.isNotEmpty ||
+        commentTextController.text.isNotEmpty ||
+        _imageFile != null;
   }
 
 
@@ -757,31 +769,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           )
                         : const Text('No Image Selected'),
                   ),
-                  // Save button
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * .30,
-                    height: MediaQuery.of(context).size.height * .07,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (!savedPressed) {
-                          if (_formKey.currentState!.validate() &&
-                              !(roomNumberTextController.text == '')) {
-                            _saveForm();
-                            savedPressed = true;
-                          } else {
-                            _showErrorDialog(context,
-                                'Please enter all room info correctly before saving.');
-                          }
-                        }
-                      },
-                      child: const Text(
-                        'Save Info',
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -793,21 +780,23 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),
-                onPressed: () {
-                  if (savedPressed) {
+                onPressed: () async {
+                  final valid = _formKey.currentState!.validate() &&
+                      roomNumberTextController.text.isNotEmpty;
+                  if (valid) {
+                    _saveForm();
                     if (!autofillPrimaryUse
                         .contains(primaryUseTextController.text)) {
                       autofillPrimaryUse.add(primaryUseTextController.text);
                     }
-                    clearFields();
-                    setState(() {
-                      isOutdoorReading = false;
-                    });
-                  } else {
-                    _showErrorDialog(context,
-                        'Please click "Save Info" to save current room info before adding new room.');
+                  } else if (_formHasInput()) {
+                    final discard = await _showDiscardDialog(context);
+                    if (!discard) return;
                   }
-
+                  clearFields();
+                  setState(() {
+                    isOutdoorReading = false;
+                  });
                 },
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * .33,
@@ -824,35 +813,44 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  if (_formKey.currentState!.validate() && !savedPressed) {
+                  bool proceed = true;
+                  if (_formKey.currentState!.validate() &&
+                      roomNumberTextController.text.isNotEmpty) {
                     _saveForm();
+                  } else if (_formHasInput()) {
+                    proceed = await _showDiscardDialog(context);
+                    if (proceed) {
+                      clearFields();
+                    }
                   }
-                  if (roomNumberTextController.text.isNotEmpty) {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => const Center(child: CircularProgressIndicator()),
-                    );
-                    await saveSurveyToFirestore(
-                      widget.surveyInfo,
-                      roomReadings,
-                    );
-                    await SurveyService().uploadPendingImages();
-
-                    // Navigate to HomeScreen or another appropriate screen
-                    Navigator.of(context).pop();
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  } else {
+                  if (!proceed) return;
+                  if (roomReadings.isEmpty) {
                     _showErrorDialog(context,
-                        'Please click "Save Info" to save current room info before closing.');
+                        'Please add at least one room before closing.');
+                    return;
                   }
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => const Center(child: CircularProgressIndicator()),
+                  );
+                  await saveSurveyToFirestore(
+                    widget.surveyInfo,
+                    roomReadings,
+                  );
+                  await SurveyService().uploadPendingImages();
+
+                  // Navigate to HomeScreen or another appropriate screen
+                  Navigator.of(context).pop();
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
@@ -963,6 +961,31 @@ void _showErrorDialog(BuildContext context, String message) {
       );
     },
   );
+}
+
+Future<bool> _showDiscardDialog(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Incomplete Room'),
+        content: const Text(
+            'The current room entry is incomplete. Discard it and continue?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Discard'),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+          TextButton(
+            child: const Text('Edit'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+        ],
+      );
+    },
+  );
+  return result ?? false;
 }
 
 void _showConfirmValueDialog(BuildContext context, String message) {
