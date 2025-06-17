@@ -21,9 +21,11 @@ void main() async {
   await SurveyService.configureFirestoreCache();
   await surveyService.startConnectivityListener();
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.playIntegrity,
-    appleProvider: AppleProvider.appAttest, // Or .deviceCheck
-    webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
+    // androidProvider: AndroidProvider.playIntegrity,
+    androidProvider: AndroidProvider.debug,
+    // appleProvider: AppleProvider.appAttest, // Or .deviceCheck
+    // appleProvider: AppleProvider.debug,
+    // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
   );
 
   runApp(

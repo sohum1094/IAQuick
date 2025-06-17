@@ -14,7 +14,9 @@ import 'package:pdf/pdf.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:math';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, Uint8List;
+import 'package:image/image.dart' as img_lib;
+
 
 
 class ExistingSurveyScreen extends StatefulWidget {
@@ -587,12 +589,16 @@ Future<File> createPhotoPdf(
     final total = list.length;
 
     // ✅ Download image bytes:
-    final imageBytes = await _downloadImageBytes(photo.downloadUrl);
+    // final imageBytes = await _downloadImageBytes(photo.downloadUrl);
+
 
     // ✅ Skip page if imageBytes are empty:
-    if (imageBytes.isEmpty) continue;
 
-    final image = pw.MemoryImage(imageBytes);
+    final rawBytes = await _downloadImageBytes(photo.downloadUrl);
+    if (rawBytes.isEmpty) continue;
+
+    final resizedBytes = await resizeImageBytes(rawBytes);
+    final image = pw.MemoryImage(resizedBytes);
 
     // ✅ Use robust timestamp:
     final dateTaken = photo.timestamp != null
@@ -602,6 +608,7 @@ Future<File> createPhotoPdf(
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.all(32), // Adds a nice page margin
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -614,15 +621,26 @@ Future<File> createPhotoPdf(
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
-              pw.SizedBox(height: 5),
+              pw.SizedBox(height: 8),
               pw.Text('Building: ${photo.building}', style: pw.TextStyle(font: font)),
               if (photo.floor.isNotEmpty)
                 pw.Text('Floor: ${photo.floor}', style: pw.TextStyle(font: font)),
               pw.Text('Room: ${photo.roomNumber}', style: pw.TextStyle(font: font)),
               pw.Text('Image $index of $total', style: pw.TextStyle(font: font)),
-              pw.SizedBox(height: 10),
-              pw.Image(image, width: double.infinity, fit: pw.BoxFit.contain),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 12),
+
+              // ✅ Use an Expanded Flexible to make the image scale properly
+              pw.Expanded(
+                child: pw.Container(
+                  alignment: pw.Alignment.center,
+                  child: pw.Image(
+                    image,
+                    fit: pw.BoxFit.contain,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 12),
               if (inspector.isNotEmpty)
                 pw.Text('Inspector: $inspector', style: pw.TextStyle(font: font)),
               pw.Text('Taken: $dateTaken', style: pw.TextStyle(font: font)),
@@ -784,6 +802,12 @@ Future<Uint8List> _downloadImageBytes(String url) async {
     print('Error downloading image $url: $e');
     return Uint8List(0);
   }
+}
+
+Future<Uint8List> resizeImageBytes(Uint8List bytes, {int width = 1024}) async {
+  final img = img_lib.decodeImage(bytes);
+  final resized = img_lib.copyResize(img!, width: width);
+  return Uint8List.fromList(img_lib.encodeJpg(resized, quality: 85));
 }
 
 
