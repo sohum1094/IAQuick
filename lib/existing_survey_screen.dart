@@ -571,14 +571,12 @@ Future<File> createPhotoPdf(
     if (inspector.isEmpty) inspector = (user.email ?? '');
   }
 
-  // ✅ Group photos by room/building for numbering:
   final Map<String, List<PhotoMetadata>> byRoom = {};
   for (final p in photos) {
     final key = '${p.building}|${p.roomNumber}';
     byRoom.putIfAbsent(key, () => []).add(p);
   }
 
-  // ✅ Load a robust Unicode font:
   final ttf = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
   final font = pw.Font.ttf(ttf);
 
@@ -588,11 +586,6 @@ Future<File> createPhotoPdf(
     final index = list.indexOf(photo) + 1;
     final total = list.length;
 
-    // ✅ Download image bytes:
-    // final imageBytes = await _downloadImageBytes(photo.downloadUrl);
-
-
-    // ✅ Skip page if imageBytes are empty:
 
     final rawBytes = await _downloadImageBytes(photo.downloadUrl);
     if (rawBytes.isEmpty) continue;
@@ -600,7 +593,6 @@ Future<File> createPhotoPdf(
     final resizedBytes = await resizeImageBytes(rawBytes);
     final image = pw.MemoryImage(resizedBytes);
 
-    // ✅ Use robust timestamp:
     final dateTaken = photo.timestamp != null
         ? DateFormat('MM-dd-yyyy HH:mm').format(photo.timestamp!)
         : 'Unknown';
@@ -629,7 +621,7 @@ Future<File> createPhotoPdf(
               pw.Text('Image $index of $total', style: pw.TextStyle(font: font)),
               pw.SizedBox(height: 12),
 
-              // ✅ Use an Expanded Flexible to make the image scale properly
+              // Use an Expanded Flexible to make the image scale properly
               pw.Expanded(
                 child: pw.Container(
                   alignment: pw.Alignment.center,
@@ -651,7 +643,6 @@ Future<File> createPhotoPdf(
     );
   }
 
-  // ✅ Safe path:
   final directory = await getApplicationDocumentsDirectory();
   final filePath = path.join(
     directory.path,
