@@ -37,6 +37,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:iaqapp/main.dart';
 import 'package:path/path.dart' as path;
 import 'package:iaqapp/models/survey_info.dart';
+import 'package:iaqapp/new_survey/room_readings_overview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -70,18 +71,16 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        leading: BackButton(
-          color: Colors.white,
-          onPressed: () {
-            if (roomCount <= 0) {
-              Navigator.pop(context);
-              debugPrint('room count = $roomCount');
-            } else {
-              roomCount--;
-              debugPrint('room count decrement to = $roomCount');
-              formKey.currentState?.clearFields();
-            }
-            if (roomReadings.isNotEmpty) roomReadings.removeLast();
+        leading: IconButton(
+          icon: const Icon(Icons.list, color: Colors.white),
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const RoomReadingsOverview(),
+              ),
+            );
+            setState(() {});
           },
         ),
         title: const Text("Room Readings"),
@@ -271,6 +270,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
             ? "No issues were observed."
             : commentTextController.text,
         isOutdoor: isOutdoorReading,
+        images: List<File>.from(_imageFiles),
         timestamp: DateTime.now(),
       );
 

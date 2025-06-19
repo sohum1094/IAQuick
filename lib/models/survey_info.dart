@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'dart:io';
 
 class SurveyInfo {
   String id; // id is now a non-nullable String
@@ -141,6 +142,7 @@ class RoomReading {
   String comments;
   bool isOutdoor;
   DateTime timestamp;
+  List<File> images;
 
   RoomReading({
     this.id, // Optional id
@@ -158,8 +160,10 @@ class RoomReading {
     this.vocs,
     this.comments = "No issues were observed.",
     this.isOutdoor = false,
+    List<File>? images,
     DateTime? timestamp,
   })  : surveyID = surveyID ?? const Uuid().v4(), // Assign a new UUID if id is not provided
+        images = images ?? [],
         timestamp = timestamp ?? DateTime.now();
 
   RoomReading.fromMap(Map<String, dynamic> map)
@@ -178,7 +182,8 @@ class RoomReading {
         vocs = map['vocs']?.toDouble(),
         comments = map['comments'] ?? "No issues were observed.",
         isOutdoor = map['isOutdoor'] == 1 || map['isOutdoor'] == true,
-        timestamp = DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now();
+        timestamp = DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now(),
+        images = [];
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
