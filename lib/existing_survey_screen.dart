@@ -564,7 +564,7 @@ Future<File> createIAQExcelFile(
   final bytes = wb.encode();
   final filePath = path.join(
       directory.path,
-      '${surveyInfo.siteName.replaceAll(' ', '_')}-IAQ-${formatDate(surveyInfo.date)}.xlsx');
+      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_{ProjectNumber}_IAQ_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
   final file = File(filePath)..writeAsBytesSync(bytes!);
   return file;
 }
@@ -576,18 +576,7 @@ Future<File> createPhotoPdf(
   final pdf = pw.Document();
 
   // ✅ Use a robust inspector initials fallback:
-  final user = FirebaseAuth.instance.currentUser;
-  String inspector = '';
-  if (user != null) {
-    final name = (user.displayName ?? '').trim();
-    if (name.isNotEmpty) {
-      final parts = name.split(RegExp(r'\s+'));
-      final first = parts.isNotEmpty && parts[0].isNotEmpty ? parts[0][0] : '';
-      final last = parts.length > 1 && parts[1].isNotEmpty ? parts[1][0] : '';
-      inspector = '$first$last'.toUpperCase();
-    }
-    if (inspector.isEmpty) inspector = (user.email ?? '');
-  }
+  String inspector = getInspector();
 
   final Map<String, List<PhotoMetadata>> byRoom = {};
   for (final p in photos) {
@@ -664,7 +653,7 @@ Future<File> createPhotoPdf(
   final directory = await getApplicationDocumentsDirectory();
   final filePath = path.join(
     directory.path,
-    '${info.siteName.replaceAll(' ', '_')}-Photos-${formatDate(info.date)}.pdf',
+    'SPC_${info.siteName.replaceAll(' ', '_')}_{ProjectNumber}_Photos_${formatDate(info.date)}_$inspector.pdf',
   );
   final file = File(filePath);
   await file.writeAsBytes(await pdf.save());
@@ -759,7 +748,7 @@ Future<File> createVisualExcelFile(
   final bytes = wb.encode();
   final filePath = path.join(
       directory.path,
-      '${surveyInfo.siteName.replaceAll(' ', '_')}-Visual-${formatDate(surveyInfo.date)}.xlsx');
+      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_{projectNumber}_Visual_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
   final file = File(filePath)..writeAsBytesSync(bytes!);
   return file;
 }
@@ -820,6 +809,22 @@ Future<Uint8List> resizeImageBytes(Uint8List bytes, {int width = 1024}) async {
   final img = img_lib.decodeImage(bytes);
   final resized = img_lib.copyResize(img!, width: width);
   return Uint8List.fromList(img_lib.encodeJpg(resized, quality: 85));
+}
+
+String getInspector() {
+  final user = FirebaseAuth.instance.currentUser;
+  String inspector = '';
+  if (user != null) {
+    final name = (user.displayName ?? '').trim();
+    if (name.isNotEmpty) {
+      final parts = name.split(RegExp(r'\s+'));
+      final first = parts.isNotEmpty && parts[0].isNotEmpty ? parts[0][0] : '';
+      final last = parts.length > 1 && parts[1].isNotEmpty ? parts[1][0] : '';
+      inspector = '$first$last'.toUpperCase();
+    }
+    if (inspector.isEmpty) inspector = (user.email ?? '');
+  }
+  return inspector;
 }
 
 
