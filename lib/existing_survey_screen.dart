@@ -153,31 +153,40 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 barrierDismissible: false,
                 builder: (_) => const Center(child: CircularProgressIndicator()),
               );
-              List<RoomReading> roomReadings =
-                  await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel =
-                  await createIAQExcelFile(surveyInfo, roomReadings);
+              try {
+                List<RoomReading> roomReadings =
+                    await fetchRoomReadingsForSurvey(surveyInfo.id);
+                File iaqExcel =
+                    await createIAQExcelFile(surveyInfo, roomReadings);
 
-              List<VisualAssessment> visuals =
-                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
-              File visualExcel =
-                  await createVisualExcelFile(
-                      surveyInfo, visuals, roomReadings);
+                List<VisualAssessment> visuals =
+                    await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+                File visualExcel =
+                    await createVisualExcelFile(
+                        surveyInfo, visuals, roomReadings);
 
-              final report =
-                  await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File? photoPdf;
-              if (report.photos.isNotEmpty) {
-                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                final report =
+                    await SurveyService().fetchSurveyReport(surveyInfo.id);
+                File? photoPdf;
+                if (report.photos.isNotEmpty) {
+                  photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                }
+
+                List<String> attachments = [
+                  iaqExcel.path,
+                  visualExcel.path,
+                  if (photoPdf != null) photoPdf.path,
+                ];
+                await shareFiles(
+                    surveyInfo.siteName, surveyInfo.date, attachments);
+              } catch (e) {
+                // If something fails, log the error and continue
+                print('Error exporting survey: $e');
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
-
-              List<String> attachments = [
-                iaqExcel.path,
-                visualExcel.path,
-                if (photoPdf != null) photoPdf.path,
-              ];
-              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
-              Navigator.of(context).pop();
 
             },
             style: ElevatedButton.styleFrom(
@@ -259,31 +268,39 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 barrierDismissible: false,
                 builder: (_) => const Center(child: CircularProgressIndicator()),
               );
-              List<RoomReading> roomReadings =
-                  await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel =
-                  await createIAQExcelFile(surveyInfo, roomReadings);
+              try {
+                List<RoomReading> roomReadings =
+                    await fetchRoomReadingsForSurvey(surveyInfo.id);
+                File iaqExcel =
+                    await createIAQExcelFile(surveyInfo, roomReadings);
 
-              List<VisualAssessment> visuals =
-                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
-              File visualExcel =
-                  await createVisualExcelFile(
-                      surveyInfo, visuals, roomReadings);
+                List<VisualAssessment> visuals =
+                    await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+                File visualExcel =
+                    await createVisualExcelFile(
+                        surveyInfo, visuals, roomReadings);
 
-              final report =
-                  await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File? photoPdf;
-              if (report.photos.isNotEmpty) {
-                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                final report =
+                    await SurveyService().fetchSurveyReport(surveyInfo.id);
+                File? photoPdf;
+                if (report.photos.isNotEmpty) {
+                  photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                }
+
+                List<String> attachments = [
+                  iaqExcel.path,
+                  visualExcel.path,
+                  if (photoPdf != null) photoPdf.path,
+                ];
+                await shareFiles(
+                    surveyInfo.siteName, surveyInfo.date, attachments);
+              } catch (e) {
+                print('Error exporting survey: $e');
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
-
-              List<String> attachments = [
-                iaqExcel.path,
-                visualExcel.path,
-                if (photoPdf != null) photoPdf.path,
-              ];
-              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
-              Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
