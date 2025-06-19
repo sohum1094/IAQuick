@@ -144,7 +144,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   ];
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode temperatureFocusNode = FocusNode();
-  File? _imageFile;
+  List<File> _imageFiles = [];
   bool isOutdoorReading = false;
 
   @override
@@ -184,7 +184,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
     if (pickedImage != null) {
       setState(() {
-        _imageFile = File(pickedImage!.path);
+        _imageFiles.add(File(pickedImage.path));
       });
     }
   }
@@ -213,7 +213,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     commentTextController.clear();
     buildingDropdownKey.currentState?.reset();
     floorDropdownKey.currentState?.reset();
-    _imageFile = null;
+    _imageFiles.clear();
   }
 
   bool _formHasInput() {
@@ -227,7 +227,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         pm25TextController.text.isNotEmpty ||
         pm10TextController.text.isNotEmpty ||
         commentTextController.text.isNotEmpty ||
-        _imageFile != null;
+        _imageFiles.isNotEmpty;
   }
 
 
@@ -277,16 +277,18 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       // Add the roomReading to the list of room readings
       roomReadings.add(roomReading);
 
-      // Save the image for offline upload if one is selected
-      if (_imageFile != null) {
+      // Save images for offline upload if any are selected
+      if (_imageFiles.isNotEmpty) {
         final service = SurveyService();
-        await service.saveRoomImageOffline(
-          building: dropdownModel.building,
-          floor: dropdownModel.floor,
-          surveyId: widget.surveyInfo.id,
-          image: _imageFile!,
-          roomNumber: roomNumberTextController.text,
-        );
+        for (final img in _imageFiles) {
+          await service.saveRoomImageOffline(
+            building: dropdownModel.building,
+            floor: dropdownModel.floor,
+            surveyId: widget.surveyInfo.id,
+            image: img,
+            roomNumber: roomNumberTextController.text,
+          );
+        }
       }
     }
   }
@@ -748,27 +750,49 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   ),
                   ElevatedButton(
                     onPressed: isOutdoorReading ? null : _getImage,
-                    child: const Text('Pick an Image'),
+                    child: const Text('Add Photo'),
                   ),
-                  const SizedBox(
-                    height: 20,
-                    child: Text("Click image to delete."),
-                  ),
-                  GestureDetector(
-                    onTap: isOutdoorReading
-                        ? null
-                        : () {
-                            setState(() {
-                              _imageFile = null; // Remove the selected image
-                            });
-                          },
-                    child: _imageFile != null
-                        ? Image.file(
-                            _imageFile!,
-                            height: 100,
-                          )
-                        : const Text('No Image Selected'),
-                  ),
+                  const SizedBox(height: 20),
+                  if (_imageFiles.isNotEmpty)
+                    SizedBox(
+                      height: 110,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _imageFiles
+                            .reversed
+                            .take(3)
+                            .map(
+                              (file) => Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Stack(
+                                  children: [
+                                    Image.file(file, height: 100),
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _imageFiles.remove(file);
+                                          });
+                                        },
+                                        child: Container(
+                                          color: Colors.black54,
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -842,7 +866,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   await SurveyService().uploadPendingImages();
 
                   // Navigate to HomeScreen or another appropriate screen
-                  Navigator.of(context).pop();
+                  Navigator.of(context, rootNavigator: true).pop();
                   Navigator.pop(context);
                   Navigator.pop(context);
                   Navigator.push(
