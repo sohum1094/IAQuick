@@ -562,9 +562,10 @@ Future<File> createIAQExcelFile(
   }
 
   final bytes = wb.encode();
+  final sanitizedProject = sanitizeFileNamePart(surveyInfo.projectNumber);
   final filePath = path.join(
       directory.path,
-      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_{ProjectNumber}_IAQ_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
+      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_${sanitizedProject}_IAQ_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
   final file = File(filePath)..writeAsBytesSync(bytes!);
   return file;
 }
@@ -651,9 +652,10 @@ Future<File> createPhotoPdf(
   }
 
   final directory = await getApplicationDocumentsDirectory();
+  final sanitizedProject = sanitizeFileNamePart(info.projectNumber);
   final filePath = path.join(
     directory.path,
-    'SPC_${info.siteName.replaceAll(' ', '_')}_{ProjectNumber}_Photos_${formatDate(info.date)}_$inspector.pdf',
+    'SPC_${info.siteName.replaceAll(' ', '_')}_${sanitizedProject}_Photos_${formatDate(info.date)}_$inspector.pdf',
   );
   final file = File(filePath);
   await file.writeAsBytes(await pdf.save());
@@ -664,6 +666,7 @@ Future<File> createVisualExcelFile(
     SurveyInfo surveyInfo, List<VisualAssessment> visuals,
     [List<RoomReading>? roomReadings]) async {
   final directory = await getApplicationDocumentsDirectory();
+  final sanitizedProject = sanitizeFileNamePart(surveyInfo.projectNumber);
   final wb = Excel.createExcel();
   final sheet = wb['Visual'];
   wb.delete('Sheet1');
@@ -748,7 +751,7 @@ Future<File> createVisualExcelFile(
   final bytes = wb.encode();
   final filePath = path.join(
       directory.path,
-      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_{projectNumber}_Visual_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
+      'SPC_${surveyInfo.siteName.replaceAll(' ', '_')}_${sanitizedProject}_Visual_${formatDate(surveyInfo.date)}_${getInspector()}.xlsx');
   final file = File(filePath)..writeAsBytesSync(bytes!);
   return file;
 }
@@ -828,3 +831,7 @@ String getInspector() {
 }
 
 
+
+String sanitizeFileNamePart(String input) {
+  return input.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+}

@@ -90,6 +90,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
       key: _initialSurveyInfoKey,
       onSave: (values, form) async {
         if (values['siteName'].isEmpty ||
+            values['projectNumber'].isEmpty ||
             values['siteAddress'].isEmpty ||
             !form.validate()) {
           showDialog<String>(
@@ -112,6 +113,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
       },
       onSaved: (response, values, form) {
         if (values['siteName'].isNotEmpty &&
+            values['projectNumber'].isNotEmpty &&
             values['siteAddress'].isNotEmpty &&
             form.validate()) {
           Navigator.of(context).push(
@@ -132,6 +134,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
               child: Column(
                 children: [
                   siteNameTextFormField(context, model),
+                  projectNumberTextFormField(context, model),
                   addressTextFormField(
                       context, model, _addressController, _addressFocusNode),
                   DateTimePicker(model: model),
@@ -188,6 +191,33 @@ EasyTextFormField siteNameTextFormField(
     onSaved: (tempSiteName) {
       if (tempSiteName != null) {
         model.siteName = tempSiteName;
+      }
+    },
+  );
+}
+
+EasyTextFormField projectNumberTextFormField(
+    BuildContext context, SurveyInfo model) {
+  return EasyTextFormField(
+    initialValue: '',
+    name: 'projectNumber',
+    autovalidateMode: EasyAutovalidateMode.always,
+    validator: (value, [values]) {
+      if (value == null) {
+        return null;
+      } else if (value.isNotEmpty &&
+          !RegExp(r'^[a-zA-Z0-9 _-]+$').hasMatch(value)) {
+        return "Enter Correct Project #";
+      } else {
+        return null;
+      }
+    },
+    decoration: const InputDecoration(
+      labelText: 'Project #*',
+    ),
+    onSaved: (tempProjectNumber) {
+      if (tempProjectNumber != null) {
+        model.projectNumber = tempProjectNumber;
       }
     },
   );
