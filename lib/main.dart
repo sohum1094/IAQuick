@@ -82,6 +82,10 @@ class HomeScreen extends StatelessWidget {
     final authService = Provider.of<AuthService>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset('assets/IAQuick_icon.png'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -92,26 +96,31 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.blueGrey,
         centerTitle: true,
       ),
-      body: Center(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * .95,
-          height: MediaQuery.of(context).size.height * .5,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 3,
-                child: createNewSurveyButton(context),
-              ),
-              const Spacer(
-                flex: 1,
-              ),
-              Expanded(
-                flex: 3,
-                child: openExistingSurveyButton(context),
-              ),
-            ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.asset(
+              'assets/IAQuick_full_logo.png',
+              height: 100,
+            ),
           ),
-        ),
+          Expanded(
+            child: Center(
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * .95,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    createNewSurveyButton(context),
+                    const SizedBox(height: 20),
+                    openExistingSurveyButton(context),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
