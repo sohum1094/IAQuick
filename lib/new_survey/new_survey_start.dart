@@ -86,8 +86,6 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
 
   @override
   EasyForm build(BuildContext context) {
-    model.date = DateTime.now();
-
     return EasyForm(
       key: _initialSurveyInfoKey,
       onSave: (values, form) async {
@@ -255,15 +253,16 @@ class _DateTimePickerState extends State<DateTimePicker> {
 
   @override
   void initState() {
-    dateInput.text = '';
     super.initState();
+    final now = DateTime.now();
+    widget.model.date = now;
+    dateInput.text = DateFormat('MM-dd-yyyy').format(now);
   }
 
   @override
   Widget build(BuildContext context) {
     return EasyTextFormField(
       controller: dateInput,
-      initialValue: DateFormat('yMd_hmm').format(DateTime.now()),
       name: 'date',
       autovalidateMode: EasyAutovalidateMode.always,
       readOnly: true,
@@ -276,8 +275,16 @@ class _DateTimePickerState extends State<DateTimePicker> {
           lastDate: DateTime(2101),
         );
         if (pickedDate != null) {
-          // Update the model
-          widget.model.date = pickedDate;
+          // Preserve the selected date but attach the current time so
+          // report timestamps reflect the moment the survey was created.
+          final now = DateTime.now();
+          widget.model.date = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            now.hour,
+            now.minute,
+          );
           // Set the date in the controller
           dateInput.text = DateFormat('MM-dd-yyyy').format(pickedDate);
         }

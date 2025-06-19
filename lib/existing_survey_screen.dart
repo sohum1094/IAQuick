@@ -144,7 +144,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
   // Extract date
       return DataRow(cells: [
         DataCell(Text(surveyInfo.siteName),),
-        DataCell(Text(DateFormat('MM/dd hh:mm a').format(surveyInfo.date)),),
+        DataCell(Text(DateFormat('MM/dd hh:mm a').format(_withCurrentTimeIfMissing(surveyInfo.date))),),
         DataCell(
           ElevatedButton(
             onPressed: () async {
@@ -153,31 +153,40 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 barrierDismissible: false,
                 builder: (_) => const Center(child: CircularProgressIndicator()),
               );
-              List<RoomReading> roomReadings =
-                  await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel =
-                  await createIAQExcelFile(surveyInfo, roomReadings);
+              try {
+                List<RoomReading> roomReadings =
+                    await fetchRoomReadingsForSurvey(surveyInfo.id);
+                File iaqExcel =
+                    await createIAQExcelFile(surveyInfo, roomReadings);
 
-              List<VisualAssessment> visuals =
-                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
-              File visualExcel =
-                  await createVisualExcelFile(
-                      surveyInfo, visuals, roomReadings);
+                List<VisualAssessment> visuals =
+                    await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+                File visualExcel =
+                    await createVisualExcelFile(
+                        surveyInfo, visuals, roomReadings);
 
-              final report =
-                  await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File? photoPdf;
-              if (report.photos.isNotEmpty) {
-                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                final report =
+                    await SurveyService().fetchSurveyReport(surveyInfo.id);
+                File? photoPdf;
+                if (report.photos.isNotEmpty) {
+                  photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                }
+
+                List<String> attachments = [
+                  iaqExcel.path,
+                  visualExcel.path,
+                  if (photoPdf != null) photoPdf.path,
+                ];
+                await shareFiles(
+                    surveyInfo.siteName, surveyInfo.date, attachments);
+              } catch (e) {
+                // If something fails, log the error and continue
+                print('Error exporting survey: $e');
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
-
-              List<String> attachments = [
-                iaqExcel.path,
-                visualExcel.path,
-                if (photoPdf != null) photoPdf.path,
-              ];
-              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
-              Navigator.of(context).pop();
 
             },
             style: ElevatedButton.styleFrom(
@@ -249,7 +258,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           Text(surveyInfo.siteName), // Display site name
         ),
         DataCell(
-          Text(DateFormat('MM/dd hh:mm a').format(surveyInfo.date)), // Display date
+          Text(DateFormat('MM/dd hh:mm a').format(_withCurrentTimeIfMissing(surveyInfo.date))), // Display date
         ),
         DataCell(
           ElevatedButton(
@@ -259,31 +268,39 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 barrierDismissible: false,
                 builder: (_) => const Center(child: CircularProgressIndicator()),
               );
-              List<RoomReading> roomReadings =
-                  await fetchRoomReadingsForSurvey(surveyInfo.id);
-              File iaqExcel =
-                  await createIAQExcelFile(surveyInfo, roomReadings);
+              try {
+                List<RoomReading> roomReadings =
+                    await fetchRoomReadingsForSurvey(surveyInfo.id);
+                File iaqExcel =
+                    await createIAQExcelFile(surveyInfo, roomReadings);
 
-              List<VisualAssessment> visuals =
-                  await fetchVisualAssessmentsForSurvey(surveyInfo.id);
-              File visualExcel =
-                  await createVisualExcelFile(
-                      surveyInfo, visuals, roomReadings);
+                List<VisualAssessment> visuals =
+                    await fetchVisualAssessmentsForSurvey(surveyInfo.id);
+                File visualExcel =
+                    await createVisualExcelFile(
+                        surveyInfo, visuals, roomReadings);
 
-              final report =
-                  await SurveyService().fetchSurveyReport(surveyInfo.id);
-              File? photoPdf;
-              if (report.photos.isNotEmpty) {
-                photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                final report =
+                    await SurveyService().fetchSurveyReport(surveyInfo.id);
+                File? photoPdf;
+                if (report.photos.isNotEmpty) {
+                  photoPdf = await createPhotoPdf(surveyInfo, report.photos);
+                }
+
+                List<String> attachments = [
+                  iaqExcel.path,
+                  visualExcel.path,
+                  if (photoPdf != null) photoPdf.path,
+                ];
+                await shareFiles(
+                    surveyInfo.siteName, surveyInfo.date, attachments);
+              } catch (e) {
+                print('Error exporting survey: $e');
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               }
-
-              List<String> attachments = [
-                iaqExcel.path,
-                visualExcel.path,
-                if (photoPdf != null) photoPdf.path,
-              ];
-              shareFiles(surveyInfo.siteName, surveyInfo.date, attachments);
-              Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
@@ -394,7 +411,8 @@ Future<File> createIAQExcelFile(
 
   sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('${lastCol}2'));
   sheet.cell(CellIndex.indexByString('A2')).value =
-      TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
+      TextCellValue(
+          DateFormat('yyyy-MM-dd HH:mm').format(_withCurrentTimeIfMissing(surveyInfo.date)));
   sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
   sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('${lastCol}3'));
@@ -666,7 +684,8 @@ Future<File> createVisualExcelFile(
   sheet.cell(CellIndex.indexByString('A1')).cellStyle = headerStyle();
 
   sheet.merge(CellIndex.indexByString('A2'), CellIndex.indexByString('E2'));
-  sheet.cell(CellIndex.indexByString('A2')).value = TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(surveyInfo.date));
+  sheet.cell(CellIndex.indexByString('A2')).value = TextCellValue(
+      DateFormat('yyyy-MM-dd HH:mm').format(_withCurrentTimeIfMissing(surveyInfo.date)));
   sheet.cell(CellIndex.indexByString('A2')).cellStyle = subHeaderStyle();
 
   sheet.merge(CellIndex.indexByString('A3'), CellIndex.indexByString('E3'));
@@ -774,14 +793,16 @@ CellStyle columnHeaderStyle() => CellStyle(
       horizontalAlign: HorizontalAlign.Center,
     );
 
-String formatDate(DateTime date) {
-  // If the stored survey date lacks a time component, use the current
-  // time so that exported filenames remain unique.
+DateTime _withCurrentTimeIfMissing(DateTime date) {
   if (date.hour == 0 && date.minute == 0 && date.second == 0) {
     final now = DateTime.now();
-    date = DateTime(date.year, date.month, date.day, now.hour, now.minute);
+    return DateTime(date.year, date.month, date.day, now.hour, now.minute);
   }
-  return DateFormat('yyyyMMdd_HHmm').format(date);
+  return date;
+}
+
+String formatDate(DateTime date) {
+  return DateFormat('yyyyMMdd_HHmm').format(_withCurrentTimeIfMissing(date));
 }
 
 Future<Uint8List> _downloadImageBytes(String url) async {
