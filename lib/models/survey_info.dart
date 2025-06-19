@@ -4,6 +4,7 @@ import 'dart:io';
 class SurveyInfo {
   String id; // id is now a non-nullable String
   String siteName;
+  String projectNumber;
   DateTime date;
   String address;
   String occupancyType;
@@ -17,6 +18,7 @@ class SurveyInfo {
   SurveyInfo()
       : id = const Uuid().v4(), // Generate a new UUID
         siteName = "",
+        projectNumber = "",
         date = DateTime.parse("19700101"),
         address = "",
         occupancyType = "",
@@ -30,6 +32,7 @@ class SurveyInfo {
   SurveyInfo.parameterized({
     String? id, // Accept an existing ID as nullable
     required this.siteName,
+    this.projectNumber = '',
     required this.date,
     required this.address,
     required this.occupancyType,
@@ -44,6 +47,7 @@ class SurveyInfo {
     final Map<String,dynamic> data = {
       'id' : id,
       'siteName': siteName,
+      'projectNumber': projectNumber,
       'date': date.toIso8601String(),
       'address': address,
       'occupancyType': occupancyType,
@@ -59,6 +63,7 @@ class SurveyInfo {
   SurveyInfo.fromMap(Map<String, dynamic> map)
     : id = map['id'] ?? const Uuid().v4(), // Assign an existing ID or generate a new one
       siteName = map['siteName'] ?? "",
+      projectNumber = map['projectNumber'] ?? "",
       date = DateTime.tryParse(map['date']) ?? DateTime.parse("1970-01-01"),
       address = map['address'] ?? "",
       occupancyType = map['occupancyType'] ?? "",
