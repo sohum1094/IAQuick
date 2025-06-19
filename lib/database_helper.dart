@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -31,6 +31,7 @@ class DatabaseHelper {
     CREATE TABLE survey_info (
       ID TEXT PRIMARY KEY,
       siteName TEXT,
+      projectNumber TEXT,
       date TEXT,
       address TEXT,
       occupancyType TEXT,
@@ -72,6 +73,10 @@ class DatabaseHelper {
       await db.execute(
           "ALTER TABLE room_readings ADD COLUMN timestamp TEXT");
     }
+    if (oldVersion < 3) {
+      await db.execute(
+          "ALTER TABLE survey_info ADD COLUMN projectNumber TEXT");
+    }
   }
 
 
@@ -87,7 +92,7 @@ class DatabaseHelper {
     final db = await instance.database;
     final maps = await db.query(
       'survey_info',
-      columns: ['id', 'siteName', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
+      columns: ['id', 'siteName', 'projectNumber', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
       where: 'id = ?',
       whereArgs: [id],
     );
