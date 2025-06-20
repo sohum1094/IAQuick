@@ -35,5 +35,11 @@ class AuthService {
     return _auth.signInWithCredential(credential);
   }
 
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    // Sign out from Firebase as well as any linked Google account
+    await Future.wait([
+      _auth.signOut(),
+      _googleSignIn.signOut(),
+    ]);
+  }
 }
