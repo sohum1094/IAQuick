@@ -8,7 +8,13 @@ import 'dart:io';
 class EditRoomReading extends StatefulWidget {
   final int index;
   final RoomReading roomReading;
-  const EditRoomReading({super.key, required this.index, required this.roomReading});
+  final SurveyInfo surveyInfo;
+  const EditRoomReading({
+    super.key,
+    required this.index,
+    required this.roomReading,
+    required this.surveyInfo,
+  });
 
   @override
   State<EditRoomReading> createState() => _EditRoomReadingState();
@@ -156,31 +162,41 @@ class _EditRoomReadingState extends State<EditRoomReading> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(labelText: 'Relative Humidity'),
               ),
-              TextFormField(
-                controller: co2Ctrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'CO₂'),
-              ),
-              TextFormField(
-                controller: coCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'CO'),
-              ),
-              TextFormField(
-                controller: vocsCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'VOCs'),
-              ),
-              TextFormField(
-                controller: pm25Ctrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'PM2.5'),
-              ),
-              TextFormField(
-                controller: pm10Ctrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'PM10'),
-              ),
+              if (widget.surveyInfo.carbonDioxideReadings)
+                TextFormField(
+                  controller: co2Ctrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'CO₂'),
+                ),
+              if (widget.surveyInfo.carbonMonoxideReadings)
+                TextFormField(
+                  controller: coCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'CO'),
+                ),
+              if (widget.surveyInfo.vocs)
+                TextFormField(
+                  controller: vocsCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'VOCs'),
+                ),
+              if (widget.surveyInfo.pm25)
+                TextFormField(
+                  controller: pm25Ctrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'PM2.5'),
+                ),
+              if (widget.surveyInfo.pm10)
+                TextFormField(
+                  controller: pm10Ctrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'PM10'),
+                ),
               TextFormField(
                 controller: commentsCtrl,
                 decoration: const InputDecoration(labelText: 'Comments'),

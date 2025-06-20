@@ -4,7 +4,8 @@ import 'package:iaqapp/new_survey/room_readings.dart';
 import 'edit_room_reading.dart';
 
 class RoomReadingsOverview extends StatefulWidget {
-  const RoomReadingsOverview({super.key});
+  final SurveyInfo surveyInfo;
+  const RoomReadingsOverview({super.key, required this.surveyInfo});
 
   @override
   State<RoomReadingsOverview> createState() => _RoomReadingsOverviewState();
@@ -74,6 +75,7 @@ class _RoomReadingsOverviewState extends State<RoomReadingsOverview> {
                           builder: (_) => EditRoomReading(
                             index: listIndex,
                             roomReading: reading,
+                            surveyInfo: widget.surveyInfo,
                           ),
                         ),
                       );
