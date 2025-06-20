@@ -138,6 +138,7 @@ class HomeScreen extends StatelessWidget {
             child: Text(
               'Open Previous Survey',
               textScaleFactor: 1.5,
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ),

@@ -72,7 +72,7 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.list, color: Colors.white),
+          icon: const Icon(Icons.list, color: Colors.black),
           onPressed: () async {
             await Navigator.push(
               context,
@@ -885,6 +885,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   child: const Center(
                     child: Text(
                       "Finish Survey",
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
