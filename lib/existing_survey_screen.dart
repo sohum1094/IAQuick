@@ -787,8 +787,9 @@ CellStyle columnHeaderStyle() => CellStyle(
 
 DateTime _withCurrentTimeIfMissing(DateTime date) {
   if (date.hour == 0 && date.minute == 0 && date.second == 0) {
-    final now = DateTime.now();
-    return DateTime(date.year, date.month, date.day, now.hour, now.minute);
+    // If no time was recorded with the date, default to midnight. This ensures
+    // consistent timestamps across the UI and exported files.
+    return DateTime(date.year, date.month, date.day, 0, 0);
   }
   return date;
 }
