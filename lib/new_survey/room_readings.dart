@@ -77,7 +77,9 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const RoomReadingsOverview(),
+                builder: (_) => RoomReadingsOverview(
+                  surveyInfo: widget.surveyInfo,
+                ),
               ),
             );
             setState(() {});
