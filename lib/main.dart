@@ -89,7 +89,15 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => authService.signOut(),
+            onPressed: () async {
+              await authService.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const SignInScreen()),
+                  (route) => false,
+                );
+              }
+            },
           ),
         ],
         title: const Text('IAQuick', textScaleFactor: 1.1),
