@@ -13,6 +13,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
@@ -172,10 +173,13 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   photoPdf = await createPhotoPdf(surveyInfo, report.photos);
                 }
 
+                File? wordDoc = await generateWordReport(surveyInfo);
+
                 List<String> attachments = [
                   iaqExcel.path,
                   visualExcel.path,
                   if (photoPdf != null) photoPdf.path,
+                  if (wordDoc != null) wordDoc.path,
                 ];
                 await shareFiles(
                     surveyInfo.siteName, surveyInfo.date, attachments);
@@ -287,10 +291,13 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                   photoPdf = await createPhotoPdf(surveyInfo, report.photos);
                 }
 
+                File? wordDoc = await generateWordReport(surveyInfo);
+
                 List<String> attachments = [
                   iaqExcel.path,
                   visualExcel.path,
                   if (photoPdf != null) photoPdf.path,
+                  if (wordDoc != null) wordDoc.path,
                 ];
                 await shareFiles(
                     surveyInfo.siteName, surveyInfo.date, attachments);
@@ -835,4 +842,34 @@ String getInspector() {
 
 String sanitizeFileNamePart(String input) {
   return input.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+}
+
+Future<File?> generateWordReport(SurveyInfo info) async {
+  try {
+    final callable =
+        FirebaseFunctions.instance.httpsCallable('generateIAQReport');
+    final result = await callable.call({
+      'full_date': DateFormat('MMMM d, yyyy').format(info.date),
+      'short_date': DateFormat('M/d/yy').format(info.date),
+      'site_name': info.siteName,
+      'site_address': info.address,
+    });
+
+    final url = result.data['url'];
+    if (url == null || url.isEmpty) return null;
+
+    final ref = FirebaseStorage.instance.refFromURL(url);
+    final directory = await getApplicationDocumentsDirectory();
+    final sanitizedProject = sanitizeFileNamePart(info.projectNumber);
+    final filePath = path.join(
+      directory.path,
+      'SPC_${info.siteName.replaceAll(' ', '_')}_${sanitizedProject}_Report_${formatDate(info.date)}.docx',
+    );
+    final file = File(filePath);
+    await ref.writeToFile(file);
+    return file;
+  } catch (e) {
+    print('Error generating Word report: $e');
+    return null;
+  }
 }
