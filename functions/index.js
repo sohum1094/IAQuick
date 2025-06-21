@@ -35,7 +35,8 @@ exports.generateIAQReport = functions.https.onCall(async (data, context) => {
   console.log("Rendering with:", contextData);
 
   try {
-    doc.render(contextData);
+    doc.setData(contextData);
+    doc.render();
   } catch (err) {
     console.error("Template render failed:", err);
     throw new functions.https.HttpsError(
