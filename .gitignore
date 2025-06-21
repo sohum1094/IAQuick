@@ -10,6 +10,7 @@ linux/
 macos/
 windows/
 web/
+functions/node_modules/
 .env
 .flutter-plugins
 .flutter-plugins-dependencies

@@ -17,6 +17,9 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+
 
 
 
@@ -844,28 +847,36 @@ String sanitizeFileNamePart(String input) {
 
 Future<File?> generateWordReport(SurveyInfo info) async {
   try {
-    final callable =
-        FirebaseFunctions.instance.httpsCallable('generateIAQReport');
-    final result = await callable.call({
-      'full_date': DateFormat('MMMM d, yyyy').format(info.date),
+    final callable = FirebaseFunctions.instanceFor(region: 'us-central1').httpsCallable('generateIAQReport');
+    final payload = {
+      'full_date':  DateFormat('MMMM d, yyyy').format(info.date),
       'short_date': DateFormat('M/d/yy').format(info.date),
-      'site_name': info.siteName,
+      'site_name':  info.siteName,
       'site_address': info.address,
-    });
+    };
+    print("📤 Sending to generateIAQReport: $payload");
 
-    final url = result.data['url'];
+    final result = await callable.call(payload);
+
+
+    final url = result.data['url'] as String?;
     if (url == null || url.isEmpty) return null;
 
-    final ref = FirebaseStorage.instance.refFromURL(url);
-    final directory = await getApplicationDocumentsDirectory();
-    final sanitizedProject = sanitizeFileNamePart(info.projectNumber);
-    final filePath = path.join(
-      directory.path,
-      'SPC_${info.siteName.replaceAll(' ', '_')}_${sanitizedProject}_Report_${formatDate(info.date)}.docx',
-    );
-    final file = File(filePath);
-    await ref.writeToFile(file);
+    // download via http, not FirebaseStorage
+    final resp = await http.get(Uri.parse(url));
+    if (resp.statusCode != 200) {
+      throw Exception('Download failed: ${resp.statusCode}');
+    }
+
+    final dir = await getApplicationDocumentsDirectory();
+    final safeProject = sanitizeFileNamePart(info.projectNumber);
+    final filename = 'SPC_${info.siteName.replaceAll(' ', '_')}_'
+        '${safeProject}_Report_${formatDate(info.date)}.docx';
+    final file = File(p.join(dir.path, filename));
+
+    await file.writeAsBytes(resp.bodyBytes);
     return file;
+
   } catch (e) {
     print('Error generating Word report: $e');
     return null;
