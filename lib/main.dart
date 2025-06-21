@@ -82,10 +82,10 @@ class HomeScreen extends StatelessWidget {
     final authService = Provider.of<AuthService>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/IAQuick_icon.png'),
-        ),
+        // leading: Padding(
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Image.asset('assets/IAQuick_icon.png'),
+        // ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -100,17 +100,17 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         ],
-        title: const Text('IAQuick', textScaleFactor: 1.1),
-        backgroundColor: Colors.blueGrey,
+        // title: const Text('IAQuick', textScaleFactor: 1.1),
+        backgroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0,32,16,0),
             child: Image.asset(
               'assets/IAQuick_full_logo.png',
-              height: 100,
+              height: 200,
             ),
           ),
           Expanded(
@@ -129,7 +129,9 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+        
       ),
+      backgroundColor: Colors.white,
     );
   }
 
@@ -149,7 +151,7 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Center(
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * .12,
+          height: 75,
           width: MediaQuery.of(context).size.width * .7,
           child: const Center(
             child: Text(
@@ -179,7 +181,7 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Center(
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * .12,
+          height: 75,
           width: MediaQuery.of(context).size.width * .7,
           child: const Center(
             child: Text(
