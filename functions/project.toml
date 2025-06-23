@@ -1,0 +1,9 @@
+# project.toml
+[[build.env]]
+name = "GOOGLE_FUNCTION_TARGET"
+value = "generateIAQReport"
+
+[[build.env]]
+name = "GOOGLE_FUNCTION_SIGNATURE_TYPE"
+value = "http"
+

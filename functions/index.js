@@ -6,11 +6,17 @@ const path         = require("path");
 const os           = require("os");
 const fs           = require("fs");
 
-admin.initializeApp();                     // ← use the Admin SDK
+admin.initializeApp({
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+});                     // ← use the Admin SDK
 const bucket = admin.storage().bucket();   // ← default bucket (no hard-coded name!)
 
-exports.generateIAQReport = functions.https.onCall(async (data, context) => {
-  // 1) download your template
+exports.generateIAQReport = functions.https.onRequest(async (req, res) => {
+  if (req.method === 'GET') {
+    return res.status(200).send('generateIAQReport is healthy');
+  }
+  const data = req.body;
+
   console.log("🔥 generateIAQReport invoked with data:", data);
 
   const templatePath = "resources/IAQ_Assessment Report_Template.docx";
@@ -61,5 +67,5 @@ exports.generateIAQReport = functions.https.onCall(async (data, context) => {
     expires: Date.now() + 1000 * 60 * 10,  // 10 minutes
   });
 
-  return { url };
+  res.json({ url });
 });
