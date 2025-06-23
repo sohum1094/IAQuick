@@ -34,6 +34,22 @@ import 'package:intl/intl.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:iaqapp/api_keys.dart';
 import 'dart:io' show Platform;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+String formatSiteName(String input) {
+  final words = input.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+  final formatted = words.map((word) {
+    final lower = word.toLowerCase();
+    if (lower == 'o' || lower == 'o.') {
+      return 'O.';
+    }
+    final first = word[0].toUpperCase();
+    final rest = word.length > 1 ? word.substring(1).toLowerCase() : '';
+    return '$first$rest';
+  }).join(' ');
+  return formatted;
+}
 
 class NewSurveyStart extends StatelessWidget {
   const NewSurveyStart({super.key});
@@ -190,7 +206,7 @@ EasyTextFormField siteNameTextFormField(
     ),
     onSaved: (tempSiteName) {
       if (tempSiteName != null) {
-        model.siteName = tempSiteName;
+        model.siteName = formatSiteName(tempSiteName);
       }
     },
   );
@@ -254,13 +270,28 @@ EasyTextFormField addressTextFormField(
         googleAPIKey: apiKey,
         debounceTime: 800,
         isLatLngRequired: false,
-        itemClick: (prediction) {
-          final description = prediction.description ?? '';
-          controller.text = description;
+        itemClick: (prediction) async {
+          String address = prediction.description ?? '';
+          final placeId = prediction.placeId;
+          if (placeId != null && placeId.isNotEmpty) {
+            final url =
+                'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=formatted_address&key=$apiKey';
+            try {
+              final resp = await http.get(Uri.parse(url));
+              if (resp.statusCode == 200) {
+                final data = json.decode(resp.body);
+                final formatted = data['result']?['formatted_address'];
+                if (formatted is String && formatted.isNotEmpty) {
+                  address = formatted.replaceAll(RegExp(r',?\\s*USA\$'), '');
+                }
+              }
+            } catch (_) {}
+          }
+          controller.text = address;
           controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: description.length),
+            TextPosition(offset: address.length),
           );
-          onChanged(description);
+          onChanged(address);
         },
         inputDecoration: const InputDecoration(
           labelText: 'Street Address*',
