@@ -13,12 +13,17 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+
+/// Base URL for the Google Cloud Function that generates Word reports.
+/// Update this to match the deployed function endpoint.
+const String kGenerateIaqReportUrl =
+    'https://us-central1-your-project.cloudfunctions.net/generate-iaq-report';
 
 
 
@@ -847,25 +852,32 @@ String sanitizeFileNamePart(String input) {
 
 Future<File?> generateWordReport(SurveyInfo info) async {
   try {
-    final callable = FirebaseFunctions.instanceFor(region: 'us-central1').httpsCallable('generateIAQReport');
     final payload = {
-      'full_date':  DateFormat('MMMM d, yyyy').format(info.date),
+      'full_date': DateFormat('MMMM d, yyyy').format(info.date),
       'short_date': DateFormat('M/d/yy').format(info.date),
-      'site_name':  info.siteName,
+      'site_name': info.siteName,
       'site_address': info.address,
     };
-    print("📤 Sending to generateIAQReport: $payload");
+    print('📤 Sending to generate-iaq-report: $payload');
 
-    final result = await callable.call(payload);
+    final resp = await http.post(
+      Uri.parse(kGenerateIaqReportUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
 
+    if (resp.statusCode != 200) {
+      throw Exception('GCF call failed: ${resp.statusCode}');
+    }
 
-    final url = result.data['url'] as String?;
+    final Map<String, dynamic> result = jsonDecode(resp.body);
+    final url = result['url'] as String?;
     if (url == null || url.isEmpty) return null;
 
-    // download via http, not FirebaseStorage
-    final resp = await http.get(Uri.parse(url));
-    if (resp.statusCode != 200) {
-      throw Exception('Download failed: ${resp.statusCode}');
+    // download via http, not Firebase Storage
+    final fileResp = await http.get(Uri.parse(url));
+    if (fileResp.statusCode != 200) {
+      throw Exception('Download failed: ${fileResp.statusCode}');
     }
 
     final dir = await getApplicationDocumentsDirectory();
@@ -874,7 +886,7 @@ Future<File?> generateWordReport(SurveyInfo info) async {
         '${safeProject}_Report_${formatDate(info.date)}.docx';
     final file = File(p.join(dir.path, filename));
 
-    await file.writeAsBytes(resp.bodyBytes);
+    await file.writeAsBytes(fileResp.bodyBytes);
     return file;
 
   } catch (e) {
