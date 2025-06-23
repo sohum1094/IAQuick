@@ -40,10 +40,6 @@ import 'dart:convert';
 String formatSiteName(String input) {
   final words = input.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
   final formatted = words.map((word) {
-    final lower = word.toLowerCase();
-    if (lower == 'o' || lower == 'o.') {
-      return 'O.';
-    }
     final first = word[0].toUpperCase();
     final rest = word.length > 1 ? word.substring(1).toLowerCase() : '';
     return '$first$rest';
