@@ -19,11 +19,12 @@ import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+
+final env = dotenv.env;
 /// Base URL for the Google Cloud Function that generates Word reports.
 /// Update this to match the deployed function endpoint.
-const String kGenerateIaqReportUrl =
-    'https://us-central1-your-project.cloudfunctions.net/generate-iaq-report';
 
 
 
@@ -861,7 +862,7 @@ Future<File?> generateWordReport(SurveyInfo info) async {
     print('📤 Sending to generate-iaq-report: $payload');
 
     final resp = await http.post(
-      Uri.parse(kGenerateIaqReportUrl),
+      Uri.parse(dotenv.env['GENERATE_IAQ_REPORT_URL'] ?? ''),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );

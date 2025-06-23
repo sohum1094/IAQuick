@@ -10,6 +10,7 @@ import 'existing_survey_screen.dart';
 import 'new_survey/new_survey_start.dart';
 import 'firebase_options.dart';
 import 'survey_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final SurveyService surveyService = SurveyService();
 
@@ -27,6 +28,8 @@ void main() async {
     // appleProvider: AppleProvider.debug,
     // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
   );
+
+  await dotenv.load(fileName: ".env");
 
   runApp(
     Provider<AuthService>(
