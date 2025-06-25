@@ -3,6 +3,7 @@ import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:iaqapp/utils.dart';
 import 'dart:io';
 
 class EditRoomReading extends StatefulWidget {
@@ -103,13 +104,25 @@ class _EditRoomReadingState extends State<EditRoomReading> {
       r.floorNumber = floorCtrl.text;
       r.roomNumber = roomCtrl.text;
       r.primaryUse = useCtrl.text;
-      r.temperature = double.tryParse(tempCtrl.text) ?? r.temperature;
-      r.relativeHumidity = double.tryParse(humidityCtrl.text) ?? r.relativeHumidity;
-      r.co2 = co2Ctrl.text.isNotEmpty ? double.tryParse(co2Ctrl.text) : null;
-      r.co = coCtrl.text.isNotEmpty ? double.tryParse(coCtrl.text) : null;
-      r.vocs = vocsCtrl.text.isNotEmpty ? double.tryParse(vocsCtrl.text) : null;
-      r.pm25 = pm25Ctrl.text.isNotEmpty ? double.tryParse(pm25Ctrl.text) : null;
-      r.pm10 = pm10Ctrl.text.isNotEmpty ? double.tryParse(pm10Ctrl.text) : null;
+      r.temperature =
+          parseFlexibleDouble(tempCtrl.text) ?? r.temperature;
+      r.relativeHumidity =
+          parseFlexibleDouble(humidityCtrl.text) ?? r.relativeHumidity;
+      r.co2 = co2Ctrl.text.isNotEmpty
+          ? parseFlexibleDouble(co2Ctrl.text)
+          : null;
+      r.co = coCtrl.text.isNotEmpty
+          ? parseFlexibleDouble(coCtrl.text)
+          : null;
+      r.vocs = vocsCtrl.text.isNotEmpty
+          ? parseFlexibleDouble(vocsCtrl.text)
+          : null;
+      r.pm25 = pm25Ctrl.text.isNotEmpty
+          ? parseFlexibleDouble(pm25Ctrl.text)
+          : null;
+      r.pm10 = pm10Ctrl.text.isNotEmpty
+          ? parseFlexibleDouble(pm10Ctrl.text)
+          : null;
       r.comments = commentsCtrl.text;
       r.images = List<File>.from(_imageFiles);
       roomReadings[widget.index] = r;
