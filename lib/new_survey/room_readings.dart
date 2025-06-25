@@ -128,6 +128,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       GlobalKey<FormFieldState<String>>();
   final GlobalKey<FormFieldState<String>> floorDropdownKey =
       GlobalKey<FormFieldState<String>>();
+  double? firstOutdoorCO2;
 
   List<String> autofillPrimaryUse = [
     'Classroom',
@@ -192,7 +193,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   void validateTemperatureAndShowDialog() {
-    if (temperatureFocusNode.hasFocus) {
+    if (!isOutdoorReading && temperatureFocusNode.hasFocus) {
       final temperatureValue = temperatureTextController.text;
       if (temperatureValue.isNotEmpty) {
         final temperature = parseFlexibleDouble(temperatureValue);
@@ -281,6 +282,11 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
       // Add the roomReading to the list of room readings
       roomReadings.add(roomReading);
+
+      if (roomReading.isOutdoor && roomReading.co2 != null &&
+          firstOutdoorCO2 == null) {
+        firstOutdoorCO2 = roomReading.co2;
+      }
 
       // Save images for offline upload if any are selected
       if (_imageFiles.isNotEmpty) {
@@ -521,7 +527,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           onEditingComplete: () {
                             bool seen = false;
 
-                            if (!seen &&
+                            if (!isOutdoorReading &&
+                                !seen &&
                                 (parseFlexibleDouble(
                                         humiditiyTextController.text) ??
                                     double.negativeInfinity) >
@@ -534,7 +541,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           onChanged: (value) {
                             bool seen = false;
 
-                            if (!seen &&
+                            if (!isOutdoorReading &&
+                                !seen &&
                                 (parseFlexibleDouble(value) ??
                                         double.negativeInfinity) >
                                     65) {
@@ -608,10 +616,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       onChanged: (value) {
                         bool seen = false;
 
-                        if (!seen &&
-                            (parseFlexibleDouble(value) ??
-                                    double.negativeInfinity) >
-                                1100) {
+                        final co2Value =
+                            parseFlexibleDouble(value) ?? double.negativeInfinity;
+                        final threshold = firstOutdoorCO2 != null
+                            ? firstOutdoorCO2! + 700
+                            : 1100;
+
+                        if (!seen && co2Value > threshold) {
                           seen = true;
                           _showConfirmValueDialog(context, 'Carbon Dioxide');
                         }
@@ -644,7 +655,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (!seen &&
                             (parseFlexibleDouble(monoxTextController.text) ??
                                     double.negativeInfinity) >
-                                10) {
+                                9) {
                           seen = true;
                           _showConfirmValueDialog(context, 'Carbon Monoxide');
                         }
@@ -678,7 +689,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (!seen &&
                             (parseFlexibleDouble(vocsTextController.text) ??
                                     double.negativeInfinity) >
-                                3.0) {
+                                0.5) {
                           seen = true;
                           _showConfirmValueDialog(context, 'VOCs');
                         }
@@ -711,7 +722,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         if (!seen &&
                             (parseFlexibleDouble(pm25TextController.text) ??
                                     double.negativeInfinity) >
-                                35) {
+                                0.035) {
                           seen = true;
                           _showConfirmValueDialog(context, 'PM 2.5');
                         }
