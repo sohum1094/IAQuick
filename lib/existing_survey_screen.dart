@@ -15,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:math';
 import 'dart:convert';
+import 'dart:collection';
 import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
 import 'package:http/http.dart' as http;
@@ -91,6 +92,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         ],
       ),
     );
+    }
   }
 
   Widget _recentFilesList() {
@@ -587,7 +589,9 @@ Future<File> createPhotoPdf(
   // ✅ Use a robust inspector initials fallback:
   String inspector = getInspector();
 
-  final Map<String, List<PhotoMetadata>> byRoom = {};
+  // Use a LinkedHashMap so that rooms remain in the order
+  // that the photos were originally collected.
+  final Map<String, List<PhotoMetadata>> byRoom = LinkedHashMap();
   for (final p in photos) {
     final key = '${p.building}|${p.roomNumber}';
     byRoom.putIfAbsent(key, () => []).add(p);
@@ -596,11 +600,15 @@ Future<File> createPhotoPdf(
   final ttf = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
   final font = pw.Font.ttf(ttf);
 
-  for (final photo in photos) {
-    final key = '${photo.building}|${photo.roomNumber}';
-    final list = byRoom[key]!;
-    final index = list.indexOf(photo) + 1;
-    final total = list.length;
+  // Iterate rooms in insertion order and emit all photos for
+  // each room sequentially so the generated PDF mirrors the
+  // collection sequence.
+  for (final room in byRoom.entries) {
+    final photosInRoom = room.value;
+    final total = photosInRoom.length;
+    for (var i = 0; i < photosInRoom.length; i++) {
+      final photo = photosInRoom[i];
+      final index = i + 1;
 
 
     final rawBytes = await _downloadImageBytes(photo.downloadUrl);
@@ -657,6 +665,7 @@ Future<File> createPhotoPdf(
         },
       ),
     );
+    }
   }
 
   final directory = await getApplicationDocumentsDirectory();
