@@ -768,7 +768,6 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     ),
                   TextFormField(
                     controller: commentTextController,
-                    enabled: !isOutdoorReading,
                     decoration: const InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         labelText: "Comments",
@@ -781,7 +780,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     height: 20,
                   ),
                   ElevatedButton(
-                    onPressed: isOutdoorReading ? null : _getImage,
+                    onPressed: _getImage,
                     child: const Text('Add Photo'),
                   ),
                   const SizedBox(height: 20),
