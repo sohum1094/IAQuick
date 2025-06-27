@@ -398,6 +398,15 @@ Future<File> createIAQExcelFile(
   if (surveyInfo.pm10) {
     optionalHeaders.add('PM10 (mg/m³)');
   }
+  if (surveyInfo.no2) {
+    optionalHeaders.add('NO2 (ppm)');
+  }
+  if (surveyInfo.so2) {
+    optionalHeaders.add('SO2 (ppm)');
+  }
+  if (surveyInfo.no) {
+    optionalHeaders.add('NO (ppm)');
+  }
   final headers = [...baseHeaders, ...optionalHeaders];
 
   String columnLetter(int index) {
@@ -489,6 +498,21 @@ Future<File> createIAQExcelFile(
     decimals.add(3);
     numberFormats.add(CustomNumericNumFormat(formatCode:'0.000'));
   }
+  if (surveyInfo.no2) {
+    valueAccessors.add((RoomReading r) => r.no2!);
+    decimals.add(2);
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.00'));
+  }
+  if (surveyInfo.so2) {
+    valueAccessors.add((RoomReading r) => r.so2!);
+    decimals.add(2);
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.00'));
+  }
+  if (surveyInfo.no) {
+    valueAccessors.add((RoomReading r) => r.no!);
+    decimals.add(2);
+    numberFormats.add(CustomNumericNumFormat(formatCode:'0.00'));
+  }
 
   final numericDecimals = decimals.sublist(4);
   final numericFormats = numberFormats.sublist(4);
@@ -541,6 +565,18 @@ Future<File> createIAQExcelFile(
   if (surveyInfo.pm10) {
     summaryLists
         .add(indoor.where((r) => r.pm10 != null).map((r) => r.pm10!).toList());
+  }
+  if (surveyInfo.no2) {
+    summaryLists
+        .add(indoor.where((r) => r.no2 != null).map((r) => r.no2!).toList());
+  }
+  if (surveyInfo.so2) {
+    summaryLists
+        .add(indoor.where((r) => r.so2 != null).map((r) => r.so2!).toList());
+  }
+  if (surveyInfo.no) {
+    summaryLists
+        .add(indoor.where((r) => r.no != null).map((r) => r.no!).toList());
   }
 
   final summary = wb['Summary'];

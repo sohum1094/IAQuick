@@ -122,6 +122,9 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
         model.vocs = _checkboxesKey.currentState!.readingsSwitches['VOCs']!;
         model.pm25 = _checkboxesKey.currentState!.readingsSwitches['PM2.5']!;
         model.pm10 = _checkboxesKey.currentState!.readingsSwitches['PM10']!;
+        model.no2 = _checkboxesKey.currentState!.readingsSwitches['NO2']!;
+        model.so2 = _checkboxesKey.currentState!.readingsSwitches['SO2']!;
+        model.no = _checkboxesKey.currentState!.readingsSwitches['NO']!;
       },
       onSaved: (response, values, form) {
         if (values['siteName'].isNotEmpty &&
@@ -446,6 +449,9 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
     'VOCs': false,
     'PM2.5': false,
     'PM10': false,
+    'NO2': false,
+    'SO2': false,
+    'NO': false,
   };
 
   @override
@@ -476,6 +482,9 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
                     checkboxTemplate(context, 'VOCs'),
                     checkboxTemplate(context, 'PM2.5'),
                     checkboxTemplate(context, 'PM10'),
+                    checkboxTemplate(context, 'NO2'),
+                    checkboxTemplate(context, 'SO2'),
+                    checkboxTemplate(context, 'NO'),
                   ],
                 ),
               ),

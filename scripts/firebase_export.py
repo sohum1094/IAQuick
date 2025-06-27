@@ -87,7 +87,7 @@ def export_iaq(header, rooms, output_dir, template_path='assets/IAQ_template_v2.
     if first_outdoor:
         rooms.remove(first_outdoor)
         rooms.insert(0, first_outdoor)
-    stats = {'temp': [], 'rh': [], 'co2': [], 'pm25': []}
+    stats = {'temp': [], 'rh': [], 'co2': [], 'pm25': [], 'no2': [], 'so2': [], 'no': [], 'co': [], 'pm10': [], 'vocs': []}
     for i, r in enumerate(rooms, start=0):
         row_idx = template_idx + i
         copy_row_style(ws, template_idx, row_idx)
@@ -99,10 +99,22 @@ def export_iaq(header, rooms, output_dir, template_path='assets/IAQ_template_v2.
         rh = r.get('relativeHumidity') or r.get('relativeHumidityPct')
         co2 = r.get('co2') or r.get('co2ppm')
         pm25 = r.get('pm25') or r.get('pm25mgm3')
+        pm10 = r.get('pm10')
+        vocs = r.get('vocs')
+        no2 = r.get('no2')
+        so2 = r.get('so2')
+        no = r.get('no')
+        co = r.get('co')
         ws.cell(row=row_idx, column=5, value=t)
         ws.cell(row=row_idx, column=6, value=rh)
         ws.cell(row=row_idx, column=7, value=co2)
         ws.cell(row=row_idx, column=8, value=pm25)
+        ws.cell(row=row_idx, column=9, value=pm10)
+        ws.cell(row=row_idx, column=10, value=vocs)
+        ws.cell(row=row_idx, column=11, value=no2)
+        ws.cell(row=row_idx, column=12, value=so2)
+        ws.cell(row=row_idx, column=13, value=no)
+        ws.cell(row=row_idx, column=14, value=co)
         if t is not None:
             stats['temp'].append(t)
         if rh is not None:
@@ -111,6 +123,18 @@ def export_iaq(header, rooms, output_dir, template_path='assets/IAQ_template_v2.
             stats['co2'].append(co2)
         if pm25 is not None:
             stats['pm25'].append(pm25)
+        if pm10 is not None:
+            stats['pm10'].append(pm10)
+        if vocs is not None:
+            stats['vocs'].append(vocs)
+        if no2 is not None:
+            stats['no2'].append(no2)
+        if so2 is not None:
+            stats['so2'].append(so2)
+        if no is not None:
+            stats['no'].append(no)
+        if co is not None:
+            stats['co'].append(co)
 
     # min & max sheet
     mm = wb.create_sheet('Min&Max') if 'Min&Max' not in wb.sheetnames else wb['Min&Max']
@@ -126,6 +150,12 @@ def export_iaq(header, rooms, output_dir, template_path='assets/IAQ_template_v2.
     write_stat(3, 'Relative Humidity (%)', stats['rh'])
     write_stat(4, 'CO2 (ppm)', stats['co2'])
     write_stat(5, 'PM2.5 (ug/m3)', stats['pm25'])
+    write_stat(6, 'PM10 (ug/m3)', stats['pm10'])
+    write_stat(7, 'VOCs', stats['vocs'])
+    write_stat(8, 'NO2 (ppm)', stats['no2'])
+    write_stat(9, 'SO2 (ppm)', stats['so2'])
+    write_stat(10, 'NO (ppm)', stats['no'])
+    write_stat(11, 'CO (ppm)', stats['co'])
 
     os.makedirs(output_dir, exist_ok=True)
     out_path = os.path.join(output_dir, f"{site_name.replace(' ', '_')}_IAQ_{date.strftime('%Y%m%d')}.xlsx")

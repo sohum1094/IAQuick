@@ -13,6 +13,9 @@ class SurveyInfo {
   bool vocs;
   bool pm25;
   bool pm10;
+  bool no2;
+  bool so2;
+  bool no;
 
   // Default constructor
   SurveyInfo()
@@ -26,7 +29,10 @@ class SurveyInfo {
         carbonMonoxideReadings = false,
         vocs = false,
         pm25 = false,
-        pm10 = false;
+        pm10 = false,
+        no2 = false,
+        so2 = false,
+        no = false;
 
   // Parameterized constructor
   SurveyInfo.parameterized({
@@ -41,6 +47,9 @@ class SurveyInfo {
     this.vocs = false,
     this.pm25 = false,
     this.pm10 = false,
+    this.no2 = false,
+    this.so2 = false,
+    this.no = false,
   }) : id = id ?? const Uuid().v4();
 
   Map<String, dynamic> toJson() {
@@ -56,6 +65,9 @@ class SurveyInfo {
       'vocs': vocs ? 1 : 0,
       'pm25': pm25 ? 1 : 0,
       'pm10': pm10 ? 1 : 0,
+      'no2': no2 ? 1 : 0,
+      'so2': so2 ? 1 : 0,
+      'no': no ? 1 : 0,
     };
     return data;
   }
@@ -71,7 +83,10 @@ class SurveyInfo {
       carbonMonoxideReadings = map['carbonMonoxideReadings'] == 1,
       vocs = map['vocs'] == 1,
       pm25 = map['pm25'] == 1,
-      pm10 = map['pm10'] == 1;
+      pm10 = map['pm10'] == 1,
+      no2 = map['no2'] == 1,
+      so2 = map['so2'] == 1,
+      no = map['no'] == 1;
 }
 
 class OutdoorReadings {
@@ -83,6 +98,9 @@ class OutdoorReadings {
   double? pm25; // nullable
   double? pm10; // nullable
   double? vocs; // nullable
+  double? no2; // nullable
+  double? so2; // nullable
+  double? no; // nullable
   DateTime timestamp;
 
   OutdoorReadings({
@@ -163,6 +181,9 @@ class RoomReading {
     this.pm25,
     this.pm10,
     this.vocs,
+    this.no2,
+    this.so2,
+    this.no,
     this.comments = "No issues were observed.",
     this.isOutdoor = false,
     List<File>? images,
@@ -185,6 +206,9 @@ class RoomReading {
         pm25 = map['pm25']?.toDouble(),
         pm10 = map['pm10']?.toDouble(),
         vocs = map['vocs']?.toDouble(),
+        no2 = map['no2']?.toDouble(),
+        so2 = map['so2']?.toDouble(),
+        no = map['no']?.toDouble(),
         comments = map['comments'] ?? "No issues were observed.",
         isOutdoor = map['isOutdoor'] == 1 || map['isOutdoor'] == true,
         timestamp = DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now(),
@@ -204,6 +228,9 @@ class RoomReading {
       'pm25': pm25,
       'pm10': pm10,
       'vocs': vocs,
+      'no2': no2,
+      'so2': so2,
+      'no': no,
       'comments': comments,
       'isOutdoor': isOutdoor ? 1 : 0,
       'timestamp': timestamp.toIso8601String(),
