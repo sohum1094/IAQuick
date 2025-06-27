@@ -34,6 +34,9 @@ class _EditRoomReadingState extends State<EditRoomReading> {
   late final TextEditingController vocsCtrl;
   late final TextEditingController pm25Ctrl;
   late final TextEditingController pm10Ctrl;
+  late final TextEditingController no2Ctrl;
+  late final TextEditingController so2Ctrl;
+  late final TextEditingController noCtrl2;
   late final TextEditingController commentsCtrl;
   List<File> _imageFiles = [];
 
@@ -52,6 +55,9 @@ class _EditRoomReadingState extends State<EditRoomReading> {
     vocsCtrl = TextEditingController(text: r.vocs?.toString() ?? '');
     pm25Ctrl = TextEditingController(text: r.pm25?.toString() ?? '');
     pm10Ctrl = TextEditingController(text: r.pm10?.toString() ?? '');
+    no2Ctrl = TextEditingController(text: r.no2?.toString() ?? '');
+    so2Ctrl = TextEditingController(text: r.so2?.toString() ?? '');
+    noCtrl2 = TextEditingController(text: r.no?.toString() ?? '');
     commentsCtrl = TextEditingController(text: r.comments);
     _imageFiles = List<File>.from(r.images);
   }
@@ -69,6 +75,9 @@ class _EditRoomReadingState extends State<EditRoomReading> {
     vocsCtrl.dispose();
     pm25Ctrl.dispose();
     pm10Ctrl.dispose();
+    no2Ctrl.dispose();
+    so2Ctrl.dispose();
+    noCtrl2.dispose();
     commentsCtrl.dispose();
     super.dispose();
   }
@@ -122,6 +131,15 @@ class _EditRoomReadingState extends State<EditRoomReading> {
           : null;
       r.pm10 = pm10Ctrl.text.isNotEmpty
           ? parseFlexibleDouble(pm10Ctrl.text)
+          : null;
+      r.no2 = no2Ctrl.text.isNotEmpty
+          ? parseFlexibleDouble(no2Ctrl.text)
+          : null;
+      r.so2 = so2Ctrl.text.isNotEmpty
+          ? parseFlexibleDouble(so2Ctrl.text)
+          : null;
+      r.no = noCtrl2.text.isNotEmpty
+          ? parseFlexibleDouble(noCtrl2.text)
           : null;
       r.comments = commentsCtrl.text;
       r.images = List<File>.from(_imageFiles);
@@ -209,6 +227,27 @@ class _EditRoomReadingState extends State<EditRoomReading> {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'PM10'),
+                ),
+              if (widget.surveyInfo.no2)
+                TextFormField(
+                  controller: no2Ctrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'NO2'),
+                ),
+              if (widget.surveyInfo.so2)
+                TextFormField(
+                  controller: so2Ctrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'SO2'),
+                ),
+              if (widget.surveyInfo.no)
+                TextFormField(
+                  controller: noCtrl2,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'NO'),
                 ),
               TextFormField(
                 controller: commentsCtrl,

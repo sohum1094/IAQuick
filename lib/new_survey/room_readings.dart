@@ -123,6 +123,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   final TextEditingController vocsTextController = TextEditingController();
   final TextEditingController pm25TextController = TextEditingController();
   final TextEditingController pm10TextController = TextEditingController();
+  final TextEditingController no2TextController = TextEditingController();
+  final TextEditingController so2TextController = TextEditingController();
+  final TextEditingController noTextController = TextEditingController();
   final TextEditingController commentTextController = TextEditingController();
   final GlobalKey<FormFieldState<String>> buildingDropdownKey =
       GlobalKey<FormFieldState<String>>();
@@ -213,6 +216,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     vocsTextController.clear();
     pm25TextController.clear();
     pm10TextController.clear();
+    no2TextController.clear();
+    so2TextController.clear();
+    noTextController.clear();
     commentTextController.clear();
     buildingDropdownKey.currentState?.reset();
     floorDropdownKey.currentState?.reset();
@@ -229,6 +235,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
         vocsTextController.text.isNotEmpty ||
         pm25TextController.text.isNotEmpty ||
         pm10TextController.text.isNotEmpty ||
+        no2TextController.text.isNotEmpty ||
+        so2TextController.text.isNotEmpty ||
+        noTextController.text.isNotEmpty ||
         commentTextController.text.isNotEmpty ||
         _imageFiles.isNotEmpty;
   }
@@ -271,6 +280,15 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
             : null,
         pm10: widget.surveyInfo.pm10
             ? parseFlexibleDouble(pm10TextController.text)
+            : null,
+        no2: widget.surveyInfo.no2
+            ? parseFlexibleDouble(no2TextController.text)
+            : null,
+        so2: widget.surveyInfo.so2
+            ? parseFlexibleDouble(so2TextController.text)
+            : null,
+        no: widget.surveyInfo.no
+            ? parseFlexibleDouble(noTextController.text)
             : null,
         comments: commentTextController.text.isEmpty
             ? "No issues were observed."
@@ -766,6 +784,84 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       ),
                       // Define your text input properties here
                     ),
+                  if (widget.surveyInfo.no2)
+                    TextFormField(
+                      controller: no2TextController,
+                      autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      validator: (value) {
+                        if (value == null) {
+                          return null;
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                          return "Enter Correct NO2 Value";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onEditingComplete: () {
+                        bool seen = false;
+                        if (!seen && (parseFlexibleDouble(no2TextController.text) ?? double.negativeInfinity) > 1.0) {
+                          seen = true;
+                          _showConfirmValueDialog(context, 'NO2');
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'NO2',
+                        suffixText: 'PPM',
+                      ),
+                    ),
+                  if (widget.surveyInfo.so2)
+                    TextFormField(
+                      controller: so2TextController,
+                      autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      validator: (value) {
+                        if (value == null) {
+                          return null;
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                          return "Enter Correct SO2 Value";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onEditingComplete: () {
+                        bool seen = false;
+                        if (!seen && (parseFlexibleDouble(so2TextController.text) ?? double.negativeInfinity) > 1.0) {
+                          seen = true;
+                          _showConfirmValueDialog(context, 'SO2');
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'SO2',
+                        suffixText: 'PPM',
+                      ),
+                    ),
+                  if (widget.surveyInfo.no)
+                    TextFormField(
+                      controller: noTextController,
+                      autovalidateMode: AutovalidateMode.always,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      validator: (value) {
+                        if (value == null) {
+                          return null;
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                          return "Enter Correct NO Value";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onEditingComplete: () {
+                        bool seen = false;
+                        if (!seen && (parseFlexibleDouble(noTextController.text) ?? double.negativeInfinity) > 1.0) {
+                          seen = true;
+                          _showConfirmValueDialog(context, 'NO');
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'NO',
+                        suffixText: 'PPM',
+                      ),
+                    ),
                   TextFormField(
                     controller: commentTextController,
                     decoration: const InputDecoration(
@@ -938,6 +1034,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     vocsTextController.dispose();
     pm25TextController.dispose();
     pm10TextController.dispose();
+    no2TextController.dispose();
+    so2TextController.dispose();
+    noTextController.dispose();
     commentTextController.dispose();
     temperatureFocusNode.dispose();
     super.dispose();

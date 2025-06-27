@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -39,7 +39,10 @@ class DatabaseHelper {
       carbonMonoxideReadings INTEGER,
       vocs INTEGER,
       pm25 INTEGER,
-      pm10 INTEGER
+      pm10 INTEGER,
+      no2 INTEGER,
+      so2 INTEGER,
+      no INTEGER
     )
   ''');
 
@@ -58,6 +61,9 @@ class DatabaseHelper {
       pm25 REAL,
       pm10 REAL,
       vocs REAL,
+      no2 REAL,
+      so2 REAL,
+      no REAL,
       comments TEXT,
       isOutdoor INTEGER,
       timestamp TEXT,
@@ -77,6 +83,14 @@ class DatabaseHelper {
       await db.execute(
           "ALTER TABLE survey_info ADD COLUMN projectNumber TEXT");
     }
+    if (oldVersion < 4) {
+      await db.execute("ALTER TABLE survey_info ADD COLUMN no2 INTEGER");
+      await db.execute("ALTER TABLE survey_info ADD COLUMN so2 INTEGER");
+      await db.execute("ALTER TABLE survey_info ADD COLUMN no INTEGER");
+      await db.execute("ALTER TABLE room_readings ADD COLUMN no2 REAL");
+      await db.execute("ALTER TABLE room_readings ADD COLUMN so2 REAL");
+      await db.execute("ALTER TABLE room_readings ADD COLUMN no REAL");
+    }
   }
 
 
@@ -92,7 +106,7 @@ class DatabaseHelper {
     final db = await instance.database;
     final maps = await db.query(
       'survey_info',
-      columns: ['id', 'siteName', 'projectNumber', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10'],
+      columns: ['id', 'siteName', 'projectNumber', 'date', 'address', 'occupancyType', 'carbonDioxideReadings', 'carbonMonoxideReadings', 'vocs', 'pm25', 'pm10', 'no2', 'so2', 'no'],
       where: 'id = ?',
       whereArgs: [id],
     );
