@@ -32,7 +32,7 @@ import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:intl/intl.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
-import 'package:iaqapp/api_keys.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -258,10 +258,10 @@ EasyTextFormField addressTextFormField(
       if (tempAddress != null) model.address = tempAddress;
     },
     builder: (state, onChanged) {
-      // pick your platform-specific key
+      // pick your platform-specific key from env
       final apiKey = Platform.isIOS
-          ? ios_google_api_key
-          : android_google_api_key;
+          ? dotenv.env['IOS_GOOGLE_API_KEY']
+          : dotenv.env['ANDROID_GOOGLE_API_KEY'];
 
       return GooglePlaceAutoCompleteTextField(
         textEditingController: controller,

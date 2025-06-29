@@ -21,7 +21,6 @@ import 'package:image/image.dart' as img_lib;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'api_keys.dart';
 
 
 class ExistingSurveyScreen extends StatefulWidget {
@@ -901,7 +900,7 @@ Future<File?> generateWordReport(SurveyInfo info) async {
     print('📤 Sending to generate-iaq-report: $payload');
 
     final resp = await http.post(
-      Uri.parse(generate_report_url),
+      Uri.parse(dotenv.env['GENERATE_REPORT_URL'] ?? ''),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
