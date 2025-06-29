@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1069851910435",
+    "project_id": "windows-9e44e",
+    "storage_bucket": "windows-9e44e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069851910435:android:603e4983c6aad658322c96",
+        "android_client_info": {
+          "package_name": "com.iaquick.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069851910435-u43fr4tl7v9hlvb7f01u04bq9ak31e1s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.iaquick.app",
+            "certificate_hash": "de43bfda4d9f94b76afd5365006d472d120785f2"
+          }
+        },
+        {
+          "client_id": "1069851910435-10q776kq7q7fbp2ee19flkg38og6u5o9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGGlTbsXQWWUQ7rVXfL23HbO4d3M_Fp-M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069851910435-10q776kq7q7fbp2ee19flkg38og6u5o9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1069851910435-6aef8k9k33c953km4r6dqhspnlts3o6u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.iaquick.app.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

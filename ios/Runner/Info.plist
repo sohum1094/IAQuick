@@ -3,6 +3,14 @@
 <plist version="1.0">
 <dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow camera access to capture room images.</string>
+    <string>Allow camera access to capture room images to attach to survey.</string>
+    <key>CFBundleName</key>
+    <string>IAQuick</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.iaquick.app</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
 </dict>
 </plist>

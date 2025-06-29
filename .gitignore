@@ -1,11 +1,8 @@
 # Firebase configuration
-android/app/google-services.json
 .dart_tool/
 .idea/
 .vscode/
-android/
 build/
-ios/
 linux/
 macos/
 windows/
@@ -15,11 +12,8 @@ functions/node_modules/
 .flutter-plugins
 .flutter-plugins-dependencies
 .metadata
-firebase.json
 node_backend/node_modules/
-flutter_frontend/assets/google_credentials.json
 lib/firebase_options.dart
 lib/google_credentials.dart
-lib/api_keys.dart
 pubspec.lock
-android-old/
+*.log
