@@ -34,6 +34,16 @@ Learn more at [sohum1094.github.io](url)
 
 After the configuration files are in place, the app can initialize Firebase using the generated options.
 
+## Environment Variables
+
+Sensitive values such as the Google Maps API keys and the URL of the Cloud Function used for Word report generation are loaded from a `.env` file at runtime. Create your own `.env` by copying `example.env` and filling in the appropriate values:
+
+```bash
+cp example.env .env
+```
+
+The application reads these variables using the `flutter_dotenv` package.
+
 ### Enable Authentication
 
 To authenticate users, enable Email/Password sign-in in the Firebase console:
