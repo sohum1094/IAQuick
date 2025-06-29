@@ -15,7 +15,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:math';
 import 'dart:convert';
-import 'dart:collection';
 import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:image/image.dart' as img_lib;
 import 'package:http/http.dart' as http;
@@ -91,8 +90,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         ],
       ),
     );
-    }
   }
+  
 
   Widget _recentFilesList() {
    // Assuming that 'date' in surveyDocuments can be parsed into DateTime
@@ -305,8 +304,6 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 ];
                 await shareFiles(
                     surveyInfo.siteName, surveyInfo.date, attachments);
-              } catch (e) {
-                print('Error exporting survey: $e');
               } finally {
                 if (context.mounted) {
                   Navigator.of(context).pop();
@@ -359,7 +356,6 @@ Future<void> shareFiles(
     );
   } catch (e) {
     // Handle error or inform the user
-    print('Error sharing files: $e');
   }
 }
 
@@ -626,7 +622,7 @@ Future<File> createPhotoPdf(
 
   // Use a LinkedHashMap so that rooms remain in the order
   // that the photos were originally collected.
-  final Map<String, List<PhotoMetadata>> byRoom = LinkedHashMap();
+  final Map<String, List<PhotoMetadata>> byRoom = {};
   for (final p in photos) {
     final key = '${p.building}|${p.roomNumber}';
     byRoom.putIfAbsent(key, () => []).add(p);
@@ -856,7 +852,6 @@ Future<Uint8List> _downloadImageBytes(String url) async {
     final data = await ref.getData();
     return data ?? Uint8List(0);
   } catch (e) {
-    print('Error downloading image $url: $e');
     return Uint8List(0);
   }
 }
@@ -897,7 +892,6 @@ Future<File?> generateWordReport(SurveyInfo info) async {
       'site_name': info.siteName,
       'site_address': info.address,
     };
-    print('📤 Sending to generate-iaq-report: $payload');
 
     final resp = await http.post(
       Uri.parse(dotenv.env['GENERATE_REPORT_URL'] ?? ''),
@@ -929,7 +923,7 @@ Future<File?> generateWordReport(SurveyInfo info) async {
     return file;
 
   } catch (e) {
-    print('Error generating Word report: $e');
+    // print('Error generating Word report: $e');
     return null;
   }
 }

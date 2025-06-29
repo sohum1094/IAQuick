@@ -26,7 +26,7 @@ void main() async {
     // androidProvider: AndroidProvider.playIntegrity,
     androidProvider: AndroidProvider.debug,
     // appleProvider: AppleProvider.appAttest, // Or .deviceCheck
-    // appleProvider: AppleProvider.debug,
+    appleProvider: AppleProvider.debug,
     // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
   );
 
@@ -39,7 +39,7 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -77,7 +77,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +158,6 @@ class HomeScreen extends StatelessWidget {
           child: const Center(
             child: Text(
               'Open Previous Survey',
-              textScaleFactor: 1.5,
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -188,7 +187,6 @@ class HomeScreen extends StatelessWidget {
           child: const Center(
             child: Text(
               'Create New Survey',
-              textScaleFactor: 1.5,
             ),
           ),
         ),

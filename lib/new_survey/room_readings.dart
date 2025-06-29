@@ -1,33 +1,3 @@
-/// This code snippet represents a Flutter form for entering room readings in an indoor air quality (IAQ) survey.
-/// It includes text input fields for room number, primary use, humidity, temperature, and various air quality parameters.
-/// The form also allows the user to select an image and save the form data to a CSV file.
-///
-/// Example Usage:
-///
-/// // Create an instance of the RoomReadingsFormScreen widget
-/// final formScreen = RoomReadingsFormScreen();
-///
-/// // Build the form screen widget
-/// final formScreenWidget = formScreen.build(context);
-///
-/// // Display the form screen widget
-/// return Scaffold(
-///   body: formScreenWidget,
-/// );
-///
-/// Inputs:
-/// - Various text input fields for room number, primary use, humidity, temperature, and air quality parameters.
-/// - Image file selected by the user.
-///
-/// Flow:
-/// 1. The user enters the room readings and selects an image.
-/// 2. The form is validated to ensure that all required fields are filled correctly.
-/// 3. If the form is valid, the data is saved to a CSV file.
-/// 4. The image is saved locally.
-///
-/// Outputs:
-/// - The form data is saved to a CSV file.
-/// - The image is saved locally.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -150,7 +120,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   ];
   late DropdownModel dropdownModel = DropdownModel();
   late FocusNode temperatureFocusNode = FocusNode();
-  List<File> _imageFiles = [];
+  final List<File> _imageFiles = [];
   bool isOutdoorReading = false;
 
   @override

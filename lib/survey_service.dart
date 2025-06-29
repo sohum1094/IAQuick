@@ -86,7 +86,6 @@ class SurveyService {
 
       return surveyRef.id;
     } catch (e) {
-      print('Error creating survey: $e');
       rethrow;
     }
   }
@@ -115,13 +114,13 @@ Future<String> saveRoomImageOffline({
           value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = [
+      final fileName = '${[
         surveyId,
         sanitize(building),
         sanitize(floor),
         sanitize(roomNumber),
         timestamp.toString()
-      ].join('_') + '.jpg';
+      ].join('_')}.jpg';
 
       final destPath = p.join(surveyDir.path, fileName);
       await image.copy(destPath);
@@ -129,7 +128,6 @@ Future<String> saveRoomImageOffline({
       await addPendingSurvey(surveyId);
       return fileName;
     } catch (e) {
-      print('Error saving room image offline: $e');
       rethrow;
     }
   } 
@@ -178,7 +176,7 @@ Future<String> saveRoomImageOffline({
           });
           await file.delete();
         } catch (e) {
-          print('Error uploading $fileName: $e');
+          rethrow;
         }
       }
 

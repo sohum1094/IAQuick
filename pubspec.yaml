@@ -48,6 +48,8 @@ dependencies:
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
   google_api_headers: ^4.5.1
+  http: ^1.4.0
+  image: ^4.6.0
 
 
 dev_dependencies:

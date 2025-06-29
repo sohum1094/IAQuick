@@ -162,6 +162,9 @@ class RoomReading {
   double? pm25; // nullable
   double? pm10; // nullable
   double? vocs; // nullable
+  double ? no2; // nullable
+  double ? so2; // nullable
+  double ? no; // nullable
   String comments;
   bool isOutdoor;
   DateTime timestamp;
