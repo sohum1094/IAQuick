@@ -53,6 +53,7 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
                 ),
               ),
             );
+            if (!mounted) return;
             setState(() {});
           },
         ),
@@ -150,17 +151,17 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     } else if (status.isDenied) {
       pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
     } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera permission denied')),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission denied')),
+      );
       return;
     }
 
+    if (!mounted) return;
     if (pickedImage != null) {
       setState(() {
-        _imageFiles.add(File(pickedImage!.path));
+        _imageFiles.add(File(pickedImage.path));
       });
     }
   }
@@ -912,9 +913,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     }
                   } else if (_formHasInput()) {
                     final discard = await _showDiscardDialog(context);
-                    if (!discard) return;
+                    if (!mounted || !discard) return;
                   }
                   clearFields();
+                  if (!mounted) return;
                   setState(() {
                     isOutdoorReading = false;
                   });
@@ -940,6 +942,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     _saveForm();
                   } else if (_formHasInput()) {
                     proceed = await _showDiscardDialog(context);
+                    if (!mounted) return;
                     if (proceed) {
                       clearFields();
                     }
@@ -961,6 +964,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                     roomReadings,
                   );
                   await SurveyService().uploadPendingImages();
+                  if (!mounted) return;
 
                   // Navigate to HomeScreen or another appropriate screen
                   Navigator.of(context, rootNavigator: true).pop();
