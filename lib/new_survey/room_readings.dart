@@ -161,7 +161,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     if (!mounted) return;
     if (pickedImage != null) {
       setState(() {
-        _imageFiles.add(File(pickedImage.path));
+        _imageFiles.add(File(pickedImage!.path));
       });
     }
   }

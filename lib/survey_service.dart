@@ -12,7 +12,7 @@ import 'models.dart';
 import 'models/survey_info.dart';
 
 class SurveyService {
-  StreamSubscription<ConnectivityResult>? _connectivitySub;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   /// Configure Firestore persistence with ~15MB cache size.
   static Future<void> configureFirestoreCache() async {
@@ -31,13 +31,13 @@ class SurveyService {
   Future<void> startConnectivityListener() async {
     final connectivity = Connectivity();
     final current = await connectivity.checkConnectivity();
-    if (current != ConnectivityResult.none) {
+    if (!current.contains(ConnectivityResult.none)) {
       await uploadPendingImages();
     }
 
     _connectivitySub = connectivity.onConnectivityChanged
-        .listen((ConnectivityResult result) async {
-      if (result != ConnectivityResult.none) {
+        .listen((List<ConnectivityResult> result) async {
+      if (!result.contains(ConnectivityResult.none)) {
         await uploadPendingImages();
       }
     });
