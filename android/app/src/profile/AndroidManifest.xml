@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.iaqapp">
+    package="com.iaquick.app">
 
     <!-- permissions go here (order doesn’t technically matter, but this is conventional) -->
     <uses-permission android:name="android.permission.INTERNET"/>
