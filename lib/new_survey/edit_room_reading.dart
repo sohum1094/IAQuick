@@ -101,7 +101,7 @@ class _EditRoomReadingState extends State<EditRoomReading> {
     if (!mounted) return;
     if (pickedImage != null) {
       setState(() {
-        _imageFiles.add(File(pickedImage.path));
+        _imageFiles.add(File(pickedImage!.path));
       });
     }
   }
