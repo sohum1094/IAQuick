@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>1069851910435-6aef8k9k33c953km4r6dqhspnlts3o6u.apps.googleusercontent.com</string>
+	<string>1069851910435-u9d6hltn6lou68sf23bre0374f0avaq0.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.1069851910435-6aef8k9k33c953km4r6dqhspnlts3o6u</string>
+	<string>com.googleusercontent.apps.1069851910435-u9d6hltn6lou68sf23bre0374f0avaq0</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>1069851910435-u43fr4tl7v9hlvb7f01u04bq9ak31e1s.apps.googleusercontent.com</string>
+	<string>1069851910435-4c4k18ttb4ldqk6u0v93bm4c92uf2231.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyA62ZT-z5laXBw6ssJB9aN1AJJAZKv9IVI</string>
+	<string>AIzaSyBdXIZrluBfiDR_HZtwnIZUrnwNHbzEciA</string>
 	<key>GCM_SENDER_ID</key>
 	<string>1069851910435</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.iaqapp.RunnerTests</string>
+	<string>com.iaquick.app</string>
 	<key>PROJECT_ID</key>
 	<string>windows-9e44e</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1069851910435:ios:2df55a0128486953322c96</string>
+	<string>1:1069851910435:ios:65850f2948e4ee71322c96</string>
 </dict>
 </plist>

@@ -7,14 +7,14 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1069851910435:android:603e4983c6aad658322c96",
+        "mobilesdk_app_id": "1:1069851910435:android:ec4c073e44cb2a80322c96",
         "android_client_info": {
           "package_name": "com.iaquick.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1069851910435-u43fr4tl7v9hlvb7f01u04bq9ak31e1s.apps.googleusercontent.com",
+          "client_id": "1069851910435-4c4k18ttb4ldqk6u0v93bm4c92uf2231.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.iaquick.app",
@@ -28,7 +28,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCGGlTbsXQWWUQ7rVXfL23HbO4d3M_Fp-M"
+          "current_key": "AIzaSyCUW7PzI5HkB5z18Ljw9IYkw7JM4vsvgU8"
         }
       ],
       "services": {
@@ -50,5 +50,5 @@
       }
     }
   ],
-  "configuration_version": "1"
+  "configuration_version": "2"
 }
