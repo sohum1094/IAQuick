@@ -56,17 +56,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           _passwordController.text.trim(),
                           displayName: _displayNameController.text.trim(),
                         );
-                        if (mounted) Navigator.pop(context);
+                        if (!mounted) return;
+                        Navigator.pop(context);
                       } on FirebaseAuthException catch (e) {
                         setState(() {
                           _error = e.message;
                         });
                       } finally {
-                        if (mounted) {
-                          setState(() {
-                            _isLoading = false;
-                          });
-                        }
+                        if (!mounted) return;
+                        setState(() {
+                          _isLoading = false;
+                        });
                       }
                     },
               child: _isLoading

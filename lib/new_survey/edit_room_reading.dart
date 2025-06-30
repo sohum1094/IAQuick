@@ -91,17 +91,17 @@ class _EditRoomReadingState extends State<EditRoomReading> {
     } else if (status.isDenied) {
       pickedImage = await picker.pickImage(source: ImageSource.gallery);
     } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera permission denied')),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission denied')),
+      );
       return;
     }
 
+    if (!mounted) return;
     if (pickedImage != null) {
       setState(() {
-        _imageFiles.add(File(pickedImage!.path));
+        _imageFiles.add(File(pickedImage.path));
       });
     }
   }

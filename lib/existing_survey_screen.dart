@@ -8,6 +8,7 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/models.dart' show VisualAssessment, PhotoMetadata;
 import 'package:iaqapp/survey_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -23,7 +24,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class ExistingSurveyScreen extends StatefulWidget {
-  const ExistingSurveyScreen({Key? key}) : super(key: key);
+  const ExistingSurveyScreen({super.key});
 
   @override
   ExistingSurveyScreenState createState() => ExistingSurveyScreenState();
@@ -188,11 +189,10 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     surveyInfo.siteName, surveyInfo.date, attachments);
               } catch (e) {
                 // If something fails, log the error and continue
-                print('Error exporting survey: $e');
+                debugPrint('Error exporting survey: $e');
               } finally {
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
               }
 
             },
@@ -305,9 +305,8 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 await shareFiles(
                     surveyInfo.siteName, surveyInfo.date, attachments);
               } finally {
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -349,10 +348,12 @@ Future<void> shareFiles(
 
   try {
     final files = attachmentPaths.map((p) => XFile(p)).toList();
-    await Share.shareXFiles(
-      files,
-      text: message,
-      subject: '[IAQuick] Report for $siteName is ready',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        text: message,
+        subject: '[IAQuick] Report for $siteName is ready',
+      ),
     );
   } catch (e) {
     // Handle error or inform the user
@@ -519,9 +520,7 @@ Future<File> createIAQExcelFile(
       final val = valueAccessors[c](r);
       final cell =
           sheet.cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: row));
-      if (val == null) {
-        cell.value = null;
-      } else if (val is num) {
+      if (val is num) {
         final d = decimals[c];
         cell.value = d == null
             ? DoubleCellValue(val.toDouble())
