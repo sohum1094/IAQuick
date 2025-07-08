@@ -763,7 +763,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       validator: (value) {
                         if (value == null) {
                           return null;
-                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)$').hasMatch(value)) {
                           return "Enter Correct NO2 Value";
                         } else {
                           return null;
@@ -789,7 +789,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       validator: (value) {
                         if (value == null) {
                           return null;
-                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)$').hasMatch(value)) {
                           return "Enter Correct SO2 Value";
                         } else {
                           return null;
@@ -815,7 +815,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       validator: (value) {
                         if (value == null) {
                           return null;
-                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)\$').hasMatch(value)) {
+                        } else if (value.isNotEmpty && !RegExp(r'^(?:\\d+(?:\\.\\d+)?|\\.\\d+)$').hasMatch(value)) {
                           return "Enter Correct NO Value";
                         } else {
                           return null;
