@@ -253,7 +253,7 @@ EasyTextFormField addressTextFormField(
                 final data = json.decode(resp.body);
                 final formatted = data['result']?['formatted_address'];
                 if (formatted is String && formatted.isNotEmpty) {
-                  address = formatted.replaceAll(RegExp(r',?\\s*USA\$'), '');
+                  address = formatted.replaceAll(RegExp(r',?\\s*USA$'), '');
                 }
               }
             } catch (_) {}
