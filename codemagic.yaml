@@ -1,0 +1,36 @@
+workflows:
+  ios-workflow:
+    name: iOS Build
+    instance_type: mac_mini
+    max_build_duration: 60
+    environment:
+      flutter: stable
+    scripts:
+      - name: Regenerate iOS folder & Podfile
+        script: |
+          # this will recreate ios/ if it’s missing, including Podfile
+          flutter create .
+
+      - name: Bump iOS deployment target to 13.0
+        script: |
+          # on macOS sed needs the '' after -i
+          sed -i '' "s/platform :ios, '.*'/platform :ios, '13.0'/" ios/Podfile
+
+      - name: Get Dart & Flutter dependencies
+        script: |
+          flutter pub get
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: Build IPA
+        script: |
+          flutter build ipa \
+            --export-options-plist "$CM_EXPORT_OPTIONS_PLIST" \
+            --no-codesign
+
+    artifacts:
+      - build/ios/ipa/*.ipa
