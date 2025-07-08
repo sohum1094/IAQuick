@@ -192,7 +192,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                 debugPrint('Error exporting survey: $e');
               } finally {
                 if (!context.mounted) return;
-                Navigator.of(context).pop();
+                Navigator.of(context, rootNavigator: true).pop();
               }
 
             },
@@ -306,7 +306,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
                     surveyInfo.siteName, surveyInfo.date, attachments);
               } finally {
                 if (!context.mounted) return;
-                Navigator.of(context).pop();
+                Navigator.of(context, rootNavigator: true).pop();
               }
             },
             style: ElevatedButton.styleFrom(
