@@ -13,7 +13,6 @@ functions/node_modules/
 .flutter-plugins-dependencies
 .metadata
 node_backend/node_modules/
-lib/firebase_options.dart
 lib/google_credentials.dart
 pubspec.lock
 *.log
