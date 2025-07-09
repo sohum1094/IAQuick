@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key><string>app-store</string>
+  <key>uploadSymbols</key><true/>
+  <key>compileBitcode</key><true/>
+  <key>signingStyle</key><string>manual</string>
+  <key>teamID</key><string>J7M9HDB68M</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>com.iaquick.app</key>
+    <string>IAQuick Indoor Air Quality Survey App ios_app_distribution …</string>
+  </dict>
+</dict>
+</plist>
