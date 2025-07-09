@@ -5,7 +5,7 @@
     <key>NSCameraUsageDescription</key>
     <string>Allow camera access to capture room images to attach to survey.</string>
     <key>CFBundleName</key>
-    <string>IAQuick</string>
+    <string>Runner</string>
     <key>CFBundleDisplayName</key>
     <string>IAQuick</string>
     <key>CFBundleIdentifier</key>
