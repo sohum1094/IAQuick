@@ -6,6 +6,8 @@
     <string>Allow camera access to capture room images to attach to survey.</string>
     <key>CFBundleName</key>
     <string>IAQuick</string>
+    <key>CFBundleDisplayName</key>
+    <string>IAQuick</string>
     <key>CFBundleIdentifier</key>
     <string>com.iaquick.app</string>
     <key>CFBundleVersion</key>
