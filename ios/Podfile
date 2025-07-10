@@ -1,7 +1,7 @@
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
-
+platform :ios, '13.0'
 project 'Runner', {
-  'Debug' => :debug,
+  'Debug'   => :debug,
   'Profile' => :release,
   'Release' => :release,
 }
@@ -13,17 +13,21 @@ def flutter_root
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-
 flutter_ios_podfile_setup
 
-platform :ios, '13.0'
-
 target 'Runner' do
+  # Use dynamic frameworks (the default Flutter recommendation)
   use_frameworks!
-  use_modular_headers!
+
+  # Don’t enable :linkage => :static here
+  # Remove use_modular_headers! if present
+
+  # Your additional pods
   pod 'Firebase/Auth'
   pod 'GoogleSignIn'
+  pod 'FirebaseAppCheck'
 
+  # This brings in Flutter.framework + all plugin pods
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 

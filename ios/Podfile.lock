@@ -1485,6 +1485,7 @@ DEPENDENCIES:
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
+  - FirebaseAppCheck
   - Flutter (from `Flutter`)
   - flutter_email_sender (from `.symlinks/plugins/flutter_email_sender/ios`)
   - flutter_secure_storage_x (from `.symlinks/plugins/flutter_secure_storage_x/ios`)
@@ -1623,6 +1624,6 @@ SPEC CHECKSUMS:
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
 
-PODFILE CHECKSUM: 42fa41eadc46f2a1d6ec5d062637c6443db3f2de
+PODFILE CHECKSUM: c06cd2a3463bf567402b1652992c68ceef9285d0
 
 COCOAPODS: 1.16.2
