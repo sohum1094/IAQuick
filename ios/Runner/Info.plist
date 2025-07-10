@@ -24,6 +24,17 @@
   <string>$(FLUTTER_BUILD_NUMBER)</string>
   <key>CFBundleIconName</key>
   <string>AppIcon</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <array>
+            <!-- This must match the “REVERSED_CLIENT_ID” in your .plist -->
+            <string>com.googleusercontent.apps.1069851910435-u9d6hltn6lou68sf23bre0374f0avaq0</string>
+        </array>
+    </dict>
+  </array>
   <key>LSRequiresIPhoneOS</key>
   <true/>
   <key>UILaunchStoryboardName</key>
@@ -49,5 +60,10 @@
   <true/>
   <key>NSCameraUsageDescription</key>
   <string>Allow camera access to capture room images to attach to survey.</string>
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>google</string>
+    <string>com.googleusercontent.apps.1069851910435-u9d6hltn6lou68sf23bre0374f0avaq0</string>
+  </array>
 </dict>
 </plist>
