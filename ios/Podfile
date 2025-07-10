@@ -1,7 +1,3 @@
-# Uncomment to set a global iOS deployment target for all pods:
-platform :ios, '13.0'
-
-# CocoaPods analytics can slow down builds; disable it if you like:
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
@@ -10,17 +6,14 @@ project 'Runner', {
   'Release' => :release,
 }
 
-# locate your Flutter SDK
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path('../Flutter/Generated.xcconfig', __FILE__)
   File.readlines(generated_xcode_build_settings_path).grep(/FLUTTER_ROOT\=(.*)/) { return $1.strip }
   raise "FLUTTER_ROOT not found in Generated.xcconfig. Run `flutter pub get` first."
 end
 
-# bring in Flutter’s CocoaPod helper
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
-# any Flutter-specific Pod tweaks
 flutter_ios_podfile_setup
 
 platform :ios, '13.0'
@@ -31,7 +24,6 @@ target 'Runner' do
   pod 'Firebase/Auth'
   pod 'GoogleSignIn'
 
-  # Install all the pods that your pubspec.yaml lists
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
