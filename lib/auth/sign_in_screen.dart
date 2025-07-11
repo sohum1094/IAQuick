@@ -32,9 +32,10 @@ class _SignInScreenState extends State<SignInScreen> {
         backgroundColor: Colors.white,
       ),
       backgroundColor: Colors.white,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
@@ -45,6 +46,7 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
             TextField(
               controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
             TextField(
@@ -117,7 +119,9 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: Image.asset('assets/icons/google.png', height: 24),
+              label: const Text('Sign In with Google'),
               onPressed: () async {
                 try {
                   final cred = await authService.signInWithGoogle();
@@ -135,14 +139,15 @@ class _SignInScreenState extends State<SignInScreen> {
                   });
                 }
               },
-              child: const Text('Sign In with Google'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.lightBlue,
               ),
             ),
             if (Platform.isIOS) ...[
               const SizedBox(height: 10),
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: Image.asset('assets/icons/apple.png', height: 24),
+                label: const Text('Sign In with Apple'),
                 onPressed: () async {
                   try {
                     final cred = await authService.signInWithApple();
@@ -160,10 +165,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     });
                   }
                 },
-                child: const Text('Sign In with Apple'),
                 style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue,
-              ),
+                  backgroundColor: Colors.lightBlue,
+                ),
               ),
             ],
           ],
