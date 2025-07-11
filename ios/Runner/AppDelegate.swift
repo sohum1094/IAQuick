@@ -24,8 +24,6 @@ class MyAppCheckProviderFactory: NSObject, AppCheckProviderFactory {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // 🔹 Configure Firebase
-    // FirebaseApp.configure()
 
     // 🔹 Wire up App Check
     #if DEBUG

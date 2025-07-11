@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
 
   static FirebaseOptions ios = FirebaseOptions(
     apiKey: dotenv.env['FIREBASE_IOS_KEY']!,
-    appId: '1:1069851910435:ios:a52c78f62779c95b322c96',
+    appId: '1:1069851910435:ios:65850f2948e4ee71322c96',
     messagingSenderId: '1069851910435',
     projectId: 'windows-9e44e',
     storageBucket: 'windows-9e44e.firebasestorage.app',

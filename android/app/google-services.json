@@ -42,7 +42,7 @@
               "client_id": "1069851910435-6aef8k9k33c953km4r6dqhspnlts3o6u.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.iaquick.app.RunnerTests"
+                "bundle_id": "com.example.iaqapp.RunnerTests"
               }
             }
           ]
@@ -50,5 +50,5 @@
       }
     }
   ],
-  "configuration_version": "2"
+  "configuration_version": "1"
 }

@@ -11,28 +11,45 @@ import 'existing_survey_screen.dart';
 import 'new_survey/new_survey_start.dart';
 import 'firebase_options.dart';
 import 'survey_service.dart';
+import 'dart:io' show Platform;
 
 final SurveyService surveyService = SurveyService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  if (Firebase.apps.isEmpty) {
+  
+  print("🔥 Firebase.apps.length before init: ${Firebase.apps.length}");
+  for (var app in Firebase.apps) {
+    print("🔥 Found Firebase app: ${app.name}, ${app.options.projectId}");
+  }
+
+  try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } else {
-    Firebase.app();
+    print('✅ Firebase initialised by Dart.');
+  } on FirebaseException catch (e) {
+    if (e.code == 'duplicate-app') {
+      print('⚠️ duplicate-app caught – native init already finished.');
+    } else {
+      rethrow; // Any other error is real and should break.
+    }
   }
+
+
   await SurveyService.configureFirestoreCache();
   await surveyService.startConnectivityListener();
   await FirebaseAppCheck.instance.activate(
     // androidProvider: AndroidProvider.playIntegrity,
     androidProvider: AndroidProvider.debug,
     // appleProvider: AppleProvider.appAttest, // Or .deviceCheck
-    appleProvider: AppleProvider.debug,
+    appleProvider: AppleProvider.deviceCheck,
     // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
   );
+
+  final token = await FirebaseAppCheck.instance.getToken(true);
+  print('App Check debug token: $token');
 
   runApp(
     Provider<AuthService>(

@@ -23,9 +23,9 @@ target 'Runner' do
   # Remove use_modular_headers! if present
 
   # Your additional pods
-  pod 'Firebase/Auth'
+  # pod 'Firebase/Auth'
   pod 'GoogleSignIn'
-  pod 'FirebaseAppCheck'
+  # pod 'FirebaseAppCheck'
 
   # This brings in Flutter.framework + all plugin pods
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
