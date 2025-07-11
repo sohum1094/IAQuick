@@ -37,19 +37,23 @@ void main() async {
     }
   }
 
-
-  await SurveyService.configureFirestoreCache();
-  await surveyService.startConnectivityListener();
   await FirebaseAppCheck.instance.activate(
     // androidProvider: AndroidProvider.playIntegrity,
     androidProvider: AndroidProvider.debug,
-    // appleProvider: AppleProvider.appAttest, // Or .deviceCheck
-    appleProvider: AppleProvider.deviceCheck,
+    appleProvider: AppleProvider.appAttest,
+    // appleProvider: AppleProvider.deviceCheck,
     // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
   );
 
-  final token = await FirebaseAppCheck.instance.getToken(true);
-  print('App Check debug token: $token');
+  
+
+
+  await SurveyService.configureFirestoreCache();
+  await surveyService.startConnectivityListener();
+  
+
+  // final token = await FirebaseAppCheck.instance.getToken(true);
+  // print('App Check debug token: $token');
 
   runApp(
     Provider<AuthService>(

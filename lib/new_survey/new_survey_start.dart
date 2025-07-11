@@ -11,11 +11,13 @@ import 'dart:convert';
 
 String formatSiteName(String input) {
   final words = input.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
-  final formatted = words.map((word) {
-    final first = word[0].toUpperCase();
-    final rest = word.length > 1 ? word.substring(1).toLowerCase() : '';
-    return '$first$rest';
-  }).join(' ');
+  final formatted = words
+      .map((word) {
+        final first = word[0].toUpperCase();
+        final rest = word.length > 1 ? word.substring(1).toLowerCase() : '';
+        return '$first$rest';
+      })
+      .join(' ');
   return formatted;
 }
 
@@ -31,20 +33,13 @@ class NewSurveyStart extends StatelessWidget {
           title: const Text('New Survey Information'),
           centerTitle: true,
           backgroundColor: Colors.blueGrey,
-          leading: BackButton(
-            onPressed: () => Navigator.pop(context),
-          ),
+          leading: BackButton(onPressed: () => Navigator.pop(context)),
         ),
         body: Center(
           child: SizedBox(
             width: MediaQuery.of(context).size.width * .9,
             child: const Column(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: SurveyInitialInfoForm(),
-                ),
-              ],
+              children: [Expanded(flex: 1, child: SurveyInitialInfoForm())],
             ),
           ),
         ),
@@ -78,8 +73,9 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
             values['siteAddress'].isEmpty ||
             !form.validate()) {
           showDialog<String>(
-              context: context,
-              builder: (BuildContext context) => errorDialog(context));
+            context: context,
+            builder: (BuildContext context) => errorDialog(context),
+          );
         } else {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -122,13 +118,16 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
                 siteNameTextFormField(context, model),
                 projectNumberTextFormField(context, model),
                 addressTextFormField(
-                    context, model, _addressController, _addressFocusNode),
+                  context,
+                  model,
+                  _addressController,
+                  _addressFocusNode,
+                ),
                 DateTimePicker(model: model),
-                  occupancyTypeDropdown(context, model),
-                  AllCheckboxes(key: _checkboxesKey, flex: 2),
-                  EasyFormSaveButton.text('Submit'),
-                ],
-              ),
+                occupancyTypeDropdown(context, model),
+                AllCheckboxes(key: _checkboxesKey, flex: 2),
+                EasyFormSaveButton.text('Submit'),
+              ],
             ),
           ),
         ),
@@ -145,19 +144,22 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
 
   AlertDialog errorDialog(BuildContext context) {
     return AlertDialog(
-        title: const Text('Error'),
-        content: const Text('Please Enter All Fields Correctly'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'OK'),
-            child: const Text('OK'),
-          )
-        ]);
+      title: const Text('Error'),
+      content: const Text('Please Enter All Fields Correctly'),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context, 'OK'),
+          child: const Text('OK'),
+        ),
+      ],
+    );
   }
 }
 
 EasyTextFormField siteNameTextFormField(
-    BuildContext context, SurveyInfo model) {
+  BuildContext context,
+  SurveyInfo model,
+) {
   return EasyTextFormField(
     initialValue: '',
     name: 'siteName',
@@ -171,9 +173,7 @@ EasyTextFormField siteNameTextFormField(
         return null;
       }
     },
-    decoration: const InputDecoration(
-      labelText: 'Site Name*',
-    ),
+    decoration: const InputDecoration(labelText: 'Site Name*'),
     onSaved: (tempSiteName) {
       if (tempSiteName != null) {
         model.siteName = formatSiteName(tempSiteName);
@@ -183,7 +183,9 @@ EasyTextFormField siteNameTextFormField(
 }
 
 EasyTextFormField projectNumberTextFormField(
-    BuildContext context, SurveyInfo model) {
+  BuildContext context,
+  SurveyInfo model,
+) {
   return EasyTextFormField(
     initialValue: '',
     name: 'projectNumber',
@@ -198,9 +200,7 @@ EasyTextFormField projectNumberTextFormField(
         return null;
       }
     },
-    decoration: const InputDecoration(
-      labelText: 'Project #*',
-    ),
+    decoration: const InputDecoration(labelText: 'Project #*'),
     onSaved: (tempProjectNumber) {
       if (tempProjectNumber != null) {
         model.projectNumber = tempProjectNumber;
@@ -263,9 +263,7 @@ EasyTextFormField addressTextFormField(
           );
           onChanged(address);
         },
-        inputDecoration: const InputDecoration(
-          labelText: 'Street Address*',
-        ),
+        inputDecoration: const InputDecoration(labelText: 'Street Address*'),
       );
     },
   );
@@ -302,7 +300,8 @@ class _DateTimePickerState extends State<DateTimePicker> {
           context: context,
           initialDate: DateTime.now(),
           firstDate: DateTime(
-              2000), //DateTime.now() - not to allow to choose before today.
+            2000,
+          ), //DateTime.now() - not to allow to choose before today.
           lastDate: DateTime(2101),
         );
         if (pickedDate != null) {
@@ -369,21 +368,14 @@ class LoggedScreen extends StatelessWidget {
 }
 
 DropdownButtonFormField occupancyTypeDropdown(
-    BuildContext context, SurveyInfo model) {
+  BuildContext context,
+  SurveyInfo model,
+) {
   return DropdownButtonFormField(
     items: const <DropdownMenuItem>[
-      DropdownMenuItem(
-        value: 'Full',
-        child: Text('Full Occupany'),
-      ),
-      DropdownMenuItem(
-        value: 'Partial',
-        child: Text('Partial Occupany'),
-      ),
-      DropdownMenuItem(
-        value: 'Vacant',
-        child: Text('Vacant'),
-      ),
+      DropdownMenuItem(value: 'Full', child: Text('Full Occupany')),
+      DropdownMenuItem(value: 'Partial', child: Text('Partial Occupany')),
+      DropdownMenuItem(value: 'Vacant', child: Text('Vacant')),
     ],
     onChanged: (value) {
       model.occupancyType = value;
@@ -398,12 +390,9 @@ DropdownButtonFormField occupancyTypeDropdown(
         return null;
       }
     },
-    decoration: const InputDecoration(
-      labelText: 'Occupancy*',
-    ),
+    decoration: const InputDecoration(labelText: 'Occupancy*'),
   );
 }
-
 
 class AllCheckboxes extends StatefulWidget {
   final int flex;
@@ -428,40 +417,42 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
   @override
   Widget build(BuildContext context) {
     return Flexible(
-        flex: widget.flex,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Text(
-              'Readings to be taken: ',
-              style:
-                  DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.1),
-            ),
-            const SizedBox(height: 5),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.transparent, width: 1.1),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: ListView(
-                  children: [
-                    checkboxTemplate(context, 'Carbon Dioxide'),
-                    checkboxTemplate(context, 'Carbon Monoxide'),
-                    checkboxTemplate(context, 'VOCs'),
-                    checkboxTemplate(context, 'PM2.5'),
-                    checkboxTemplate(context, 'PM10'),
-                    checkboxTemplate(context, 'NO2'),
-                    checkboxTemplate(context, 'SO2'),
-                    checkboxTemplate(context, 'NO'),
-                  ],
-                ),
+      flex: widget.flex,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 10),
+          Text(
+            'Readings to be taken: ',
+            style: DefaultTextStyle.of(
+              context,
+            ).style.apply(fontSizeFactor: 1.1),
+          ),
+          const SizedBox(height: 5),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.transparent, width: 1.1),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: ListView(
+                children: [
+                  checkboxTemplate(context, 'Carbon Dioxide'),
+                  checkboxTemplate(context, 'Carbon Monoxide'),
+                  checkboxTemplate(context, 'VOCs'),
+                  checkboxTemplate(context, 'PM2.5'),
+                  checkboxTemplate(context, 'PM10'),
+                  checkboxTemplate(context, 'NO2'),
+                  checkboxTemplate(context, 'SO2'),
+                  checkboxTemplate(context, 'NO'),
+                ],
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 
   CheckboxListTile checkboxTemplate(BuildContext context, String readingType) {
