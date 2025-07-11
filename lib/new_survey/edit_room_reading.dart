@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:iaqapp/models/survey_info.dart';
 import 'package:iaqapp/new_survey/room_readings.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:iaqapp/utils.dart';
 import 'dart:io';
 
@@ -83,19 +82,14 @@ class _EditRoomReadingState extends State<EditRoomReading> {
   }
 
   Future<void> _getImage() async {
-    final status = await Permission.camera.request();
     final picker = ImagePicker();
+    final permissionGranted = await requestCameraPermission(context);
     XFile? pickedImage;
-    if (status.isGranted) {
+
+    if (permissionGranted) {
       pickedImage = await picker.pickImage(source: ImageSource.camera);
-    } else if (status.isDenied) {
-      pickedImage = await picker.pickImage(source: ImageSource.gallery);
     } else {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission denied')),
-      );
-      return;
+      pickedImage = await picker.pickImage(source: ImageSource.gallery);
     }
 
     if (!mounted) return;

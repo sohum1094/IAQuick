@@ -148,14 +148,8 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
 
     if (permissionGranted) {
       pickedImage = await imagePicker.pickImage(source: ImageSource.camera);
-    } else if (!permissionGranted ) {
-      pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
     } else {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission denied')),
-      );
-      return;
+      pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
     }
 
     if (!mounted) return;
@@ -1183,6 +1177,7 @@ Future<void> saveSurveyToFirestore(
 Future<bool> requestCameraPermission(BuildContext context) async {
   // 1️⃣ Check current status
   var status = await Permission.camera.status;
+  final alreadyRequested = await wasCameraPermissionRequested();
 
   // 2️⃣ If permanently denied, prompt user to open Settings
   if (status.isPermanentlyDenied) {
@@ -1211,9 +1206,10 @@ Future<bool> requestCameraPermission(BuildContext context) async {
     return false;
   }
 
-  // 3️⃣ If not granted yet, request it
-  if (!status.isGranted) {
+  // 3️⃣ If not granted yet, request it (only first time)
+  if (!status.isGranted && !alreadyRequested) {
     status = await Permission.camera.request();
+    await markCameraPermissionRequested();
   }
 
   // 4️⃣ Check result
