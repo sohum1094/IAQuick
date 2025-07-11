@@ -26,7 +26,7 @@ class NewSurveyStart extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('New Survey Information'),
           centerTitle: true,
@@ -115,16 +115,15 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * .9,
-            child: Center(
-              child: Column(
-                children: [
-                  siteNameTextFormField(context, model),
-                  projectNumberTextFormField(context, model),
-                  addressTextFormField(
-                      context, model, _addressController, _addressFocusNode),
-                  DateTimePicker(model: model),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                siteNameTextFormField(context, model),
+                projectNumberTextFormField(context, model),
+                addressTextFormField(
+                    context, model, _addressController, _addressFocusNode),
+                DateTimePicker(model: model),
                   occupancyTypeDropdown(context, model),
                   AllCheckboxes(key: _checkboxesKey, flex: 2),
                   EasyFormSaveButton.text('Submit'),
