@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io' show Platform;
 import '../auth_service.dart';
+import '../main.dart';
 import 'sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -60,10 +61,18 @@ class _SignInScreenState extends State<SignInScreen> {
                         _error = null;
                       });
                       try {
-                        await authService.signIn(
+                        final cred = await authService.signIn(
                           _emailController.text.trim(),
                           _passwordController.text.trim(),
                         );
+                        if (cred.user != null && mounted) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const HomeScreen(),
+                            ),
+                            (_) => false,
+                          );
+                        }
                       } on FirebaseAuthException catch (e) {
                         setState(() {
                           _error = e.message;
@@ -94,7 +103,15 @@ class _SignInScreenState extends State<SignInScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await authService.signInWithGoogle();
+                  final cred = await authService.signInWithGoogle();
+                  if (cred.user != null && mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const HomeScreen(),
+                      ),
+                      (_) => false,
+                    );
+                  }
                 } on FirebaseAuthException catch (e) {
                   setState(() {
                     _error = e.message;
@@ -108,7 +125,15 @@ class _SignInScreenState extends State<SignInScreen> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    await authService.signInWithApple();
+                    final cred = await authService.signInWithApple();
+                    if (cred.user != null && mounted) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const HomeScreen(),
+                        ),
+                        (_) => false,
+                      );
+                    }
                   } on FirebaseAuthException catch (e) {
                     setState(() {
                       _error = e.message;
