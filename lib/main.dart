@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,10 +20,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   
-  print("🔥 Firebase.apps.length before init: ${Firebase.apps.length}");
-  for (var app in Firebase.apps) {
-    print("🔥 Found Firebase app: ${app.name}, ${app.options.projectId}");
-  }
+  // print("🔥 Firebase.apps.length before init: ${Firebase.apps.length}");
+  // for (var app in Firebase.apps) {
+  //   print("🔥 Found Firebase app: ${app.name}, ${app.options.projectId}");
+  // }
 
   try {
     await Firebase.initializeApp(
@@ -38,20 +39,16 @@ void main() async {
   }
 
   await FirebaseAppCheck.instance.activate(
-    // androidProvider: AndroidProvider.playIntegrity,
-    androidProvider: AndroidProvider.debug,
-    appleProvider: AppleProvider.appAttest,
-    // appleProvider: AppleProvider.deviceCheck,
-    // webProvider: ReCaptchaV3Provider('YOUR_SITE_KEY'), // optional for web
+    appleProvider: kDebugMode
+        ? AppleProvider.debug               // dev & CI
+        : AppleProvider.appAttestWithDeviceCheckFallback, // release
+    androidProvider:
+        kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
   );
-
-  
-
 
   await SurveyService.configureFirestoreCache();
   await surveyService.startConnectivityListener();
   
-
   // final token = await FirebaseAppCheck.instance.getToken(true);
   // print('App Check debug token: $token');
 
@@ -117,13 +114,15 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await authService.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const SignInScreen()),
-                  (route) => false,
-                );
-              }
+              await authService.signOut();                 // provider + Firebase sign-out
+              if (!context.mounted) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) {
+                    return const SignInScreen();
+                  }
+                ),
+              );
             },
           ),
         ],

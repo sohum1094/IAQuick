@@ -1,53 +1,50 @@
 import UIKit
 import Flutter
-
 import FirebaseCore
 import FirebaseAppCheck
 import GoogleSignIn
 
-// 1️⃣ Create your App Check provider factory
+// 🔹 Custom provider for release/TestFlight
 class MyAppCheckProviderFactory: NSObject, AppCheckProviderFactory {
   func createProvider(with app: FirebaseApp) -> AppCheckProvider? {
     if #available(iOS 14.0, *) {
-      // Uses Apple’s App Attest
-      return AppAttestProvider(app: app)
+      return AppAttestProvider(app: app)      // App Attest
     } else {
-      // Falls back to DeviceCheck on older iOS
-      return DeviceCheckProvider(app: app)
+      return DeviceCheckProvider(app: app)    // iOS 13 fallback
     }
   }
 }
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // 🔹 Wire up App Check
+    // 1️⃣ Register App Check provider factory *before* Firebase is configured
     #if DEBUG
-      // Built-in debug provider logs a token you register in the console
-      AppCheck.setAppCheckProviderFactory(DebugAppCheckProviderFactory())
+      // Use the debug provider so attestation succeeds locally
+      AppCheck.setAppCheckProviderFactory(AppCheckDebugProviderFactory())
     #else
-      // Your custom factory from above
       AppCheck.setAppCheckProviderFactory(MyAppCheckProviderFactory())
     #endif
 
-    // 🔹 Register Flutter plugins
+    // 2️⃣ Register Flutter plugins (firebase_core will call
+    //     Firebase.initializeApp() later from Dart)
     GeneratedPluginRegistrant.register(with: self)
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  // 🔹 Google Sign-In callback support
+  // Google-Sign-In URL handler
   override func application(
     _ app: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
-    if GIDSignIn.sharedInstance.handle(url) {
-      return true
-    }
+    if GIDSignIn.sharedInstance.handle(url) { return true }
     return super.application(app, open: url, options: options)
   }
 }
