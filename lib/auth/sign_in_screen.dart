@@ -25,11 +25,13 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign In'),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/IAQuick_icon.png'),
-        ),
+        // leading: Padding(
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Image.asset('assets/IAQuick_icon.png'),
+        // ),
+        backgroundColor: Colors.white,
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -52,7 +54,9 @@ class _SignInScreenState extends State<SignInScreen> {
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            const SizedBox(height: 20),
+            SizedBox(
+              height: 30,
+            ),
             if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
             ElevatedButton(
               onPressed: _isLoading
@@ -76,9 +80,16 @@ class _SignInScreenState extends State<SignInScreen> {
                           );
                         }
                       } on FirebaseAuthException catch (e) {
-                        setState(() {
-                          _error = e.message;
-                        });
+                        if (e.message == "The supplied auth credential is malformed or has expired.") {
+                          setState(() {
+                            _error = "Incorrect email/password or sign-in method.";
+                          });
+                        } else {
+                          setState(() {
+                            _error = e.message;
+                          });
+                        }
+                        
                       } finally {
                         if (mounted) {
                           setState(() {
@@ -90,9 +101,12 @@ class _SignInScreenState extends State<SignInScreen> {
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign In'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue,
+              ),
             ),
             const SizedBox(height: 10),
-            OutlinedButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -100,6 +114,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 );
               },
               child: const Text('Create Account'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue,
+              ),
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
@@ -121,7 +138,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     _error = e.message;
                   });
                 }
-                },
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlue,
+              ),
             ),
             if (Platform.isIOS) ...[
               const SizedBox(height: 10),
@@ -145,6 +165,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     });
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlue,
+                ),
               ),
             ],
           ],
