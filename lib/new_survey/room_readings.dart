@@ -142,13 +142,13 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
   }
 
   Future<void> _getImage() async {
-    final status = await Permission.camera.request();
+    bool permissionGranted = await requestCameraPermission(context);
     final imagePicker = ImagePicker();
     XFile? pickedImage;
 
-    if (status.isGranted) {
+    if (permissionGranted) {
       pickedImage = await imagePicker.pickImage(source: ImageSource.camera);
-    } else if (status.isDenied) {
+    } else if (!permissionGranted ) {
       pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
     } else {
       if (!context.mounted) return;
@@ -394,7 +394,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
       child: Column(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * .8,
+            height: MediaQuery.of(context).size.height * .7,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -431,20 +431,20 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   Row(
                     children: [
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: buildingDropdownTemplate(context, dropdownModel),
                       ),
                       const Spacer(
                         flex: 1,
                       ),
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: floorDropdownTemplate(context, dropdownModel),
                       ),
                       const Spacer(
                         flex: 1,
                       ),
-                      //Room number
+                      //Room nurmber
                       Expanded(
                         flex: 5,
                         child: TextFormField(
@@ -1175,4 +1175,55 @@ Future<void> saveSurveyToFirestore(
     info: surveyInfo,
     rooms: roomReadings,
   );
+}
+
+/// Requests camera permission, showing system dialog or a rationale/settings prompt as needed.
+/// 
+/// Returns true if permission is granted, false otherwise.
+Future<bool> requestCameraPermission(BuildContext context) async {
+  // 1️⃣ Check current status
+  var status = await Permission.camera.status;
+
+  // 2️⃣ If permanently denied, prompt user to open Settings
+  if (status.isPermanentlyDenied) {
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Camera Permission'),
+        content: Text(
+          'Camera access has been permanently denied.\n'
+          'Please enable it in Settings under “Permissions.”'
+        ),
+        actions: [
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: Text('Open Settings'),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (open == true) await openAppSettings();
+    return false;
+  }
+
+  // 3️⃣ If not granted yet, request it
+  if (!status.isGranted) {
+    status = await Permission.camera.request();
+  }
+
+  // 4️⃣ Check result
+  if (status.isGranted) {
+    return true;
+  } else {
+    // Denied (but not permanent): show a brief message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Camera permission denied.')),
+    );
+    return false;
+  }
 }
