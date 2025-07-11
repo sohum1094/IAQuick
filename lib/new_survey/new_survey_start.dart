@@ -125,7 +125,7 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
                 ),
                 DateTimePicker(model: model),
                 occupancyTypeDropdown(context, model),
-                AllCheckboxes(key: _checkboxesKey, flex: 2),
+                AllCheckboxes(key: _checkboxesKey),
                 EasyFormSaveButton.text('Submit'),
               ],
             ),
@@ -395,8 +395,7 @@ DropdownButtonFormField occupancyTypeDropdown(
 }
 
 class AllCheckboxes extends StatefulWidget {
-  final int flex;
-  const AllCheckboxes({super.key, this.flex = 1});
+  const AllCheckboxes({super.key});
 
   @override
   State<AllCheckboxes> createState() => _AllCheckboxesState();
@@ -416,42 +415,38 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      flex: widget.flex,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 10),
-          Text(
-            'Readings to be taken: ',
-            style: DefaultTextStyle.of(
-              context,
-            ).style.apply(fontSizeFactor: 1.1),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text(
+          'Readings to be taken: ',
+          style:
+              DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.1),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.transparent, width: 1.1),
+            borderRadius: BorderRadius.circular(5),
           ),
-          const SizedBox(height: 5),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.transparent, width: 1.1),
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: ListView(
-                children: [
-                  checkboxTemplate(context, 'Carbon Dioxide'),
-                  checkboxTemplate(context, 'Carbon Monoxide'),
-                  checkboxTemplate(context, 'VOCs'),
-                  checkboxTemplate(context, 'PM2.5'),
-                  checkboxTemplate(context, 'PM10'),
-                  checkboxTemplate(context, 'NO2'),
-                  checkboxTemplate(context, 'SO2'),
-                  checkboxTemplate(context, 'NO'),
-                ],
-              ),
-            ),
+          child: ListView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              checkboxTemplate(context, 'Carbon Dioxide'),
+              checkboxTemplate(context, 'Carbon Monoxide'),
+              checkboxTemplate(context, 'VOCs'),
+              checkboxTemplate(context, 'PM2.5'),
+              checkboxTemplate(context, 'PM10'),
+              checkboxTemplate(context, 'NO2'),
+              checkboxTemplate(context, 'SO2'),
+              checkboxTemplate(context, 'NO'),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
