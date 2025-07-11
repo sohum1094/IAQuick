@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io' show Platform;
 import '../auth_service.dart';
 import 'sign_up_screen.dart';
 
@@ -102,6 +103,21 @@ class _SignInScreenState extends State<SignInScreen> {
               },
               child: const Text('Sign In with Google'),
             ),
+            if (Platform.isIOS) ...[
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await authService.signInWithApple();
+                  } on FirebaseAuthException catch (e) {
+                    setState(() {
+                      _error = e.message;
+                    });
+                  }
+                },
+                child: const Text('Sign In with Apple'),
+              ),
+            ],
           ],
         ),
       ),

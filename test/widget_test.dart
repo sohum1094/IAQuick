@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'dart:io' show Platform;
 
 import 'package:iaqapp/auth_service.dart';
 import 'package:iaqapp/auth/sign_in_screen.dart';
@@ -26,5 +27,8 @@ void main() {
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Create Account'), findsOneWidget);
     expect(find.text('Sign In with Google'), findsOneWidget);
+    if (Platform.isIOS) {
+      expect(find.text('Sign In with Apple'), findsOneWidget);
+    }
   });
 }
