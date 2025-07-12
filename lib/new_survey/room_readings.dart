@@ -468,6 +468,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           controller: roomNumberTextController,
                           autovalidateMode: AutovalidateMode.always,
                           enabled: !isOutdoorReading,
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) =>
+                              FocusScope.of(context).nextFocus(),
                           validator: (value) {
                             if (value == null) {
                               return null;
@@ -487,14 +490,17 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                   ),
 
                   //Primary Use
-                  TextFormField(
-                    controller: primaryUseTextController,
-                    autovalidateMode: AutovalidateMode.always,
-                    keyboardType: TextInputType.text,
-                    enabled: !isOutdoorReading,
-                    validator: (value) {
-                      if (value == null) {
-                        return null;
+                TextFormField(
+                  controller: primaryUseTextController,
+                  autovalidateMode: AutovalidateMode.always,
+                  keyboardType: TextInputType.text,
+                  enabled: !isOutdoorReading,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).nextFocus(),
+                  validator: (value) {
+                    if (value == null) {
+                      return null;
                       } else if (value.isNotEmpty &&
                           !RegExp(r'^[a-zA-Z\s\-]+$').hasMatch(value)) {
                         return "Enter Valid Primary Use Value";
@@ -530,6 +536,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           validator: validateRelativeHumidity,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true, signed: false),
+                          textInputAction: TextInputAction.next,
                           onEditingComplete: () {
                             bool seen = false;
 
@@ -543,6 +550,7 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                               _showConfirmValueDialog(
                                   context, 'relative humidity');
                             }
+                            FocusScope.of(context).nextFocus();
                           },
                           onChanged: (value) {
                             bool seen = false;
@@ -570,13 +578,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         flex: 3,
                         child: //Temperature
                             TextFormField(
-                          controller: temperatureTextController,
-                          autovalidateMode: AutovalidateMode.always,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true, signed: false),
-                          validator: (value) {
-                            if (value == null) {
-                              return null;
+                              controller: temperatureTextController,
+                              autovalidateMode: AutovalidateMode.always,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true, signed: false),
+                              textInputAction: TextInputAction.next,
+                              validator: (value) {
+                                if (value == null) {
+                                  return null;
                             } else if (value.isNotEmpty &&
                                 !RegExp(r'^(?:\d+(?:\.\d+)?|\.\d+)$').hasMatch(value)) {
                               return "Enter Correct Temperature Value";
@@ -588,14 +597,14 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                           // onChanged: (value) {
                           //   validateTemperatureAndShowDialog();
                           // },
-                          decoration: const InputDecoration(
-                            labelText: "Temperature (F)",
-                            suffixText: 'F',
-                          ),
-                          onEditingComplete: () {
-                            validateTemperatureAndShowDialog();
-                            FocusScope.of(context).unfocus();
-                          },
+                              decoration: const InputDecoration(
+                                labelText: "Temperature (F)",
+                                suffixText: 'F',
+                              ),
+                              onEditingComplete: () {
+                                validateTemperatureAndShowDialog();
+                                FocusScope.of(context).nextFocus();
+                              },
                           // temperature
                         ),
                       ),
@@ -609,6 +618,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -645,6 +657,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -679,6 +694,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -712,6 +730,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -745,6 +766,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(
                           decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -777,6 +801,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       controller: no2TextController,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -803,6 +830,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       controller: so2TextController,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -829,6 +859,9 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                       controller: noTextController,
                       autovalidateMode: AutovalidateMode.always,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       validator: (value) {
                         if (value == null) {
                           return null;
@@ -858,7 +891,10 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
                         hintText:
                             'Enter comments, leave empty if no issues are observed.'),
                     keyboardType: TextInputType
-                        .multiline, // Define your text input properties here
+                        .multiline,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) =>
+                        FocusScope.of(context).unfocus(),
                   ),
                   const SizedBox(
                     height: 20,
