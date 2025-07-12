@@ -55,7 +55,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Existing Survey Files'),
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Column(

@@ -64,5 +64,7 @@ flutter:
   assets:
     - assets/
     - assets/fonts/Roboto-Regular.ttf
+    - assets/icons/google.png
+    - assets/icons/apple.png
     - .env
 

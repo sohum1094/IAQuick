@@ -39,10 +39,7 @@ class _SignInScreenState extends State<SignInScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
-              child: Image.asset(
-                'assets/IAQuick_full_logo.png',
-                height: 100,
-              ),
+              child: Image.asset('assets/IAQuick_full_logo.png', height: 100),
             ),
             TextField(
               controller: _emailController,
@@ -54,10 +51,9 @@ class _SignInScreenState extends State<SignInScreen> {
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(
-              height: 30,
-            ),
-            if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+            SizedBox(height: 30),
+            if (_error != null)
+              Text(_error!, style: const TextStyle(color: Colors.red)),
             ElevatedButton(
               onPressed: _isLoading
                   ? null
@@ -80,16 +76,17 @@ class _SignInScreenState extends State<SignInScreen> {
                           );
                         }
                       } on FirebaseAuthException catch (e) {
-                        if (e.message == "The supplied auth credential is malformed or has expired.") {
+                        if (e.message ==
+                            "The supplied auth credential is malformed or has expired.") {
                           setState(() {
-                            _error = "Incorrect email/password or sign-in method.";
+                            _error =
+                                "Incorrect email/password or sign-in method.";
                           });
                         } else {
                           setState(() {
                             _error = e.message;
                           });
                         }
-                        
                       } finally {
                         if (mounted) {
                           setState(() {
@@ -127,9 +124,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   final cred = await authService.signInWithGoogle();
                   if (cred.user != null && mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (_) => const HomeScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
                       (_) => false,
                     );
                   }
@@ -153,9 +148,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     final cred = await authService.signInWithApple();
                     if (cred.user != null && mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (_) => const HomeScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
                         (_) => false,
                       );
                     }

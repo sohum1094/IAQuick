@@ -37,6 +37,7 @@ class _RoomReadingsOverviewState extends State<RoomReadingsOverview> {
         leading: BackButton(onPressed: () => Navigator.pop(context)),
         title: const Text('Room Readings'),
         centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: Column(
         children: [

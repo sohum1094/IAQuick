@@ -32,7 +32,7 @@ class NewSurveyStart extends StatelessWidget {
         appBar: AppBar(
           title: const Text('New Survey Information'),
           centerTitle: true,
-          backgroundColor: Colors.blueGrey,
+          backgroundColor: Colors.white,
           leading: BackButton(onPressed: () => Navigator.pop(context)),
         ),
         body: Center(

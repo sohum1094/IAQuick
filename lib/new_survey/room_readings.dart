@@ -59,6 +59,7 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
         ),
         title: const Text("Room Readings"),
         centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: RoomReadingsForm(
         key: formKey,
