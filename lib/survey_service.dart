@@ -20,8 +20,8 @@ class SurveyService {
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
       cacheSizeBytes: 15 * 1024 * 1024,
-      logLevel: LogLevel.error,
     );
+    FirebaseFirestore.setLoggingEnabled(false);
   }
 
   /// Start listening for connectivity changes.
