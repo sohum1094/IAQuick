@@ -29,9 +29,11 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('✅ Firebase initialised by Dart.');
+    if (kDebugMode) {
+      print('✅ Firebase initialised by Dart.');
+    }
   } on FirebaseException catch (e) {
-    if (e.code == 'duplicate-app') {
+    if (e.code == 'duplicate-app' && kDebugMode) {
       print('⚠️ duplicate-app caught – native init already finished.');
     } else {
       rethrow; // Any other error is real and should break.

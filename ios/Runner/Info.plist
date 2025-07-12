@@ -46,8 +46,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Allow camera access to capture room images to attach to survey.</string>
+       <key>NSCameraUsageDescription</key>
+       <string>Allow camera access to capture room images to attach to survey.</string>
+       <key>NSPhotoLibraryUsageDescription</key>
+       <string>Allow access to your photo library to select room images.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

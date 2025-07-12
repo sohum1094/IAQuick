@@ -13,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-int roomCount = 0;
 List<RoomReading> roomReadings = [];
 
 class RoomReadingsFormScreen extends StatefulWidget {
@@ -33,7 +32,6 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
     super.initState();
     // When starting a new survey clear any previous readings
     roomReadings.clear();
-    roomCount = 0;
   }
 
   @override
@@ -142,21 +140,45 @@ class RoomReadingsFormState extends State<RoomReadingsForm> {
     }
   }
 
-  Future<void> _getImage() async {
-    bool permissionGranted = await requestCameraPermission(context);
-    final imagePicker = ImagePicker();
-    XFile? pickedImage;
+  Future<ImageSource?> _selectImageSource() async {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Photo Library'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (permissionGranted) {
-      pickedImage = await imagePicker.pickImage(source: ImageSource.camera);
-    } else {
-      pickedImage = await imagePicker.pickImage(source: ImageSource.gallery);
+  Future<void> _getImage() async {
+    final source = await _selectImageSource();
+    if (source == null) return;
+
+    final imagePicker = ImagePicker();
+
+    if (source == ImageSource.camera) {
+      final granted = await requestCameraPermission(context);
+      if (!granted) return;
     }
+
+    final pickedImage = await imagePicker.pickImage(source: source);
 
     if (!mounted) return;
     if (pickedImage != null) {
       setState(() {
-        _imageFiles.add(File(pickedImage!.path));
+        _imageFiles.add(File(pickedImage.path));
       });
     }
   }
