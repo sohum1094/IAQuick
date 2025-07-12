@@ -11,13 +11,18 @@ admin.initializeApp({
 });                     // ← use the Admin SDK
 const bucket = admin.storage().bucket();   // ← default bucket (no hard-coded name!)
 
+const env = functions.config().env;
+const isProd = env === 'production';
+
 exports.generateIAQReport = functions.https.onRequest(async (req, res) => {
   if (req.method === 'GET') {
     return res.status(200).send('generateIAQReport is healthy');
   }
   const data = req.body;
 
-  console.log("🔥 generateIAQReport invoked with data:", data);
+  if (!isProd) {
+    functions.logger.info("🔥 generateIAQReport invoked with data:", data);
+  }
 
   const templatePath = "resources/IAQ_Assessment Report_Template.docx";
   const tempTemplate = path.join(os.tmpdir(), "template.docx");
@@ -38,13 +43,15 @@ exports.generateIAQReport = functions.https.onRequest(async (req, res) => {
     site_name:    data.site_name,
     site_address: data.site_address,
   };
-  console.log("Rendering with:", contextData);
+  if (!isProd) {
+    functions.logger.debug("Rendering with:", contextData);
+  }
 
   try {
     doc.setData(contextData);
     doc.render();
   } catch (err) {
-    console.error("Template render failed:", err);
+    functions.logger.error("Template render failed:", err);
     throw new functions.https.HttpsError(
       "invalid-argument",
       "Template rendering error: " + err.message
