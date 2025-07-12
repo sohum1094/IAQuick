@@ -13,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iaqapp/survey_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-int roomCount = 0;
 List<RoomReading> roomReadings = [];
 
 class RoomReadingsFormScreen extends StatefulWidget {
@@ -33,7 +32,6 @@ class _RoomReadingsFormScreenState extends State<RoomReadingsFormScreen> {
     super.initState();
     // When starting a new survey clear any previous readings
     roomReadings.clear();
-    roomCount = 0;
   }
 
   @override
