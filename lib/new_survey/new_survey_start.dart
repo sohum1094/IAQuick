@@ -35,6 +35,7 @@ class NewSurveyStart extends StatelessWidget {
           backgroundColor: Colors.white,
           leading: BackButton(onPressed: () => Navigator.pop(context)),
         ),
+        backgroundColor:Colors.white,
         body: Center(
           child: SizedBox(
             width: MediaQuery.of(context).size.width * .9,
@@ -126,7 +127,9 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
                 DateTimePicker(model: model),
                 occupancyTypeDropdown(context, model),
                 AllCheckboxes(key: _checkboxesKey),
+                SizedBox(height:20,),
                 EasyFormSaveButton.text('Submit'),
+                SizedBox(height: 30,)
               ],
             ),
           ),
@@ -264,8 +267,10 @@ EasyTextFormField addressTextFormField(
           onChanged(address);
         },
         inputDecoration: const InputDecoration(labelText: 'Street Address*'),
+        boxDecoration: BoxDecoration(border: Border.symmetric()),
       );
     },
+    
   );
 }
 
@@ -426,14 +431,16 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
         ),
         const SizedBox(height: 5),
         Container(
+          height: MediaQuery.of(context).size.height * .4,
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(color: Colors.transparent, width: 1.1),
+            border: Border.all(color: Colors.black, width: 1.1),
             borderRadius: BorderRadius.circular(5),
           ),
           child: ListView(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            scrollDirection: Axis.vertical,
+            physics: AlwaysScrollableScrollPhysics(),
             children: [
               checkboxTemplate(context, 'Carbon Dioxide'),
               checkboxTemplate(context, 'Carbon Monoxide'),
@@ -454,6 +461,8 @@ class _AllCheckboxesState extends State<AllCheckboxes> {
     return CheckboxListTile(
       title: Text(readingType),
       value: readingsSwitches[readingType],
+      contentPadding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+      checkboxScaleFactor: 1.1,
       onChanged: (value) {
         setState(() {
           readingsSwitches[readingType] = value!;

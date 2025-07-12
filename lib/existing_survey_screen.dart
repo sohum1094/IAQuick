@@ -58,6 +58,7 @@ class ExistingSurveyScreenState extends State<ExistingSurveyScreen> {
         backgroundColor: Colors.white,
         centerTitle: true,
       ),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Padding(
