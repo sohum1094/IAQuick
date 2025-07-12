@@ -61,6 +61,8 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
   final SurveyInfo model = SurveyInfo();
   final GlobalKey<_AllCheckboxesState> _checkboxesKey =
       GlobalKey<_AllCheckboxesState>();
+  final FocusNode _siteNameFocusNode = FocusNode();
+  final FocusNode _projectNumberFocusNode = FocusNode();
   final TextEditingController _addressController = TextEditingController();
   final FocusNode _addressFocusNode = FocusNode();
 
@@ -116,8 +118,18 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                siteNameTextFormField(context, model),
-                projectNumberTextFormField(context, model),
+                siteNameTextFormField(
+                  context,
+                  model,
+                  _siteNameFocusNode,
+                  _projectNumberFocusNode,
+                ),
+                projectNumberTextFormField(
+                  context,
+                  model,
+                  _projectNumberFocusNode,
+                  _addressFocusNode,
+                ),
                 addressTextFormField(
                   context,
                   model,
@@ -140,6 +152,8 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
 
   @override
   void dispose() {
+    _siteNameFocusNode.dispose();
+    _projectNumberFocusNode.dispose();
     _addressController.dispose();
     _addressFocusNode.dispose();
     super.dispose();
@@ -162,10 +176,17 @@ class SurveyInitialInfoFormState extends State<SurveyInitialInfoForm> {
 EasyTextFormField siteNameTextFormField(
   BuildContext context,
   SurveyInfo model,
+  FocusNode focusNode,
+  FocusNode nextFocus,
 ) {
   return EasyTextFormField(
     initialValue: '',
     name: 'siteName',
+    focusNode: focusNode,
+    textInputAction: TextInputAction.next,
+    onFieldSubmitted: (_) {
+      FocusScope.of(context).requestFocus(nextFocus);
+    },
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
       if (value == null) {
@@ -188,10 +209,17 @@ EasyTextFormField siteNameTextFormField(
 EasyTextFormField projectNumberTextFormField(
   BuildContext context,
   SurveyInfo model,
+  FocusNode focusNode,
+  FocusNode nextFocus,
 ) {
   return EasyTextFormField(
     initialValue: '',
     name: 'projectNumber',
+    focusNode: focusNode,
+    textInputAction: TextInputAction.next,
+    onFieldSubmitted: (_) {
+      FocusScope.of(context).requestFocus(nextFocus);
+    },
     autovalidateMode: EasyAutovalidateMode.always,
     validator: (value, [values]) {
       if (value == null) {
@@ -240,6 +268,10 @@ EasyTextFormField addressTextFormField(
       return GooglePlaceAutoCompleteTextField(
         textEditingController: controller,
         focusNode: focusNode,
+        textInputAction: TextInputAction.next,
+        onEditingComplete: () {
+          FocusScope.of(context).nextFocus();
+        },
         googleAPIKey: apiKey!,
         debounceTime: 800,
         isLatLngRequired: false,
